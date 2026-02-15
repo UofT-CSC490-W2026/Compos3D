@@ -14,9 +14,11 @@ terraform {
 provider "aws" {
   region = var.aws_region
 
+  # Credentials from AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY env vars (e.g. from .env via scripts/terraform.ps1)
+  # Or from shared config: aws configure
   default_tags {
     tags = {
-      Project   = "Compos3D"
+      Project     = "Compos3D"
       Environment = "dev"
     }
   }

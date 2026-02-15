@@ -5,7 +5,7 @@ Prerequisites:
   1. Apply Terraform in terraform/environments/dev/ and note the S3 bucket name.
   2. Create an IAM user with the same S3 read/write policy as the Modal role
      (or use the role's policy attached to a user). Create access keys for that user.
-  3. In Modal dashboard: Secrets -> create a secret named "aws-compos3d" with:
+  3. In Modal dashboard: Secrets -> create a secret named "aws-secret-compos3d" with:
      - AWS_ACCESS_KEY_ID
      - AWS_SECRET_ACCESS_KEY
      - AWS_REGION (e.g. us-east-1)
@@ -15,11 +15,11 @@ Run: modal run modal_app.py
 """
 
 import modal
-
+image = modal.Image.debian_slim().pip_install("boto3")
 app = modal.App("compos3d-s3-upload")
 
 # Use the secret that holds AWS credentials (populated from IAM user keys with S3 access)
-@app.function(secrets=[modal.Secret.from_name("aws-compos3d")])
+@app.function(image=image, secrets=[modal.Secret.from_name("aws-secret-compos3d")])
 def upload_dummy_file_to_s3(bucket_name: str | None = None):
     """
     Upload a small dummy file to the Compos3D Data Lake S3 bucket.
@@ -32,7 +32,7 @@ def upload_dummy_file_to_s3(bucket_name: str | None = None):
     bucket = bucket_name or os.environ.get("BUCKET_NAME")
     if not bucket:
         raise ValueError(
-            "Provide bucket_name or set BUCKET_NAME in the 'aws-compos3d' Modal secret. "
+            "Provide bucket_name or set BUCKET_NAME in the 'aws-secret-compos3d' Modal secret. "
             "Bucket name is in Terraform output: data_lake_bucket_name (e.g. dev-compos3d-data-lake)."
         )
 
