@@ -1,79 +1,169 @@
-# Compos3D Data Platform
+# Compos3D
 
-Data engineering infrastructure for Compositional 3D Scene Generation.
+3D scene generation system.
 
 ## Setup
 
+### Environment Setup
+
+Install dependencies with uv:
+
 ```bash
-# Install dependencies
-uv sync
+uv venv
+source .venv/bin/activate
+uv pip install -e .
 
-# Configure AWS SSO
+python -c "import compos3d_dp"
+```
+
+## Data Pipeline
+
+### AWS & Anyscale Setup
+
+#### Development
+
+For local development, configure AWS and Anyscale access:
+
+```bash
+# Configure AWS SSO (uses your personal credentials)
 aws configure sso
-# Enter: https://d-9d675989d2.awsapps.com/start
-# Profile: myisb_IsbUsersPS-136268833180
 
+# Setup Anyscale (interactive login)
+anyscale login
+```
+
+#### Production/Staging (First-Time)
+
+For production or staging deployments, use Terraform and AWS Secrets Manager:
+
+```bash
 # Deploy infrastructure
 cd terraform
 terraform init
-terraform apply -var-file=environments/dev.tfvars
+terraform apply -var-file=environments/prod.tfvars  # or staging.tfvars
 
-# Set environment
-export AWS_PROFILE=myisb_IsbUsersPS-136268833180
-export COMPOS3D_S3_BUCKET=compos3d-dev-silver
+# Store API keys in AWS Secrets Manager
+aws secretsmanager put-secret-value \
+  --secret-id compos3d-prod-anyscale-key \
+  --secret-string "your-anyscale-api-key"
+
+aws secretsmanager put-secret-value \
+  --secret-id compos3d-prod-wandb-key \
+  --secret-string "your-wandb-api-key"
 ```
 
-## Usage
+> **Note:** Production/staging jobs use IAM roles and Secrets Manager (no local credentials needed).
+
+### Deployment
+
+#### Deploy Dev Environment
 
 ```bash
-# Ingest data to Bronze
-uv run python -m compos3d_dp.cli bronze-demo --config-path config/env.aws.yaml
-
-# Transform Bronze → Silver
-uv run python -m compos3d_dp.cli silver-build --config-path config/env.aws.yaml
-
-# Discover tables in Glue
-aws glue start-crawler --name compos3d_dev-silver-crawler
-
-# Query with Athena
-aws athena start-query-execution \
-  --query-string "SELECT * FROM scene LIMIT 10" \
-  --query-execution-context Database=compos3d_dev \
-  --result-configuration OutputLocation=s3://compos3d-dev-silver/athena-results/ \
-  --work-group compos3d_dev-workgroup
+cd terraform
+terraform init
+terraform apply -var-file=environments/dev.tfvars -auto-approve
 ```
 
-## Structure
+#### Deploy Staging Environment
 
-```
-├── src/compos3d_dp/
-│   ├── cli.py              # CLI entrypoint
-│   ├── config.py           # Configuration management
-│   ├── schemas/            # Pydantic data models
-│   ├── pipelines/          # ETL pipelines
-│   ├── storage/            # S3/Local storage
-│   ├── compute/            # Modal integration
-│   └── utils/              # Manifest & GE validation
-├── terraform/              # AWS infrastructure
-└── config/                 # Environment configs
+```bash
+cd terraform
+terraform workspace new staging  # or: terraform workspace select staging
+terraform apply -var-file=environments/staging.tfvars -auto-approve
 ```
 
-## AWS Resources
+#### Deploy Prod Environment
 
-- **S3**: Bronze/Silver/Gold buckets
-- **Glue**: Data catalog + crawler
-- **Athena**: SQL queries on data lake
-- **IAM**: Access roles
+```bash
+cd terraform
+terraform workspace new prod  # or: terraform workspace select prod
+terraform apply -var-file=environments/prod.tfvars -auto-approve
+```
 
-## Modal (Distributed Compute)
+This creates the following resource per environment:
 
-```python
-from compos3d_dp.compute.modal_runner import submit_batch_to_modal
+- S3 Buckets: Bronze, Silver, Gold (data lake layers)
+- IAM Roles: Pipeline execution roles with proper permissions
+- Secrets Manager: API key storage
+- Glue Data Catalog: Metadata management
+- Athena Workgroup: Query interface
 
-# Process 1000s of scenes in parallel
-submit_batch_to_modal(
-    scene_ids=your_scenes,
-    s3_bucket="compos3d-dev-silver",
-    batch_size=100
-)
+### Running Pipelines
+
+The data pipeline consists of three stages:
+1. **Bronze Ingestion**: Ingest raw 3D scenes from BlenderBench dataset
+2. **Silver Transformation**: Clean, validate, and transform data
+3. **Gold Aggregation**: Create training-ready datasets
+
+#### Run Complete Pipeline Locally
+
+Test the complete pipeline on your local machine:
+
+```bash
+# Activate virtual environment
+source .venv/bin/activate
+
+# Run pipeline with 3 scenes (for testing)
+python scripts/run_pipeline_on_anyscale.py --env dev --num-scenes 3 --local
+```
+
+#### Run Pipelines on Anyscale
+
+Submit the pipeline job to Anyscale cloud:
+
+```bash
+source .venv/bin/activate
+
+python submit_job.py
+```
+
+To customize the pipeline (edit `anyscale_job.yaml`):
+- Change `--num-scenes 10` to process more scenes
+- Change `--env dev` to `staging` or `prod`
+
+```yaml
+entrypoint: |
+  pip install -e . && python scripts/run_pipeline_on_anyscale.py --env dev --num-scenes 10 --local
+```
+
+**Note**: The job automatically makes the container
+
+Pipeline Output:
+- Bronze layer: `s3://compos3d-{env}-bronze/compos3d/bronze/scenes/YYYY/MM/DD/`
+- Silver layer: `s3://compos3d-{env}-silver/compos3d/silver/scenes/YYYY/MM/DD/`
+- Gold layer: `s3://compos3d-{env}-gold/compos3d/gold/training_datasets/YYYY/MM/DD/`
+
+#### Verify Pipeline Results
+
+Check data was written to S3:
+
+```bash
+# Check Bronze layer
+aws s3 ls s3://compos3d-dev-bronze/compos3d/bronze/scenes/$(date +%Y/%m/%d)/ --recursive
+
+# Check Silver layer  
+aws s3 ls s3://compos3d-dev-silver/compos3d/silver/scenes/$(date +%Y/%m/%d)/ --recursive
+
+# Download and view Gold training dataset
+aws s3 cp s3://compos3d-dev-gold/compos3d/gold/training_datasets/$(date +%Y/%m/%d)/dataset.json - | python -m json.tool
+```
+
+### Run Tests
+
+Run the tests:
+
+```bash
+source .venv/bin/activate
+
+# Run all tests
+pytest tests/ -v
+
+pytest tests/ -m bronze      # Bronze ingestion tests
+pytest tests/ -m silver      # Silver transformation tests
+pytest tests/ -m gold        # Gold aggregation tests
+pytest tests/ -m training    # Training pipeline tests
+pytest tests/ -m generation  # Generation pipeline tests
+
+pytest tests/ -m unit
+pytest tests/ -m integration
 ```

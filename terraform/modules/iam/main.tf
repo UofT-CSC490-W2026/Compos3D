@@ -4,6 +4,7 @@ variable "bronze_bucket" { type = string }
 variable "silver_bucket" { type = string }
 variable "gold_bucket" { type = string }
 variable "glue_db_name" { type = string }
+variable "secrets_policy_arn" { type = string }
 
 # IAM Role for AWS Batch jobs
 resource "aws_iam_role" "batch_job" {
@@ -22,6 +23,12 @@ resource "aws_iam_role" "batch_job" {
 }
 
 # Policy for Batch jobs to access S3 and Glue
+# Attach secrets read policy to batch job role
+resource "aws_iam_role_policy_attachment" "batch_secrets" {
+  role       = aws_iam_role.batch_job.name
+  policy_arn = var.secrets_policy_arn
+}
+
 resource "aws_iam_role_policy" "batch_job_policy" {
   name = "${var.project_name}-${var.environment}-batch-policy"
   role = aws_iam_role.batch_job.id

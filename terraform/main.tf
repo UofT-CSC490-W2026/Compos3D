@@ -60,6 +60,14 @@ module "glue_catalog" {
   depends_on = [module.s3_lake]
 }
 
+# Secrets Manager
+module "secrets" {
+  source = "./modules/secrets"
+  
+  project_name = var.project_name
+  environment  = var.environment
+}
+
 # IAM Roles and Policies
 module "iam" {
   source = "./modules/iam"
@@ -70,6 +78,8 @@ module "iam" {
   silver_bucket = local.silver_bucket
   gold_bucket   = local.gold_bucket
   glue_db_name  = local.glue_db_name
+  
+  secrets_policy_arn = module.secrets.secrets_policy_arn
 }
 
 # Batch compute (commented out for initial deployment)

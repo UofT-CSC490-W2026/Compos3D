@@ -32,7 +32,10 @@ class AppConfig(BaseSettings):
     local_lake_root: str = "_lake"
 
     # s3 configuration (when storage_backend=s3)
-    s3_bucket: Optional[str] = None
+    s3_bucket: Optional[str] = None  # Legacy single bucket
+    s3_bucket_bronze: Optional[str] = None
+    s3_bucket_silver: Optional[str] = None
+    s3_bucket_gold: Optional[str] = None
     s3_prefix: str = "compos3d"
 
     aws_region: str = "us-east-1"
@@ -46,3 +49,9 @@ def load_config_from_yaml(path: str, env: EnvName) -> AppConfig:
     # allow either a top-level dict or {env: {...}}
     env_data = data.get(env, data)
     return AppConfig(env=env, **env_data)
+
+
+def load_config(env: EnvName = "dev") -> AppConfig:
+    """Load config for a given environment using standard path"""
+    config_path = f"config/env.{env}.yaml"
+    return load_config_from_yaml(config_path, env)

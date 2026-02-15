@@ -1,69 +1,168 @@
+"""Compos3D Data Platform CLI"""
+
 from __future__ import annotations
 import typer
 from rich import print
 
-from compos3d_dp.config import load_config_from_yaml
-from compos3d_dp.storage.local import LocalStore
-from compos3d_dp.storage.s3 import S3Store
-from compos3d_dp.pipelines.bronze_demo_ingest import run_bronze_demo
-from compos3d_dp.pipelines.silver_build import build_silver_from_bronze_local
-
-app = typer.Typer(help="Compos3D Data Platform CLI", no_args_is_help=True)
+app = typer.Typer(
+    help="Compos3D - Production 3D Generation System", no_args_is_help=True
+)
 
 
-def _make_store(cfg):
-    if cfg.storage_backend == "local":
-        return LocalStore(cfg.local_lake_root)
+# ============================================================================
+# FULL SYSTEM COMMANDS
+# ============================================================================
 
-    assert cfg.s3_bucket is not None, "Set s3_bucket in config or COMPOS3D_S3_BUCKET"
-    return S3Store(cfg.s3_bucket, cfg.s3_prefix, cfg.aws_region)
+
+@app.command("run-full-system")
+def run_full_system(
+    env: str = typer.Option("dev", help="Environment (dev/staging/prod)"),
+    num_scenes: int = typer.Option(10, help="Number of scenes to ingest"),
+    num_epochs: int = typer.Option(3, help="Training epochs"),
+    test_prompt: str = typer.Option(
+        "a red cube on a table", help="Test generation prompt"
+    ),
+):
+    """Run the complete Compos3D system end-to-end"""
+    from compos3d_dp.orchestration.pipeline_orchestrator import Compos3DOrchestrator
+
+    orchestrator = Compos3DOrchestrator(env=env)
+    orchestrator.run_full_system(
+        num_scenes=num_scenes,
+        num_epochs=num_epochs,
+        test_prompt=test_prompt,
+    )
+
+
+@app.command("data-pipeline")
+def data_pipeline(
+    env: str = typer.Option("dev"),
+    num_scenes: int = typer.Option(100, help="Number of scenes to process"),
+    skip_bronze: bool = typer.Option(False, help="Skip Bronze ingestion"),
+    skip_silver: bool = typer.Option(False, help="Skip Silver transformation"),
+    skip_gold: bool = typer.Option(False, help="Skip Gold aggregation"),
+):
+    """Run complete data processing pipeline (Bronze → Silver → Gold)"""
+    from compos3d_dp.orchestration.pipeline_orchestrator import Compos3DOrchestrator
+
+    orchestrator = Compos3DOrchestrator(env=env)
+    orchestrator.run_data_pipeline(
+        num_scenes=num_scenes,
+        skip_bronze=skip_bronze,
+        skip_silver=skip_silver,
+        skip_gold=skip_gold,
+    )
+
+
+@app.command("train")
+def train(
+    env: str = typer.Option("dev"),
+    num_epochs: int = typer.Option(10, help="Number of training epochs"),
+    checkpoint: str = typer.Option(None, help="Resume from checkpoint"),
+):
+    """Train the Compos3D generative model"""
+    from compos3d_dp.orchestration.pipeline_orchestrator import Compos3DOrchestrator
+
+    orchestrator = Compos3DOrchestrator(env=env)
+    orchestrator.run_training_pipeline(
+        num_epochs=num_epochs,
+        checkpoint_path=checkpoint,
+    )
+
+
+@app.command("generate")
+def generate(
+    prompt: str = typer.Argument(..., help="Text description of scene to generate"),
+    env: str = typer.Option("prod"),
+    checkpoint: str = typer.Option(None, help="Model checkpoint to use"),
+):
+    """Generate a 3D scene from text prompt"""
+    from compos3d_dp.orchestration.pipeline_orchestrator import Compos3DOrchestrator
+
+    orchestrator = Compos3DOrchestrator(env=env)
+    result = orchestrator.run_generation_pipeline(
+        prompt=prompt,
+        checkpoint_path=checkpoint,
+    )
+
+    if not result["success"]:
+        print(f"Generation failed: {result.get('error')}")
+
+
+# ============================================================================
+# INDIVIDUAL PIPELINE COMMANDS
+# ============================================================================
+
+
+@app.command("bronze-ingest")
+def bronze_ingest(
+    env: str = typer.Option("dev"),
+    num_scenes: int = typer.Option(100, help="Number of scenes to ingest"),
+):
+    """Bronze Layer: Ingest raw scenes from BlenderBench"""
+    from compos3d_dp.pipelines.bronze_ingestion_distributed import (
+        run_bronze_ingestion_distributed,
+    )
+
+    run_bronze_ingestion_distributed(env=env, num_scenes=num_scenes)
+
+
+@app.command("silver-transform")
+def silver_transform(
+    env: str = typer.Option("dev"),
+    date_filter: str = typer.Option(None, help="Filter by date (YYYY/MM/DD)"),
+):
+    """Silver Layer: Clean, validate, and transform Bronze data"""
+    from compos3d_dp.pipelines.silver_transformation_distributed import (
+        run_silver_transformation_distributed,
+    )
+
+    run_silver_transformation_distributed(env=env, date_filter=date_filter)
+
+
+@app.command("gold-aggregate")
+def gold_aggregate(
+    env: str = typer.Option("dev"),
+    date_filter: str = typer.Option(None, help="Filter by date (YYYY/MM/DD)"),
+):
+    """Gold Layer: Aggregate Silver data into training datasets"""
+    from compos3d_dp.pipelines.gold_aggregation_distributed import (
+        run_gold_aggregation_distributed,
+    )
+
+    run_gold_aggregation_distributed(env=env, date_filter=date_filter)
+
+
+# ============================================================================
+# UTILITY COMMANDS
+# ============================================================================
 
 
 @app.command("show-config")
 def show_config(
     env: str = typer.Option("dev"),
-    config_path: str = typer.Option("config/env.dev.yaml"),
 ):
-    cfg = load_config_from_yaml(config_path, env=env)  # type: ignore
-    print(cfg.model_dump())
+    """Display configuration for environment"""
+    from compos3d_dp.config import load_config
+
+    cfg = load_config(env)
+    print(f"[bold]Configuration for {env}:[/bold]")
+    print(f"  Storage: {cfg.storage_backend}")
+    print(f"  Bronze: s3://{cfg.s3_bucket_bronze}")
+    print(f"  Silver: s3://{cfg.s3_bucket_silver}")
+    print(f"  Gold: s3://{cfg.s3_bucket_gold}")
+    print(f"  Region: {cfg.aws_region}")
 
 
-@app.command("bronze-demo")
-def bronze_demo(
-    env: str = typer.Option("dev"),
-    config_path: str = typer.Option("config/env.dev.yaml"),
+@app.command("download-blenderbench")
+def download_blenderbench(
+    cache_dir: str = typer.Option("data/blenderbench", help="Cache directory"),
 ):
-    cfg = load_config_from_yaml(config_path, env=env)  # type: ignore
-    store = _make_store(cfg)
-    out = run_bronze_demo(store, cfg.layout.bronze_prefix)
-    print("[green]Bronze demo wrote:[/green]", out.scene_json_uri)
+    """Download BlenderBench dataset from HuggingFace"""
+    from compos3d_dp.datasets.blenderbench import BlenderBenchDataset
 
-
-@app.command("silver-build")
-def silver_build(
-    env: str = typer.Option("dev"),
-    config_path: str = typer.Option("config/env.dev.yaml"),
-    date: str = typer.Option(None, help="YYYY-MM-DD (default: today UTC)"),
-):
-    cfg = load_config_from_yaml(config_path, env=env)  # type: ignore
-    store = _make_store(cfg)
-
-    out = build_silver_from_bronze_local(
-        store=store,
-        bronze_prefix=cfg.layout.bronze_prefix,
-        silver_prefix=cfg.layout.silver_prefix,
-        date_yyyy_mm_dd=date,
-        config_snapshot=cfg.model_dump(),
-    )
-    print("[green]Silver built:[/green]")
-    print(" scene:", out.scene_dataset_uri)
-    print(" scene_object:", out.scene_object_dataset_uri)
-    if out.relations_dataset_uri:
-        print(" relations:", out.relations_dataset_uri)
-    if out.manifest_uri:
-        print(" manifest:", out.manifest_uri)
-    if out.validation_report_uri:
-        print(" validation report:", out.validation_report_uri)
+    dataset = BlenderBenchDataset(cache_dir=cache_dir)
+    dataset.download()
 
 
 if __name__ == "__main__":
