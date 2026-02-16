@@ -11,6 +11,7 @@ Install dependencies with uv:
 ```bash
 uv venv
 source .venv/bin/activate
+cd Compos3D
 uv pip install -e .
 
 python -c "import compos3d_dp"
