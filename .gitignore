@@ -1,0 +1,24 @@
+_lake/
+.terraform/
+*.tfstate*
+.terraform.lock.hcl
+__pycache__/
+*.pyc
+
+# Data directories
+data/
+output/
+checkpoints/
+
+# Cache
+*.cache
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Blender files
+*.blend
+*.blend1
+
+# Temp files
+tmp/
