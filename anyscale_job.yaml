@@ -1,0 +1,26 @@
+name: compos3d-pipeline-dev
+
+image_uri: anyscale/ray:2.9.0-py311
+
+working_dir: .
+
+entrypoint: |
+  pip install -e . && python scripts/run_pipeline_on_anyscale.py --env dev --num-scenes 10 --local
+
+requirements:
+  - ray[default]==2.9.0
+  - boto3
+  - pandas
+  - pyarrow
+  - pydantic
+  - pydantic-settings
+  - typer
+  - rich
+  - datasets>=2.14.0
+  - huggingface_hub>=0.20.0
+  - fsspec>=2023.10.0
+  - trimesh
+  - pillow>=10.0.0
+
+env_vars:
+  APP_AWS_REGION: us-east-1
