@@ -780,6 +780,39 @@ def stage_eval_and_report() -> None:
     print("=" * 60)
     print(report_md)
 
+@app.function(
+    image=image,
+    secrets=[secret],
+    volumes={VOLUME_MOUNT: volume},
+    gpu=GPU_EVAL,
+    timeout=TIMEOUT_EVAL,
+)
+def stage_needle_reeval() -> None:
+    """
+    Re-run the needle-in-haystack eval (likelihood-ranking variant) on all three
+    d20 checkpoints, preserving the existing BPB results in the JSON.
+    """
+    volume.reload()
+    _setup_cache()
+
+    tags = [TAG_PHASE1, TAG_PHASE2, TAG_BASELINE]
+    results_path = os.path.join(NANOCHAT_CACHE, "part3_eval_results.json")
+
+    print(f"\n{'=' * 60}")
+    print("Needle-in-haystack re-eval (likelihood ranking, 10-way)")
+    print(f"{'=' * 60}")
+    _python(
+        "part3.eval_longctx",
+        [
+            f"--tags={','.join(tags)}",
+            f"--output={results_path}",
+            "--n-samples=200",
+            "--skip-bpb",
+        ],
+    )
+    volume.commit()
+    print(f"\nResults written to: {results_path}")
+
 
 # =============================================================================
 # D12 QUICK TEST — validates full pipeline in ~15 minutes
