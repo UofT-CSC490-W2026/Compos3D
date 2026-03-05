@@ -1,25 +1,3 @@
-"""
-vol_clean.py — Delete one or more directories from the nanochat Modal volume.
-
-Usage
------
-# Preview what would be deleted (dry-run, default):
-    python part3/vol_clean.py nanochat_cache/base_checkpoints
-    python part3/vol_clean.py nanochat_cache/base_checkpoints nanochat_cache/chatsft_checkpoints
-
-# Actually delete:
-    python part3/vol_clean.py --delete nanochat_cache/base_checkpoints
-    python part3/vol_clean.py --delete nanochat_cache/base_checkpoints nanochat_cache/chatsft_checkpoints
-
-# Common targets:
-#   nanochat_cache/base_checkpoints       pretrain checkpoints
-#   nanochat_cache/chatsft_checkpoints    SFT checkpoints
-#   nanochat_cache/chatrl_checkpoints     RL checkpoints
-#   nanochat_cache/report                 markdown report files
-#   nanochat_cache/base_data_climbmix     downloaded data shards
-#   nanochat_cache/eval_bundle            eval benchmark bundle
-"""
-
 import argparse
 import subprocess
 import sys
@@ -28,10 +6,8 @@ VOLUME = "nanochat-vol"
 
 
 def modal_ls(path: str) -> list[str]:
-    """Return a list of entries under `path` in the volume (empty if not found)."""
     result = subprocess.run(
-        ["modal", "volume", "ls", VOLUME, f"/{path}"],
-        capture_output=True, text=True
+        ["modal", "volume", "ls", VOLUME, f"/{path}"], capture_output=True, text=True
     )
     if result.returncode != 0:
         return []
@@ -39,11 +15,9 @@ def modal_ls(path: str) -> list[str]:
 
 
 def modal_rm(path: str) -> int:
-    """Recursively delete `path` from the volume. Returns the exit code."""
     print(f"  Deleting /{path} ...")
     result = subprocess.run(
-        ["modal", "volume", "rm", "-r", VOLUME, f"/{path}"],
-        text=True
+        ["modal", "volume", "rm", "-r", VOLUME, f"/{path}"], text=True
     )
     return result.returncode
 
@@ -71,7 +45,6 @@ def main():
 
     errors = 0
     for path in args.paths:
-        # Normalise: strip leading slash so we can safely prepend one for modal
         path = path.lstrip("/")
 
         print(f"[{'DELETE' if args.delete else 'DRY-RUN'}] /{path}")
