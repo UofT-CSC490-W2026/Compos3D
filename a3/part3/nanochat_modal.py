@@ -1335,8 +1335,8 @@ def stage_make_eval_figures_p3() -> None:
         from end of context) for Phase 1, Phase 2, and Baseline.
         Random-chance baseline (10 %) shown as a dotted line.
 
-    All PNGs are saved to nanochat_cache/report/ on the shared volume and
-    logged as images to the nanochat-part3 W&B project.
+    All PDFs are saved to nanochat_cache/report/ on the shared volume and
+    logged as a W&B artifact to the nanochat-part3 project.
     Requires stage_eval_and_report to have been run first.
     """
     import os
@@ -1457,8 +1457,8 @@ def stage_make_eval_figures_p3() -> None:
     ax1.legend(fontsize=9, loc="upper right")
     ax1.grid(alpha=0.3)
 
-    fig1_path = os.path.join(report_dir, "p3_training_curves.png")
-    fig1.savefig(fig1_path, dpi=150, bbox_inches="tight")
+    fig1_path = os.path.join(report_dir, "p3_training_curves.pdf")
+    fig1.savefig(fig1_path, format="pdf", bbox_inches="tight")
     plt.close(fig1)
     print(f"Saved: {fig1_path}")
 
@@ -1499,8 +1499,8 @@ def stage_make_eval_figures_p3() -> None:
     ax2.legend(fontsize=9)
     ax2.grid(axis="y", alpha=0.3)
 
-    fig2_path = os.path.join(report_dir, "p3_bpb_by_position.png")
-    fig2.savefig(fig2_path, dpi=150, bbox_inches="tight")
+    fig2_path = os.path.join(report_dir, "p3_bpb_by_position.pdf")
+    fig2.savefig(fig2_path, format="pdf", bbox_inches="tight")
     plt.close(fig2)
     print(f"Saved: {fig2_path}")
 
@@ -1550,8 +1550,8 @@ def stage_make_eval_figures_p3() -> None:
     ax3.legend(fontsize=9, loc="upper right")
     ax3.grid(alpha=0.3)
 
-    fig3_path = os.path.join(report_dir, "p3_needle_accuracy.png")
-    fig3.savefig(fig3_path, dpi=150, bbox_inches="tight")
+    fig3_path = os.path.join(report_dir, "p3_needle_accuracy.pdf")
+    fig3.savefig(fig3_path, format="pdf", bbox_inches="tight")
     plt.close(fig3)
     print(f"Saved: {fig3_path}")
 
@@ -1564,14 +1564,12 @@ def stage_make_eval_figures_p3() -> None:
         job_type="figures",
         name="p3_eval_figures",
     ) as wrun:
-        wrun.log(
-            {
-                "eval/training_curves": wandb.Image(fig1_path),
-                "eval/bpb_by_position": wandb.Image(fig2_path),
-                "eval/needle_accuracy": wandb.Image(fig3_path),
-            }
-        )
-    print("Eval figures logged to W&B ✓")
+        artifact = wandb.Artifact("p3_eval_figures", type="figures")
+        artifact.add_file(fig1_path)
+        artifact.add_file(fig2_path)
+        artifact.add_file(fig3_path)
+        wrun.log_artifact(artifact)
+    print("Eval figures (PDF) logged to W&B as artifact ✓")
 
 
 # =============================================================================
@@ -1598,8 +1596,8 @@ def stage_make_sweep_figures_p3() -> None:
         4 groups (s256_p1 | s256_p2 | s512_p1 | s512_p2), 3 bars each.
         Same colour per frac across groups.
 
-    Both PNGs saved to the shared Volume (nanochat_cache/report/) and
-    logged as images to the part3_sweep W&B project.
+    Both PDFs saved to the shared Volume (nanochat_cache/report/) and
+    logged as a W&B artifact to the part3_sweep project.
     """
     import re
     import os
@@ -1749,8 +1747,8 @@ def stage_make_sweep_figures_p3() -> None:
         title_fontsize=8,
     )
 
-    fig1_path = os.path.join(report_dir, "p3_sweep_loss_curves.png")
-    fig1.savefig(fig1_path, dpi=150, bbox_inches="tight")
+    fig1_path = os.path.join(report_dir, "p3_sweep_loss_curves.pdf")
+    fig1.savefig(fig1_path, format="pdf", bbox_inches="tight")
     plt.close(fig1)
     print(f"Saved: {fig1_path}")
 
@@ -1829,8 +1827,8 @@ def stage_make_sweep_figures_p3() -> None:
         loc="upper right",
     )
 
-    fig2_path = os.path.join(report_dir, "p3_sweep_bar_chart.png")
-    fig2.savefig(fig2_path, dpi=150, bbox_inches="tight")
+    fig2_path = os.path.join(report_dir, "p3_sweep_bar_chart.pdf")
+    fig2.savefig(fig2_path, format="pdf", bbox_inches="tight")
     plt.close(fig2)
     print(f"Saved: {fig2_path}")
 
@@ -1843,10 +1841,8 @@ def stage_make_sweep_figures_p3() -> None:
         job_type="figures",
         name="sweep_figures_p3",
     ) as wrun:
-        wrun.log(
-            {
-                "sweep/loss_curves": wandb.Image(fig1_path),
-                "sweep/final_loss_bar": wandb.Image(fig2_path),
-            }
-        )
-    print("Figures logged to W&B ✓")
+        artifact = wandb.Artifact("p3_sweep_figures", type="figures")
+        artifact.add_file(fig1_path)
+        artifact.add_file(fig2_path)
+        wrun.log_artifact(artifact)
+    print("Sweep figures (PDF) logged to W&B as artifact ✓")

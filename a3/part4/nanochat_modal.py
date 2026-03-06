@@ -615,6 +615,128 @@ def quick_test() -> None:
 
 
 # =============================================================================
+# EMERGENT ABILITIES — picochat (d16) vs nanochat (d20) text generation
+# =============================================================================
+
+_EMERGENT_PROMPTS = [
+    "The water cycle is a natural process by which water evaporates from oceans,"
+    " rises into the atmosphere, and",
+    "The Pythagorean theorem states that in a right triangle, the square of the"
+    " hypotenuse equals",
+    "Democracy is a form of government in which political power is held by",
+    "The main difference between a virus and a bacterium is that viruses",
+    "To convert a temperature from Celsius to Fahrenheit, you multiply by 9/5 and",
+    "Newton's first law of motion states that an object at rest will remain at rest"
+    " unless",
+    "Shakespeare wrote the tragedy Hamlet, in which Prince Hamlet seeks revenge"
+    " against his uncle Claudius, who",
+    "In computer science, an algorithm is a finite sequence of well-defined"
+    " instructions that",
+    "The mitochondria are often called the powerhouse of the cell because they",
+    "The French Revolution began in 1789 when economic hardship and social"
+    " inequality led",
+    "Photosynthesis is the process by which plants use sunlight, water, and"
+    " carbon dioxide to produce",
+    "The circumference of a circle is calculated by multiplying pi by",
+    "The immune system protects the body against disease by recognising"
+    " and destroying",
+    "A sonnet is a 14-line poem that typically follows a strict rhyme scheme."
+    " Shakespeare's sonnets are famous for",
+    "In economics, the law of supply and demand states that when the price of"
+    " a good rises,",
+]
+
+
+@app.function(
+    image=image,
+    volumes={VOLUME_MOUNT: volume},
+    secrets=[secret],
+    gpu="H100:1",
+    timeout=60 * 30,  # 30 min — single-GPU inference, two models
+)
+def stage_emergent_abilities(
+    max_new_tokens: int = 80,
+    temperature: float = 0.0,  # greedy
+    top_k: int = 0,
+) -> None:
+    """
+    Load the d16 baseline (picochat) and d20 baseline (nanochat) models,
+    run greedy generation on each prompt, and save results to the volume
+    as JSON for later use in the LaTeX report.
+    """
+    import json
+    import glob
+    import sys
+    import torch
+
+    sys.path.insert(0, "/root/nanochat")
+    os.environ["BASE_DIR"] = NANOCHAT_CACHE
+
+    volume.reload()
+
+    from nanochat.checkpoint_manager import load_model
+    from nanochat.tokenizer import HuggingFaceTokenizer
+
+    device = torch.device("cuda")
+
+    def _find_step(tag: str) -> int:
+        ckpt_dir = os.path.join(NANOCHAT_CACHE, "base_checkpoints", tag)
+        files = glob.glob(os.path.join(ckpt_dir, "model_*.pt"))
+        if not files:
+            raise RuntimeError(f"No checkpoints under {ckpt_dir}")
+        return max(int(os.path.basename(f).split("_")[1].split(".")[0]) for f in files)
+
+    def _load(tag: str):
+        step = _find_step(tag)
+        print(f"Loading {tag} @ step {step}")
+        model, tokenizer, _ = load_model(
+            "base", device=device, phase="inference", model_tag=tag, step=step
+        )
+        model.eval()
+        return model, tokenizer
+
+    def _generate(model, tokenizer, prompt: str, max_tok: int) -> str:
+        ids = tokenizer.encode(prompt)
+        generated = []
+        for tok in model.generate(
+            ids,
+            max_tokens=max_tok,
+            temperature=temperature if temperature > 0 else 0,
+            top_k=top_k if top_k > 0 else None,
+            seed=42,
+        ):
+            generated.append(tok)
+        return tokenizer.decode(generated)
+
+    results = []
+    for tag, label in [
+        (TAG_D16_BASELINE, "picochat_d16"),
+        (TAG_D20_CURRICULUM, "nanochat_d20"),
+    ]:
+        model, tokenizer = _load(tag)
+        for prompt in _EMERGENT_PROMPTS:
+            continuation = _generate(model, tokenizer, prompt, max_new_tokens)
+            results.append(
+                {
+                    "model": label,
+                    "prompt": prompt,
+                    "continuation": continuation,
+                    "full": prompt + continuation,
+                }
+            )
+            print(f"\n[{label}] {prompt[:60]}...\n  → {continuation[:120]}")
+        del model  # free memory before loading next model
+
+    out_dir = os.path.join(NANOCHAT_CACHE, "report")
+    os.makedirs(out_dir, exist_ok=True)
+    out_path = os.path.join(out_dir, "emergent_abilities.json")
+    with open(out_path, "w") as f:
+        json.dump(results, f, indent=2)
+    volume.commit()
+    print(f"\nSaved {len(results)} entries → {out_path}")
+
+
+# =============================================================================
 # MAIN ENTRYPOINT — full Part 4 pipeline
 # =============================================================================
 
