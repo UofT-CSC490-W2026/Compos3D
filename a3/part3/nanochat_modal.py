@@ -1479,8 +1479,9 @@ def stage_make_sweep_figures_p3() -> None:
 
     for grp in GROUPS:
         cx = x
+        seq_g, phase_g = grp
         for i, frac in enumerate(FRACS):
-            val = final_loss.get((*grp, frac))
+            val = final_loss.get((seq_g, frac, phase_g))
             bx  = cx + offsets[i]
             if val is not None:
                 ax2.bar(bx, val, width=BAR_W, color=FRAC_COLORS[frac],
