@@ -160,6 +160,13 @@ image = (
         remote_path="/root/nanochat/scripts/base_eval.py",
         copy=True,
     )
+    .add_local_file(
+        local_path=os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "patches", "gpt.py"
+        ),
+        remote_path="/root/nanochat/model/gpt.py",
+        copy=True,
+    )
     .workdir("/root/nanochat")
     .run_commands(
         "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y",
