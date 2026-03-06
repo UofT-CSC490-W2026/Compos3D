@@ -107,6 +107,31 @@ checkpoints, then writes a markdown report.
 modal run part3/nanochat_modal.py::stage_eval_and_report 2>&1 | tee /tmp/p3_d16_eval.log
 ```
 
+### 5. Eval figures
+
+CPU-only Modal job (no GPU needed). Requires step 4 to have completed.
+
+Generates three figures from the eval JSON + W&B training-curve data:
+
+- **`p3_training_curves.png`** — Phase 1 and Phase 2 loss on the same axes,
+  with a vertical dashed marker at the Phase 1→2 boundary. Baseline shown
+  as a dashed line.
+- **`p3_bpb_by_position.png`** — Grouped bar chart of BPB for each of the four
+  non-overlapping 512-token segments (seg0–seg3) of a 2048-token sequence.
+  Three bar clusters: Phase 1 (ctx=512), Phase 2 (ctx=2048, warm-start),
+  Baseline (ctx=2048, full).
+- **`p3_needle_accuracy.png`** — 10-way needle-in-haystack retrieval accuracy
+  vs needle distance (in tokens) for all three checkpoints. Random-chance
+  baseline (10 %) shown as a dotted line; Phase 1's blind zone (>512 tokens)
+  is shaded.
+
+All PNGs are saved to the shared volume under `nanochat_cache/report/` and
+logged as images to the `nanochat-part3` W&B project.
+
+```sh
+modal run part3/nanochat_modal.py::stage_make_eval_figures_p3 2>&1 | tee /tmp/p3_eval_figures.log
+```
+
 ---
 
 ## Credits
