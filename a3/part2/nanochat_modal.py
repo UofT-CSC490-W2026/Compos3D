@@ -70,7 +70,7 @@ DEVICE_BATCH_SIZE = 16    # d24 at 16 is safe; 32 may OOM on some H100 configs
 
 # ── WandB ─────────────────────────────────────────────────────────────────────
 # Set to "dummy" to disable WandB logging
-WANDB_RUN = "dummy"
+WANDB_RUN = "baseline-d16"
 
 # ── Volume mount path ──────────────────────────────────────────────────────────
 # All cached data (shards, tokenizer, checkpoints, eval bundle) lives here
