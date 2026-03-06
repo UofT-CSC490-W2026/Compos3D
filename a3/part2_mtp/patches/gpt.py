@@ -11,13 +11,15 @@ Notable features:
 - Group-Query Attention (GQA) support for more efficient inference
 - Flash Attention 3 integration
 
-Patch for a2_mtp: adds Meta-style Multi-Token Prediction (MTP) with weight tying.
-  GPTConfig gains mtp_k (int, default 0).
-  When mtp_k > 0 and training, forward() computes k extra CE losses using the SAME
-  lm_head weights but with targets shifted by 1..k positions (weight-tied heads).
-  No extra parameters. Inference is unchanged (mtp_k is ignored without targets).
+Patch for part2 (MTP + YaRN):
+  GPTConfig gains:
+    mtp_k    (int,   default 0)     — number of weight-tied MTP heads (0=disabled)
+    rope_type (str,  default "rope") — "rope" for standard RoPE, "yarn" for YaRN NTK-by-Parts
+    yarn_scale (float, default 8.0) — YaRN context extension factor (only used when rope_type="yarn")
+  All three options are independent and can be combined freely (e.g. mtp_k=2, rope_type="yarn").
 """
 
+import math
 from functools import partial
 from dataclasses import dataclass
 
@@ -47,6 +49,11 @@ class GPTConfig:
     # mtp_k > 0: compute k additional CE losses predicting tokens at offsets +1..+k,
     # all using the same shared lm_head weight. No extra parameters.
     mtp_k: int = 0
+    # Positional encoding variant.
+    # "rope" : standard Rotary Position Embedding (default)
+    # "yarn" : YaRN NTK-by-Parts scaled RoPE (Peng et al. 2023)
+    rope_type: str = "rope"
+    yarn_scale: float = 8.0   # YaRN target context extension factor (only used when rope_type="yarn")
 
 
 def norm(x):
@@ -251,20 +258,59 @@ class GPT(nn.Module):
                 ve.to(dtype=torch.bfloat16)
 
     def _precompute_rotary_embeddings(self, seq_len, head_dim, base=10000, device=None):
-        # TODO: bump base theta more? e.g. 100K is more common more recently
-        # autodetect the device from model embeddings
+        """Dispatch to standard RoPE or YaRN based on config.rope_type."""
         if device is None:
             device = self.transformer.wte.weight.device
-        # stride the channels
+        if self.config.rope_type == "yarn":
+            return self._precompute_yarn_embeddings(
+                seq_len, head_dim, base=base,
+                scale=self.config.yarn_scale, device=device,
+            )
+        return self._precompute_rope_embeddings(seq_len, head_dim, base=base, device=device)
+
+    def _precompute_rope_embeddings(self, seq_len, head_dim, base=10000, device=None):
+        """Standard RoPE frequencies."""
+        if device is None:
+            device = self.transformer.wte.weight.device
         channel_range = torch.arange(0, head_dim, 2, dtype=torch.float32, device=device)
         inv_freq = 1.0 / (base ** (channel_range / head_dim))
-        # stride the time steps
         t = torch.arange(seq_len, dtype=torch.float32, device=device)
-        # calculate the rotation frequencies at each (time, channel) pair
         freqs = torch.outer(t, inv_freq)
         cos, sin = freqs.cos(), freqs.sin()
-        cos, sin = cos.bfloat16(), sin.bfloat16() # keep them in bfloat16
-        cos, sin = cos[None, :, None, :], sin[None, :, None, :] # add batch and head dims for later broadcasting
+        cos, sin = cos.bfloat16(), sin.bfloat16()
+        cos, sin = cos[None, :, None, :], sin[None, :, None, :]
+        return cos, sin
+
+    def _precompute_yarn_embeddings(
+        self, seq_len, head_dim, base=10000, scale=8.0,
+        alpha=1.0, beta=32.0, device=None,
+    ):
+        """
+        YaRN NTK-by-Parts rotary embeddings (Peng et al., 2023).
+
+        Each frequency dimension is classified as:
+          - high-freq (wavelength < α·seq_len): pass-through, no change
+          - low-freq  (wavelength > β·seq_len): linearly interpolated (scaled by 1/scale)
+          - mid-freq  (in between):             linear blend
+
+        With scale=1.0 this degenerates to standard RoPE.
+        With scale=8.0 (default) the model is prepared for 8× context extension.
+        """
+        if device is None:
+            device = self.transformer.wte.weight.device
+        channel_range = torch.arange(0, head_dim, 2, dtype=torch.float32, device=device)
+        freq_base   = 1.0 / (base ** (channel_range / head_dim))   # unscaled
+        freq_scaled = freq_base / scale                             # linearly interpolated
+        wavelength  = 2.0 * math.pi / freq_base                    # per-dim wavelength (tokens)
+        r = wavelength / seq_len                                    # normalised wavelength
+        # γ=0 → high-freq (no change), γ=1 → low-freq (scaled)
+        gamma = ((r - alpha) / (beta - alpha)).clamp(0.0, 1.0)
+        inv_freq = (1.0 - gamma) * freq_base + gamma * freq_scaled
+        t = torch.arange(seq_len, dtype=torch.float32, device=device)
+        freqs = torch.outer(t, inv_freq)
+        cos, sin = freqs.cos(), freqs.sin()
+        cos, sin = cos.bfloat16(), sin.bfloat16()
+        cos, sin = cos[None, :, None, :], sin[None, :, None, :]
         return cos, sin
 
     def _compute_window_sizes(self, config):

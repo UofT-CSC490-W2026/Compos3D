@@ -24,7 +24,7 @@ modal secret create nanochat-secrets \
 ```
 
 > [!NOTE]
-> To avoid making changes to nanochat, we make all our changes to nanochat through the use of the `patches` directory which overwrites certain nanochat files during execution. This includes a patched `gpt.py` that adds the `mtp_k` field to `GPTConfig` and implements the weight-tied MTP loss in `forward()`.
+> To avoid making changes to nanochat, we make all our changes to nanochat through the use of the `patches` directory which overwrites certain nanochat files during execution. This includes a patched `gpt.py` that adds the `mtp_k`, `rope_type`, and `yarn_scale` fields to `GPTConfig`, implements the weight-tied MTP loss in `forward()`, and adds the YaRN NTK-by-Parts rotary embedding variant.
 
 ## Run experiments
 
@@ -36,12 +36,13 @@ Run the following commands one after another from your environment from inside t
 modal run part2_mtp/nanochat_modal.py::quick_test_d12 2>&1 | tee /tmp/a2mtp_quicktest.log
 ```
 
-2. Run all three d16 training experiments in parallel.
+2. Run all four d16 training experiments in parallel.
 
 ```sh
 modal run part2_mtp/nanochat_modal.py::stage_train_baseline 2>&1 | tee /tmp/a2mtp_baseline.log &
 modal run part2_mtp/nanochat_modal.py::stage_train_mtp2 2>&1 | tee /tmp/a2mtp_mtp2.log &
 modal run part2_mtp/nanochat_modal.py::stage_train_mtp4 2>&1 | tee /tmp/a2mtp_mtp4.log &
+modal run part2_mtp/nanochat_modal.py::stage_train_mtp2_yarn 2>&1 | tee /tmp/a2mtp_mtp2_yarn.log &
 wait
 ```
 
