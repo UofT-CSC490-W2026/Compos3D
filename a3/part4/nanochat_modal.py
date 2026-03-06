@@ -243,17 +243,17 @@ def _setup_cache() -> None:
 
 
 def _find_last_step(model_tag: str) -> int:
-    """Return the highest step number saved under base_checkpoints/<model_tag>/."""
+    """Return the highest checkpoint step saved under base_checkpoints/<model_tag>/.
+
+    Checkpoints are written as flat files model_{step:06d}.pt inside the tag directory.
+    """
+    import glob
     ckpt_dir = os.path.join(NANOCHAT_CACHE, "base_checkpoints", model_tag)
     volume.reload()
-    steps = [
-        int(d.split("step")[-1])
-        for d in os.listdir(ckpt_dir)
-        if d.startswith("step")
-    ]
-    if not steps:
+    files = glob.glob(os.path.join(ckpt_dir, "model_*.pt"))
+    if not files:
         raise RuntimeError(f"No checkpoints found under {ckpt_dir}")
-    return max(steps)
+    return max(int(os.path.basename(f).split("_")[1].split(".")[0]) for f in files)
 
 
 def _ensure_eval_bundle() -> None:
