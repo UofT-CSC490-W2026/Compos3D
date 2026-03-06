@@ -656,84 +656,89 @@ _EMERGENT_PROMPTS = [
 )
 def stage_emergent_abilities(
     max_new_tokens: int = 80,
-    temperature: float = 0.0,  # greedy
-    top_k: int = 0,
 ) -> None:
     """
     Load the d16 baseline (picochat) and d20 baseline (nanochat) models,
     run greedy generation on each prompt, and save results to the volume
     as JSON for later use in the LaTeX report.
+
+    Runs inference inside the uv-managed venv (same pattern as training stages)
+    to avoid 'No module named torch' errors when importing from system Python.
     """
     import json
-    import glob
-    import sys
-    import torch
-
-    sys.path.insert(0, "/root/nanochat")
-    os.environ["BASE_DIR"] = NANOCHAT_CACHE
+    import textwrap
 
     volume.reload()
-
-    from nanochat.checkpoint_manager import load_model
-    from nanochat.tokenizer import HuggingFaceTokenizer
-
-    device = torch.device("cuda")
-
-    def _find_step(tag: str) -> int:
-        ckpt_dir = os.path.join(NANOCHAT_CACHE, "base_checkpoints", tag)
-        files = glob.glob(os.path.join(ckpt_dir, "model_*.pt"))
-        if not files:
-            raise RuntimeError(f"No checkpoints under {ckpt_dir}")
-        return max(int(os.path.basename(f).split("_")[1].split(".")[0]) for f in files)
-
-    def _load(tag: str):
-        step = _find_step(tag)
-        print(f"Loading {tag} @ step {step}")
-        model, tokenizer, _ = load_model(
-            "base", device=device, phase="inference", model_tag=tag, step=step
-        )
-        model.eval()
-        return model, tokenizer
-
-    def _generate(model, tokenizer, prompt: str, max_tok: int) -> str:
-        ids = tokenizer.encode(prompt)
-        generated = []
-        for tok in model.generate(
-            ids,
-            max_tokens=max_tok,
-            temperature=temperature if temperature > 0 else 0,
-            top_k=top_k if top_k > 0 else None,
-            seed=42,
-        ):
-            generated.append(tok)
-        return tokenizer.decode(generated)
-
-    results = []
-    for tag, label in [
-        (TAG_D16_BASELINE, "picochat_d16"),
-        (TAG_D20_CURRICULUM, "nanochat_d20"),
-    ]:
-        model, tokenizer = _load(tag)
-        for prompt in _EMERGENT_PROMPTS:
-            continuation = _generate(model, tokenizer, prompt, max_new_tokens)
-            results.append(
-                {
-                    "model": label,
-                    "prompt": prompt,
-                    "continuation": continuation,
-                    "full": prompt + continuation,
-                }
-            )
-            print(f"\n[{label}] {prompt[:60]}...\n  → {continuation[:120]}")
-        del model  # free memory before loading next model
+    _setup_cache()
 
     out_dir = os.path.join(NANOCHAT_CACHE, "report")
     os.makedirs(out_dir, exist_ok=True)
     out_path = os.path.join(out_dir, "emergent_abilities.json")
-    with open(out_path, "w") as f:
-        json.dump(results, f, indent=2)
+
+    # Serialise prompt list and model tags into the script so there are
+    # no import/pickle complications across the subprocess boundary.
+    prompts_repr = repr(_EMERGENT_PROMPTS)
+    tag_d16 = TAG_D16_BASELINE
+    tag_d20 = TAG_D20_CURRICULUM
+
+    script = textwrap.dedent(f"""
+        import glob, json, os, sys
+        import torch
+        from contextlib import nullcontext
+        sys.path.insert(0, "/root/nanochat")
+        os.environ["BASE_DIR"] = "{NANOCHAT_CACHE}"
+
+        from nanochat.checkpoint_manager import load_model
+
+        PROMPTS = {prompts_repr}
+        TAGS = [("{tag_d16}", "picochat_d16"), ("{tag_d20}", "nanochat_d20")]
+        MAX_TOK = {max_new_tokens}
+        device = torch.device("cuda")
+        autocast_ctx = torch.amp.autocast(device_type="cuda", dtype=torch.bfloat16)
+
+        def find_step(tag):
+            ckpt_dir = os.path.join("{NANOCHAT_CACHE}", "base_checkpoints", tag)
+            files = glob.glob(os.path.join(ckpt_dir, "model_*.pt"))
+            if not files:
+                raise RuntimeError(f"No checkpoints under {{ckpt_dir}}")
+            return max(int(os.path.basename(f).split("_")[1].split(".")[0]) for f in files)
+
+        results = []
+        for tag, label in TAGS:
+            step = find_step(tag)
+            print(f"\\nLoading {{label}} ({{tag}}) @ step {{step}}", flush=True)
+            model, tokenizer, _ = load_model("base", device=device, phase="eval",
+                                             model_tag=tag, step=step)
+            model.eval()
+            for prompt in PROMPTS:
+                ids = tokenizer.encode(prompt)
+                generated = []
+                with autocast_ctx:
+                    for tok in model.generate(ids, max_tokens=MAX_TOK, temperature=0, seed=42):
+                        generated.append(tok)
+                cont = tokenizer.decode(generated)
+                results.append(dict(model=label, prompt=prompt, continuation=cont,
+                                    full=prompt + cont))
+                print(f"  [{{label}}] {{prompt[:55]}}...\\n    → {{cont[:100]}}", flush=True)
+            del model
+
+        out = "{out_path}"
+        with open(out, "w") as fh:
+            json.dump(results, fh, indent=2)
+        print(f"\\nSaved {{len(results)}} entries → {{out}}")
+    """)
+
+    script_path = "/tmp/run_emergent.py"
+    with open(script_path, "w") as f:
+        f.write(script)
+
+    _run(
+        f"cd /root/nanochat && "
+        f"PYTHONPATH=/root/nanochat:$PYTHONPATH "
+        f"uv run python {script_path}"
+    )
     volume.commit()
-    print(f"\nSaved {len(results)} entries → {out_path}")
+    print("Done — results written to volume.")
 
 
 # =============================================================================
