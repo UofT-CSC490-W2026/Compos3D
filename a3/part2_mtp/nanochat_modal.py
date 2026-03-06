@@ -78,6 +78,26 @@ TAG_D12_MTP2_YARN = "a2mtp/d12_mtp2_yarn"
 
 YARN_SCALE = 8.0  # YaRN context extension factor
 
+# =============================================================================
+# HYPERPARAMETER SWEEP — 9 short d16 runs, H100:2, 300 steps each
+# =============================================================================
+
+SWEEP_LRS      = [0.01, 0.02, 0.04]        # matrix LR values to test
+SWEEP_BATCHES  = [131072, 262144, 524288]   # total batch sizes to test
+SWEEP_STEPS    = 300
+GPU_SWEEP      = "H100:2"
+DEVICE_BATCH_SWEEP = 16                    # per-GPU device batch; grad_accum derived automatically
+TIMEOUT_SWEEP  = 60 * 60 * 14             # 14 h for 4 configs × 9 runs = 36 sequential runs
+WANDB_PROJECT_SWEEP = "part2_sweep"
+
+# All 4 configs to sweep — each gets its own 9-run LR×batch grid
+SWEEP_CONFIGS = [
+    dict(name="baseline",  mtp_k=0, rope_type="rope",  yarn_scale=YARN_SCALE),
+    dict(name="mtp2",      mtp_k=2, rope_type="rope",  yarn_scale=YARN_SCALE),
+    dict(name="mtp4",      mtp_k=4, rope_type="rope",  yarn_scale=YARN_SCALE),
+    dict(name="mtp2_yarn", mtp_k=2, rope_type="yarn",  yarn_scale=YARN_SCALE),
+]
+
 WANDB_PROJECT         = "part2_mtp"
 WANDB_RUN_BASELINE    = "d16_baseline"
 WANDB_RUN_MTP2        = "d16_mtp2"
@@ -402,6 +422,99 @@ def _build_report_markdown(
 
 _N_TRAIN_GPUS = int(GPU_TRAIN.split(":")[1]) if ":" in GPU_TRAIN else 1
 _N_EVAL_GPUS = int(GPU_EVAL.split(":")[1]) if ":" in GPU_EVAL else 1
+
+
+# =============================================================================
+# STAGE: HYPERPARAMETER SWEEP — 9 sequential runs on 2×H100
+# =============================================================================
+
+_N_SWEEP_GPUS = int(GPU_SWEEP.split(":")[1]) if ":" in GPU_SWEEP else 1
+
+
+def _run_sweep_for_config(cfg: dict, depth: int) -> None:
+    """
+    Runs the 9-run LR×batch grid for a single config dict.
+    Called by each of the four per-config sweep stages.
+    """
+    _setup_cache()
+    cfg_name   = cfg["name"]
+    mtp_k      = cfg["mtp_k"]
+    rope_type  = cfg["rope_type"]
+    yarn_scale = cfg["yarn_scale"]
+    lrs        = SWEEP_LRS
+    batches    = SWEEP_BATCHES
+    n_steps    = SWEEP_STEPS
+    bs         = DEVICE_BATCH_SWEEP
+    nproc      = _N_SWEEP_GPUS
+    total      = len(lrs) * len(batches)
+
+    print(f"\n{'#' * 64}\nSweep config: {cfg_name}  mtp_k={mtp_k}  rope_type={rope_type}\n{'#' * 64}")
+
+    idx = 0
+    for lr in lrs:
+        for batch in batches:
+            idx += 1
+            run_name = f"sweep_{cfg_name}_lr{lr:g}_bs{batch // 1000}k"
+            tag      = f"a2mtp/sweep/{run_name}"
+            print(f"\n{'=' * 64}\n[{idx}/{total}] {run_name}\n{'=' * 64}")
+            _torchrun(
+                "scripts.base_train",
+                [
+                    f"--depth={depth}",
+                    "--max-seq-len=2048",
+                    f"--model-tag={tag}",
+                    f"--mtp-k={mtp_k}",
+                    f"--rope-type={rope_type}",
+                    f"--yarn-scale={yarn_scale}",
+                    f"--matrix-lr={lr}",
+                    f"--device-batch-size={bs}",
+                    f"--total-batch-size={batch}",
+                    f"--num-iterations={n_steps}",
+                    "--save-every=9999",        # no mid-run checkpoints
+                    "--core-metric-every=9999", # skip CORE eval
+                    "--sample-every=-1",
+                    f"--wandb-project={WANDB_PROJECT_SWEEP}",
+                    f"--run={run_name}",
+                ],
+                nproc=nproc,
+            )
+            volume.commit()
+            print(f"  Done: {run_name}")
+
+    print(
+        f"\n{'=' * 64}\n"
+        f"Config '{cfg_name}' sweep done. {total} runs in '{WANDB_PROJECT_SWEEP}'.\n"
+        f"Filter by '{cfg_name}' in W&B and sort by step-{n_steps} train/loss.\n"
+        f"{'=' * 64}"
+    )
+
+
+@app.function(image=image, secrets=[secret], volumes={VOLUME_MOUNT: volume},
+              gpu=GPU_SWEEP, timeout=TIMEOUT_SWEEP)
+def stage_sweep_baseline(depth: int = DEPTH) -> None:
+    """Sweep: baseline (mtp_k=0, rope=rope) — 9 runs, 300 steps each, 2×H100."""
+    _run_sweep_for_config(SWEEP_CONFIGS[0], depth)
+
+
+@app.function(image=image, secrets=[secret], volumes={VOLUME_MOUNT: volume},
+              gpu=GPU_SWEEP, timeout=TIMEOUT_SWEEP)
+def stage_sweep_mtp2(depth: int = DEPTH) -> None:
+    """Sweep: MTP-2 (mtp_k=2, rope=rope) — 9 runs, 300 steps each, 2×H100."""
+    _run_sweep_for_config(SWEEP_CONFIGS[1], depth)
+
+
+@app.function(image=image, secrets=[secret], volumes={VOLUME_MOUNT: volume},
+              gpu=GPU_SWEEP, timeout=TIMEOUT_SWEEP)
+def stage_sweep_mtp4(depth: int = DEPTH) -> None:
+    """Sweep: MTP-4 (mtp_k=4, rope=rope) — 9 runs, 300 steps each, 2×H100."""
+    _run_sweep_for_config(SWEEP_CONFIGS[2], depth)
+
+
+@app.function(image=image, secrets=[secret], volumes={VOLUME_MOUNT: volume},
+              gpu=GPU_SWEEP, timeout=TIMEOUT_SWEEP)
+def stage_sweep_mtp2_yarn(depth: int = DEPTH) -> None:
+    """Sweep: MTP-2+YaRN (mtp_k=2, rope=yarn) — 9 runs, 300 steps each, 2×H100."""
+    _run_sweep_for_config(SWEEP_CONFIGS[3], depth)
 
 
 # =============================================================================
