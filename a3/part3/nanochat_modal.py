@@ -164,7 +164,7 @@ image = (
         local_path=os.path.join(
             os.path.dirname(os.path.abspath(__file__)), "patches", "gpt.py"
         ),
-        remote_path="/root/nanochat/model/gpt.py",
+        remote_path="/root/nanochat/nanochat/gpt.py",
         copy=True,
     )
     .workdir("/root/nanochat")
