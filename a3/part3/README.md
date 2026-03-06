@@ -1,4 +1,18 @@
-## Setup 
+## Overview
+
+Part 3 trains a **d16 picochat** with a context-length curriculum: first at a short
+sequence length (Phase 1), then extended to 2048 (Phase 2), and compares against a
+d16 baseline trained at 2048 from scratch.
+
+> [!NOTE]
+> The d20 runs are also done through this code.
+> (tags `part3/d20_ctx512`, `part3/d20_ctx2048`, `part3/d20_baseline`).
+> Those results are reused in **Part 4** as the nanochat baseline
+> All commands below operate exclusively on d16 checkpoints.
+
+---
+
+## Setup
 
 > [!NOTE]
 > Make sure to do a recursive clone of this repo to get the nanochat submodule.
@@ -13,7 +27,7 @@ uv pip install modal    # install Modal
 modal setup             # authenticate with Modal
 ```
 
-pass API keys as a Modal secret
+Pass API keys as a Modal secret
 - W&B key:  https://wandb.ai/authorize
 - HF token: https://huggingface.co/settings/tokens
 - HF token is needed to download the FineWeb-EDU dataset
@@ -24,37 +38,104 @@ modal secret create nanochat-secrets \
 ```
 
 > [!NOTE]
-> To avoid making changes to nanochat, we make all our changes to nanochat through the use of the `patches` directory which overwrites certain nanochat files during execution.
+> To avoid making changes to nanochat, all modifications are applied through the
+> `patches/` directory, which overwrites specific nanochat files at container
+> build time. The nanochat submodule itself stays clean.
+
+---
 
 ## Run experiments
 
-Run the following commands one after another from your environment from inside the `a3` directory.
+All commands are run from inside the `a3` directory.
 
-I. Part 2
-1. Run the training on picochat depth=16 and using YaRN embedding:
-```
-modal run part2/nanochat_modal_yarn.py
-```
+### 1. Hyperparameter sweep
 
-II. Part 3
-1. Run the training on 512 and 20248 context sizes.
+Sweeps 6 curriculum configurations: 2 Phase 1 sequence lengths × 3 Phase 1
+budget fractions. Each combo trains 300 steps at the Phase 1 seq length, then
+warm-starts and trains 300 more steps at seq=2048. Results log to the
+`part3_sweep` W&B project.
 
-```sh
-modal run part3/nanochat_modal.py::stage_pretrain_phase1 2>&1 | tee /tmp/d20_phase1.log && \
-modal run part3/nanochat_modal.py::stage_pretrain_phase2 2>&1 | tee /tmp/d20_phase2.log
-```
-
-2. Run the baseline model.
+Run both groups **in parallel** (one container per seq length, 3 fracs each):
 
 ```sh
-modal run part3/nanochat_modal.py::stage_pretrain_baseline 2>&1 | tee /tmp/d20_baseline.log
+modal run part3/nanochat_modal.py::stage_sweep_p3_s256 2>&1 | tee /tmp/p3_sweep_s256.log &
+modal run part3/nanochat_modal.py::stage_sweep_p3_s512 2>&1 | tee /tmp/p3_sweep_s512.log &
+wait
 ```
 
-3. Compute metrics and generate a report.
+W&B run names follow the pattern `sweep_s{seq}_f{frac}_phase{1,2}`
+(e.g. `sweep_s512_f40_phase1`). Pick the `(seq, frac)` combo with the lowest
+Phase 2 BPB at step 300 to justify the Phase 1 fraction used in the main runs.
+
+Once the sweeps have finished, generate the figures (CPU-only job, no GPU needed):
 
 ```sh
-modal run part3/nanochat_modal.py::stage_eval_and_report 2>&1 | tee /tmp/d20_eval_report.log
+modal run part3/nanochat_modal.py::stage_make_sweep_figures_p3 2>&1 | tee /tmp/p3_sweep_figures.log
 ```
+
+This saves two PNGs to the volume under `nanochat_cache/report/` and logs them to the `part3_sweep` W&B project:
+- `p3_sweep_loss_curves.png` — 2×2 panel loss curves (rows = seq len, columns = phase, 3 coloured lines per frac).
+- `p3_sweep_bar_chart.png` — grouped bar chart of final-step loss across all 4 groups (s256_p1/p2, s512_p1/p2).
+
+### 2. Smoke test
+
+Validates the full two-phase curriculum pipeline end-to-end at d12 scale
+before spending money on d16.
+
+```sh
+modal run part3/nanochat_modal.py::quick_test_d12 2>&1 | tee /tmp/p3_quicktest.log
+```
+
+### 3. Main d16 training
+
+Phase 1 must complete before Phase 2 can start (Phase 2 warm-starts from the
+Phase 1 checkpoint). Phase 2 and Baseline can then run in parallel.
+
+```sh
+# Phase 1 first (sequential)
+modal run part3/nanochat_modal.py::stage_pretrain_phase1 2>&1 | tee /tmp/p3_d16_phase1.log
+
+# Then Phase 2 and Baseline in parallel
+modal run part3/nanochat_modal.py::stage_pretrain_phase2    2>&1 | tee /tmp/p3_d16_phase2.log &
+modal run part3/nanochat_modal.py::stage_pretrain_baseline  2>&1 | tee /tmp/p3_d16_baseline.log &
+wait
+```
+
+### 4. Eval + report
+
+Runs CORE benchmark + needle-in-haystack custom eval on all three d16
+checkpoints, then writes a markdown report.
+
+```sh
+modal run part3/nanochat_modal.py::stage_eval_and_report 2>&1 | tee /tmp/p3_d16_eval.log
+```
+
+### 5. Eval figures
+
+CPU-only Modal job (no GPU needed). Requires step 4 to have completed.
+
+Generates three figures from the eval JSON + W&B training-curve data:
+
+- **`p3_training_curves.png`** — Phase 1 and Phase 2 loss on the same axes,
+  with a vertical dashed marker at the Phase 1→2 boundary. Baseline shown
+  as a dashed line.
+- **`p3_bpb_by_position.png`** — Grouped bar chart of BPB for each of the four
+  non-overlapping 512-token segments (seg0–seg3) of a 2048-token sequence.
+  Three bar clusters: Phase 1 (ctx=512), Phase 2 (ctx=2048, warm-start),
+  Baseline (ctx=2048, full).
+- **`p3_needle_accuracy.png`** — 10-way needle-in-haystack retrieval accuracy
+  vs needle distance (in tokens) for all three checkpoints. Random-chance
+  baseline (10 %) shown as a dotted line; Phase 1's blind zone (>512 tokens)
+  is shaded.
+
+All PNGs are saved to the shared volume under `nanochat_cache/report/` and
+logged as images to the `nanochat-part3` W&B project.
+
+```sh
+modal run part3/nanochat_modal.py::stage_make_eval_figures_p3 2>&1 | tee /tmp/p3_eval_figures.log
+```
+
+---
 
 ## Credits
 

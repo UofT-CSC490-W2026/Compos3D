@@ -1,19 +1,24 @@
 """
-Part 3: Picochat Context Length Curriculum
-==========================================
+Part 3: Picochat Context Length Curriculum (d16)
+=================================================
 
 Three training experiments:
-  1. Phase 1  — picochat (d20) at seq=512,  40% of Chinchilla token budget
+  1. Phase 1  — picochat (d16) at seq=512,  40% of Chinchilla token budget
   2. Phase 2  — continue from Phase 1 at seq=2048, remaining 60% of budget
-  3. Baseline — picochat (d20) at seq=2048,  full Chinchilla budget from scratch
+  3. Baseline — picochat (d16) at seq=2048,  full Chinchilla budget from scratch
 
 Phase 2 and Baseline run in parallel after Phase 1.
+The d20 runs are preserved as Part 4 nanochat baselines.
 
 All checkpoints land in nanochat_cache/base_checkpoints/part3/ on the volume.
 
 Usage
 -----
-Full pipeline (d12 smoke-test, then d20):
+Sweep (justify curriculum choices):
+    modal run nanochat_modal.py::stage_sweep_p3_s256 &
+    modal run nanochat_modal.py::stage_sweep_p3_s512 &
+
+Full pipeline (d12 smoke-test, then d16):
     modal run nanochat_modal.py
 
 Individual stages:
@@ -27,10 +32,11 @@ Individual stages:
 Cost reference (8×H100 ~$31/hr)
 ---------------------------------
     d12 quick test    : ~15 min   (~$8)
-    d20 Phase 1       : ~45 min   (~$23)
-    d20 Phase 2       : ~60 min   (~$31) ]  run in parallel
-    d20 Baseline      : ~90 min   (~$46) ]
-    eval              : ~45 min   (~$12, 2×H100)
+    sweep (2×H100:4)  : ~30 min   (~$8)   ]  run in parallel
+    d16 Phase 1       : ~30 min   (~$16)
+    d16 Phase 2       : ~45 min   (~$23)  ]  run in parallel
+    d16 Baseline      : ~60 min   (~$31)  ]
+    eval              : ~30 min   (~$8,  H100:4)
 """
 
 import os
@@ -43,35 +49,33 @@ from modal import App, Image as ModalImage, Volume, Secret
 # CONFIGURATION
 # =============================================================================
 
-DEPTH = 20  # picochat = d20 (~560M params)
+DEPTH = 16  # picochat = d16 (~234M scaling params)
 GPU_TRAIN = "H100:8"
 GPU_EVAL = "H100:4"
 
 # Device batch sizes
-DEVICE_BATCH_PHASE1 = 32  # seq=512 use 4× shorter batch for faster training
-DEVICE_BATCH_PHASE2 = 16  # seq=2048
-DEVICE_BATCH_BASELINE = 16
+DEVICE_BATCH_PHASE1 = 32   # seq=512
+DEVICE_BATCH_PHASE2 = 32   # seq=2048, d16 comfortably fits 32/H100
+DEVICE_BATCH_BASELINE = 32
 
 # Fixed total batch size (tokens per optimizer step) for all three runs so
 # gradient accumulation and LR scales are comparable.
 TOTAL_BATCH_SIZE = 524288
 
-# Chinchilla-optimal token budget for d20:
-#   model_dim = depth * aspect_ratio = 20 * 64 = 1280
-#   Each transformer layer (attention + MLP matrices):
-#     attn: 4 * 1280^2 ≈ 6.55M  |  mlp: ~2 * 4 * 1280^2 ≈ 13.1M
-#   20 layers ≈ 393M transformer_matrices + lm_head ≈ 65M → scaling_params ≈ 458M
-#   target_param_data_ratio default = 10.5 → target_tokens ≈ 4.81B
-#   At total_batch_size=524288 → total_steps ≈ 9174
-# We use explicit --num-iterations for reproducibility across runs.
-CHINCHILLA_TOKENS = 4_810_000_000  # ≈ 10.5 × 458M scaling params
-PHASE1_FRAC = 0.40  # 40% at seq=512
+# Chinchilla-optimal token budget for d16:
+#   model_dim = depth * aspect_ratio = 16 * 64 = 1024
+#   Each transformer layer: attn ≈ 4*1024² + mlp ≈ 8*1024² ≈ 12.6M params/layer
+#   16 layers ≈ 201M transformer_matrices + lm_head ≈ 33.5M → scaling_params ≈ 234M
+#   target_param_data_ratio default = 10.5 → target_tokens ≈ 2.46B
+#   At total_batch_size=524288 → total_steps ≈ 4693
+CHINCHILLA_TOKENS = 2_460_000_000  # ≈ 10.5 × 234M scaling params
+PHASE1_FRAC = 0.40  # 40% at seq=512  (chosen from sweep)
 PHASE2_FRAC = 0.60  # 60% at seq=2048 (warm-started)
 
-N_TOTAL_STEPS = CHINCHILLA_TOKENS // TOTAL_BATCH_SIZE  # ≈ 9174
-N_PHASE1_STEPS = int(N_TOTAL_STEPS * PHASE1_FRAC)  # ≈ 3670
-N_PHASE2_STEPS = N_TOTAL_STEPS - N_PHASE1_STEPS  # ≈ 5504
-N_BASELINE_STEPS = N_TOTAL_STEPS  # full budget
+N_TOTAL_STEPS = CHINCHILLA_TOKENS // TOTAL_BATCH_SIZE   # ≈ 4693
+N_PHASE1_STEPS = int(N_TOTAL_STEPS * PHASE1_FRAC)       # ≈ 1877
+N_PHASE2_STEPS = N_TOTAL_STEPS - N_PHASE1_STEPS         # ≈ 2816
+N_BASELINE_STEPS = N_TOTAL_STEPS                        # full budget ≈ 4693
 
 # d12 quick-test step counts (just enough to exercise all code paths)
 N_D12_PHASE1_STEPS = 300
@@ -79,25 +83,43 @@ N_D12_PHASE2_STEPS = 300
 N_D12_BASELINE_STEPS = 300
 
 # Model tags (become subdirectories under base_checkpoints/)
-TAG_PHASE1 = "part3/d20_ctx512"
-TAG_PHASE2 = "part3/d20_ctx2048"
-TAG_BASELINE = "part3/d20_baseline"
+TAG_PHASE1   = "part3/d16_ctx512"
+TAG_PHASE2   = "part3/d16_ctx2048"
+TAG_BASELINE = "part3/d16_baseline"
 
-TAG_D12_PHASE1 = "part3/d12_ctx512"
-TAG_D12_PHASE2 = "part3/d12_ctx2048"
+TAG_D12_PHASE1   = "part3/d12_ctx512"
+TAG_D12_PHASE2   = "part3/d12_ctx2048"
 TAG_D12_BASELINE = "part3/d12_baseline"
 
-WANDB_PROJECT = "nanochat-part3"
-WANDB_RUN_PHASE1 = "p3_phase1"
-WANDB_RUN_PHASE2 = "p3_phase2"
-WANDB_RUN_BASELINE = "p3_baseline"
+WANDB_PROJECT      = "nanochat-part3"
+WANDB_RUN_PHASE1   = "p3_d16_phase1"
+WANDB_RUN_PHASE2   = "p3_d16_phase2"
+WANDB_RUN_BASELINE = "p3_d16_baseline"
 
-# Timeouts
-TIMEOUT_PHASE1 = 60 * 60 * 2  # 2 h
-TIMEOUT_PHASE2 = 60 * 60 * 3  # 3 h
-TIMEOUT_BASELINE = 60 * 60 * 3  # 3 h
-TIMEOUT_EVAL = 60 * 60 * 3  # 3 h (3× CORE eval on d20 + longctx)
-TIMEOUT_QUICKTEST = 60 * 60 * 1  # 1 h
+# Timeouts (d16 is roughly half the cost of d20)
+TIMEOUT_PHASE1   = 60 * 60 * 1    # 1 h
+TIMEOUT_PHASE2   = 60 * 60 * 2    # 2 h
+TIMEOUT_BASELINE = 60 * 60 * 2    # 2 h
+TIMEOUT_EVAL     = 60 * 60 * 2    # 2 h
+TIMEOUT_QUICKTEST = 60 * 60 * 1   # 1 h
+
+# =============================================================================
+# HYPERPARAMETER SWEEP — 6 curriculum configs, H100:4, 300 steps per phase
+# =============================================================================
+
+# Design choices to sweep:
+#   phase1_seq  : sequence length during Phase 1 (256 or 512)
+#   phase1_frac : fraction of total budget spent in Phase 1 (0.2 / 0.4 / 0.6)
+# Each combo runs 300 phase-1 steps then 300 phase-2 steps at seq=2048.
+# Baseline (seq=2048 from scratch) is reused from Part 2 — not re-swept here.
+
+SWEEP_P3_SEQS   = [256, 512]
+SWEEP_P3_FRACS  = [0.2, 0.4, 0.6]
+SWEEP_P3_STEPS  = 300            # steps per phase within each sweep run
+GPU_SWEEP_P3    = "H100:2"
+DEVICE_BATCH_SWEEP_P3 = 16      # conservative; works for both seq=256 and seq=2048
+TIMEOUT_SWEEP_P3 = 60 * 60 * 3  # 3 h for 3 combos × 2 phases sequentially
+WANDB_PROJECT_SWEEP_P3 = "part3_sweep"
 
 # Volume / cache paths (same volume as the parent nanochat_modal.py)
 VOLUME_MOUNT = "/vol"
@@ -165,6 +187,12 @@ image = (
     .run_commands(
         "cd /root/nanochat && uv sync --extra gpu --no-install-project",
     )
+)
+
+# Lightweight CPU-only image for figure generation (no CUDA needed).
+figures_image = (
+    ModalImage.debian_slim(python_version="3.11")
+    .pip_install("wandb>=0.18", "matplotlib>=3.9", "numpy>=1.26")
 )
 
 
@@ -507,8 +535,119 @@ def _find_last_step(model_tag: str) -> int:
     return max(int(os.path.basename(f).split("_")[1].split(".")[0]) for f in files)
 
 
-_N_TRAIN_GPUS = int(GPU_TRAIN.split(":")[1]) if ":" in GPU_TRAIN else 1
-_N_EVAL_GPUS = int(GPU_EVAL.split(":")[1]) if ":" in GPU_EVAL else 1
+_N_TRAIN_GPUS    = int(GPU_TRAIN.split(":")[1])    if ":" in GPU_TRAIN    else 1
+_N_EVAL_GPUS     = int(GPU_EVAL.split(":")[1])     if ":" in GPU_EVAL     else 1
+_N_SWEEP_P3_GPUS = int(GPU_SWEEP_P3.split(":")[1]) if ":" in GPU_SWEEP_P3 else 1
+
+
+# =============================================================================
+# STAGE: HYPERPARAMETER SWEEP — curriculum choices
+# =============================================================================
+
+
+def _run_sweep_combo_p3(phase1_seq: int, phase1_frac: float, depth: int) -> None:
+    """
+    Run one curriculum sweep combo:
+      1. Train SWEEP_P3_STEPS at phase1_seq  (Phase 1 mini-run)
+      2. Warm-start, train SWEEP_P3_STEPS at seq=2048 (Phase 2 mini-run)
+    Both phases log to WandB project part3_sweep as separate runs.
+    """
+    n_steps   = SWEEP_P3_STEPS
+    bs        = DEVICE_BATCH_SWEEP_P3
+    nproc     = _N_SWEEP_P3_GPUS
+    frac_str  = f"f{int(phase1_frac * 100):02d}"
+    combo     = f"s{phase1_seq}_{frac_str}"
+
+    # ── Phase 1 mini-run ──────────────────────────────────────────────────────
+    tag_p1   = f"part3/sweep/{combo}_p1"
+    run_p1   = f"sweep_{combo}_phase1"
+    print(f"\n{'=' * 64}\nSweep Phase 1: seq={phase1_seq}  frac={phase1_frac}  steps={n_steps}\n{'=' * 64}")
+    _torchrun(
+        "scripts.base_train",
+        [
+            f"--depth={depth}",
+            f"--max-seq-len={phase1_seq}",
+            f"--model-tag={tag_p1}",
+            f"--device-batch-size={bs}",
+            f"--total-batch-size={TOTAL_BATCH_SIZE}",
+            f"--num-iterations={n_steps}",
+            "--save-every=9999",
+            "--core-metric-every=9999",
+            "--sample-every=-1",
+            f"--wandb-project={WANDB_PROJECT_SWEEP_P3}",
+            f"--run={run_p1}",
+        ],
+        nproc=nproc,
+    )
+    volume.commit()
+
+    # ── Phase 2 mini-run (warm-start from Phase 1) ────────────────────────────
+    p1_last_step = _find_last_step(tag_p1)
+    p2_total_iters = p1_last_step + n_steps
+    tag_p2 = f"part3/sweep/{combo}_p2"
+    run_p2 = f"sweep_{combo}_phase2"
+    print(f"\n{'=' * 64}\nSweep Phase 2: seq=2048  warm-start step={p1_last_step}\n{'=' * 64}")
+    _torchrun(
+        "scripts.base_train",
+        [
+            f"--depth={depth}",
+            "--max-seq-len=2048",
+            f"--model-tag={tag_p2}",
+            f"--resume-model-tag={tag_p1}",
+            f"--resume-from-step={p1_last_step}",
+            "--load-model-only",
+            f"--device-batch-size={bs}",
+            f"--total-batch-size={TOTAL_BATCH_SIZE}",
+            f"--num-iterations={p2_total_iters}",
+            "--save-every=9999",
+            "--core-metric-every=9999",
+            "--sample-every=-1",
+            f"--wandb-project={WANDB_PROJECT_SWEEP_P3}",
+            f"--run={run_p2}",
+        ],
+        nproc=nproc,
+    )
+    volume.commit()
+    print(f"  Done combo: {combo}  (phase1 run={run_p1}, phase2 run={run_p2})")
+
+
+@app.function(image=image, secrets=[secret], volumes={VOLUME_MOUNT: volume},
+              gpu=GPU_SWEEP_P3, timeout=TIMEOUT_SWEEP_P3)
+def stage_sweep_p3_s256(depth: int = DEPTH) -> None:
+    """
+    Curriculum sweep — Phase 1 seq=256, three phase-fractions: 0.2 / 0.4 / 0.6.
+    Runs 3 combos sequentially (each combo = 300-step phase1 + 300-step phase2).
+    Run in parallel with stage_sweep_p3_s512.
+
+    WandB project: part3_sweep
+    Run names: sweep_s256_f{20,40,60}_phase{1,2}
+    """
+    _setup_cache()
+    total = len(SWEEP_P3_FRACS)
+    for i, frac in enumerate(SWEEP_P3_FRACS, 1):
+        print(f"\n{'#' * 64}\n[{i}/{total}] seq=256  frac={frac}\n{'#' * 64}")
+        _run_sweep_combo_p3(phase1_seq=256, phase1_frac=frac, depth=depth)
+    print(f"\n{'=' * 64}\nseq=256 sweep done — {total} combos in '{WANDB_PROJECT_SWEEP_P3}'.\n{'=' * 64}")
+
+
+@app.function(image=image, secrets=[secret], volumes={VOLUME_MOUNT: volume},
+              gpu=GPU_SWEEP_P3, timeout=TIMEOUT_SWEEP_P3)
+def stage_sweep_p3_s512(depth: int = DEPTH) -> None:
+    """
+    Curriculum sweep — Phase 1 seq=512, three phase-fractions: 0.2 / 0.4 / 0.6.
+    Runs 3 combos sequentially (each combo = 300-step phase1 + 300-step phase2).
+    Run in parallel with stage_sweep_p3_s256.
+
+    WandB project: part3_sweep
+    Run names: sweep_s512_f{20,40,60}_phase{1,2}
+    """
+    _setup_cache()
+    total = len(SWEEP_P3_FRACS)
+    for i, frac in enumerate(SWEEP_P3_FRACS, 1):
+        print(f"\n{'#' * 64}\n[{i}/{total}] seq=512  frac={frac}\n{'#' * 64}")
+        _run_sweep_combo_p3(phase1_seq=512, phase1_frac=frac, depth=depth)
+    print(f"\n{'=' * 64}\nseq=512 sweep done — {total} combos in '{WANDB_PROJECT_SWEEP_P3}'.\n{'=' * 64}")
+
 
 # =============================================================================
 # STAGE: PHASE 1 — seq=512, 40% of Chinchilla budget
@@ -527,7 +666,7 @@ def stage_pretrain_phase1(
     n_steps: int = N_PHASE1_STEPS,
 ) -> None:
     """
-    Phase 1: train picochat at seq=512 for ~40% of the Chinchilla-optimal token budget.
+    Phase 1: train picochat d16 at seq=512 for ~40% of the Chinchilla-optimal token budget.
 
     Justification for seq=512:
       1. Attention is O(n²): seq=512 is 16× cheaper per step than seq=2048, giving
@@ -637,7 +776,7 @@ def stage_pretrain_baseline(
     n_steps: int = N_BASELINE_STEPS,
 ) -> None:
     """
-    Baseline: train d20 at seq=2048 for the full Chinchilla-optimal budget from scratch.
+    Baseline: train d16 at seq=2048 for the full Chinchilla-optimal budget from scratch.
 
     This control run answers: 'is the 512→2048 curriculum better, worse, or the same
     as just training at 2048 the whole time?'  Runs in parallel with Phase 2.
@@ -987,13 +1126,13 @@ def main() -> None:
     """
     Full Part 3 pipeline:
       1. d12 smoke test (validates all code paths cheaply)
-      2. Phase 1: d20 at seq=512, 40% of Chinchilla budget
+      2. Phase 1: d16 at seq=512, 40% of Chinchilla budget
       3. Phase 2 + Baseline in parallel (separate Modal containers)
       4. Eval + Report: CORE, needle-in-haystack, BPB-by-position, then markdown
     """
     w = 64
     print("\n" + "=" * w)
-    print("Part 3: Picochat Context Length Curriculum")
+    print("Part 3: Picochat Context Length Curriculum (d16)")
     print(
         f"  depth={DEPTH}  phase1_steps={N_PHASE1_STEPS}  phase2_steps={N_PHASE2_STEPS}"
     )
@@ -1020,7 +1159,7 @@ def main() -> None:
     stage_eval_and_report.remote()
 
     print("\n" + "=" * w)
-    print("Part 3 complete!")
+    print("Part 3 (d16) complete!")
     print(f"  Report: nanochat_cache/report/part3_report.md (on nanochat-vol)")
     print(f"  WandB:  project '{WANDB_PROJECT}'")
     print("=" * w + "\n")
@@ -1146,3 +1285,452 @@ def quick_test_d12_eval_report() -> None:
     print("FULL REPORT:")
     print("=" * 60)
     print(_d12_report_md)
+
+
+# =============================================================================
+# STAGE: EVAL FIGURES  (CPU-only, no GPU)
+# =============================================================================
+
+
+@app.function(
+    image=figures_image,
+    secrets=[secret],
+    volumes={VOLUME_MOUNT: volume},
+    cpu=4,
+    timeout=60 * 30,
+)
+def stage_make_eval_figures_p3() -> None:
+    """CPU-only job: load part3_eval_results.json from the volume and fetch
+    training-loss history from W&B to generate three publication figures:
+
+    Figure 1 — p3_training_curves.png
+        Phase 1 and Phase 2 loss/BPB curves on the same axes, with a vertical
+        dashed line at the Phase 1 / Phase 2 boundary.
+        Baseline shown as a separate dashed curve.
+
+    Figure 2 — p3_bpb_by_position.png
+        Grouped bar chart of BPB on each of four non-overlapping 512-token
+        segments (seg0–seg3) of a 2048-token sequence.
+        Three bar groups: Phase 1, Phase 2, Baseline.
+
+    Figure 3 — p3_needle_accuracy.png
+        Line plot of 10-way retrieval accuracy vs needle distance (tokens
+        from end of context) for Phase 1, Phase 2, and Baseline.
+        Random-chance baseline (10 %) shown as a dotted line.
+
+    All PNGs are saved to nanochat_cache/report/ on the shared volume and
+    logged as images to the nanochat-part3 W&B project.
+    Requires stage_eval_and_report to have been run first.
+    """
+    import os
+    import json
+
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as mpatches
+    import numpy as np
+    import wandb
+
+    report_dir = os.path.join(NANOCHAT_CACHE, "report")
+    os.makedirs(report_dir, exist_ok=True)
+
+    # ── load eval JSON ────────────────────────────────────────────────────────
+    results_path = os.path.join(NANOCHAT_CACHE, "part3_eval_results.json")
+    volume.reload()
+    with open(results_path) as f:
+        results = json.load(f)
+
+    tags    = [TAG_PHASE1, TAG_PHASE2, TAG_BASELINE]
+    labels  = {
+        TAG_PHASE1:   "Phase 1 (ctx=512)",
+        TAG_PHASE2:   "Phase 2 (ctx=2048, warm-start)",
+        TAG_BASELINE: "Baseline (ctx=2048, full)",
+    }
+    colors  = {
+        TAG_PHASE1:   "#4C72B0",   # blue
+        TAG_PHASE2:   "#DD8452",   # orange
+        TAG_BASELINE: "#55A868",   # green
+    }
+    run_names = {
+        TAG_PHASE1:   WANDB_RUN_PHASE1,
+        TAG_PHASE2:   WANDB_RUN_PHASE2,
+        TAG_BASELINE: WANDB_RUN_BASELINE,
+    }
+
+    # ── resolve W&B entity ────────────────────────────────────────────────────
+    api = wandb.Api(timeout=120)
+    entity = ""
+    for getter in [
+        lambda: api.viewer()["entity"],
+        lambda: api.default_entity,
+        lambda: os.environ.get("WANDB_ENTITY", ""),
+    ]:
+        try:
+            entity = getter() or ""
+            if entity:
+                break
+        except Exception:
+            pass
+
+    project_path = f"{entity}/{WANDB_PROJECT}" if entity else WANDB_PROJECT
+    print(f"Fetching training curves from W&B: {project_path}")
+
+    # ── helper: fetch run history ─────────────────────────────────────────────
+    def fetch_run_history(run_name: str):
+        """Return (steps, values) for the best available loss metric."""
+        try:
+            runs = api.runs(project_path, filters={"config.run": run_name})
+            if not runs:
+                runs = api.runs(project_path, filters={"display_name": run_name})
+            if not runs:
+                print(f"  WARNING: no W&B run found for name {run_name!r}")
+                return [], []
+            run = runs[0]
+            for key in ["val_bpb", "val/bpb", "train/loss", "loss", "train_loss"]:
+                rows = list(run.scan_history(keys=["_step", key]))
+                rows = [r for r in rows if r.get(key) is not None]
+                if rows:
+                    print(f"  {run_name}: {len(rows)} points for '{key}'")
+                    return [r["_step"] for r in rows], [r[key] for r in rows]
+            print(f"  WARNING: no loss metric found for {run_name!r}")
+            return [], []
+        except Exception as e:
+            print(f"  WARNING: failed to fetch {run_name!r}: {e}")
+            return [], []
+
+    # ── Figure 1: Training curves ─────────────────────────────────────────────
+    fig1, ax1 = plt.subplots(figsize=(10, 5), constrained_layout=True)
+
+    for tag in tags:
+        steps, vals = fetch_run_history(run_names[tag])
+        if steps:
+            ls = "--" if tag == TAG_BASELINE else "-"
+            ax1.plot(steps, vals, label=labels[tag], color=colors[tag],
+                     linewidth=1.6, linestyle=ls, alpha=0.92)
+
+    ax1.axvline(x=N_PHASE1_STEPS, color="grey", linestyle=":", linewidth=1.4,
+                label=f"Phase 1→2 boundary (step {N_PHASE1_STEPS})")
+    ax1.set_xlabel("Training Step", fontsize=11)
+    ax1.set_ylabel("Loss / BPB ↓", fontsize=11)
+    ax1.set_title("Part 3 d16: Training Curves  (Phase 1, Phase 2, Baseline)", fontsize=12)
+    ax1.legend(fontsize=9, loc="upper right")
+    ax1.grid(alpha=0.3)
+
+    fig1_path = os.path.join(report_dir, "p3_training_curves.png")
+    fig1.savefig(fig1_path, dpi=150, bbox_inches="tight")
+    plt.close(fig1)
+    print(f"Saved: {fig1_path}")
+
+    # ── Figure 2: BPB by context position ─────────────────────────────────────
+    seg_keys   = ["seg0", "seg1", "seg2", "seg3"]
+    seg_labels = [
+        "seg0\n(0–511)", "seg1\n(512–1023)",
+        "seg2\n(1024–1535)", "seg3\n(1536–2047)",
+    ]
+    bpb_data = results.get("bpb_by_position", {})
+
+    x       = np.arange(len(seg_keys))
+    n_mdl   = len(tags)
+    bar_w   = 0.22
+    offsets = np.linspace(-(n_mdl - 1) / 2 * bar_w, (n_mdl - 1) / 2 * bar_w, n_mdl)
+
+    fig2, ax2 = plt.subplots(figsize=(9, 5), constrained_layout=True)
+    for i, tag in enumerate(tags):
+        vals = [bpb_data.get(tag, {}).get(sk, float("nan")) for sk in seg_keys]
+        ax2.bar(x + offsets[i], vals, width=bar_w, label=labels[tag],
+                color=colors[tag], edgecolor="white", linewidth=0.5)
+
+    ax2.set_xticks(x)
+    ax2.set_xticklabels(seg_labels, fontsize=9)
+    ax2.set_ylabel("BPB ↓", fontsize=11)
+    ax2.set_title("Part 3 d16: BPB by Context Position (512-token segments)", fontsize=12)
+    ax2.legend(fontsize=9)
+    ax2.grid(axis="y", alpha=0.3)
+
+    fig2_path = os.path.join(report_dir, "p3_bpb_by_position.png")
+    fig2.savefig(fig2_path, dpi=150, bbox_inches="tight")
+    plt.close(fig2)
+    print(f"Saved: {fig2_path}")
+
+    # ── Figure 3: Needle-in-Haystack ──────────────────────────────────────────
+    needle_data = results.get("needle", {})
+    distances   = needle_data.get("distances", [64, 256, 512, 768, 1024, 1536])
+
+    fig3, ax3 = plt.subplots(figsize=(9, 5), constrained_layout=True)
+    ax3.axhline(y=0.10, color="black", linestyle=":", linewidth=1.2,
+                label="Random chance (10%)", zorder=2)
+
+    for tag in tags:
+        accs = [needle_data.get(tag, {}).get(str(d), float("nan")) for d in distances]
+        ax3.plot(distances, accs, marker="o", markersize=5,
+                 label=labels[tag], color=colors[tag], linewidth=1.8, zorder=3)
+        if tag == TAG_PHASE1:
+            ax3.axvspan(512.5, max(distances) + 50, alpha=0.06, color=colors[tag],
+                        label="Beyond Phase 1 context (>512)", zorder=1)
+
+    ax3.set_xlabel("Needle Distance from End of Context (tokens)", fontsize=11)
+    ax3.set_ylabel("10-way Retrieval Accuracy ↑", fontsize=11)
+    ax3.set_title("Part 3 d16: Needle-in-Haystack  (200 trials per distance)", fontsize=12)
+    ax3.set_xticks(distances)
+    ax3.set_ylim(0, None)
+    ax3.legend(fontsize=9, loc="upper right")
+    ax3.grid(alpha=0.3)
+
+    fig3_path = os.path.join(report_dir, "p3_needle_accuracy.png")
+    fig3.savefig(fig3_path, dpi=150, bbox_inches="tight")
+    plt.close(fig3)
+    print(f"Saved: {fig3_path}")
+
+    # ── commit + log to W&B ───────────────────────────────────────────────────
+    volume.commit()
+
+    with wandb.init(
+        project=WANDB_PROJECT,
+        entity=entity or None,
+        job_type="figures",
+        name="p3_eval_figures",
+    ) as wrun:
+        wrun.log({
+            "eval/training_curves":  wandb.Image(fig1_path),
+            "eval/bpb_by_position":  wandb.Image(fig2_path),
+            "eval/needle_accuracy":  wandb.Image(fig3_path),
+        })
+    print("Eval figures logged to W&B ✓")
+
+
+# =============================================================================
+# STAGE: SWEEP FIGURES  (CPU-only, no GPU)
+# =============================================================================
+
+@app.function(
+    image=figures_image,
+    secrets=[secret],
+    volumes={VOLUME_MOUNT: volume},
+    cpu=4,
+    timeout=60 * 30,
+)
+def stage_make_sweep_figures_p3() -> None:
+    """CPU-only job: pull all Part 3 sweep runs from W&B and produce:
+
+    Figure 1 — 2×2 panel training-loss curves.
+        Rows = seq len (256, 512).  Columns = phase (Phase 1, Phase 2).
+        3 lines per panel = phase1_frac (0.2, 0.4, 0.6).
+        Same colour per frac across all panels.
+
+    Figure 2 — grouped bar chart of final-step train loss.
+        4 groups (s256_p1 | s256_p2 | s512_p1 | s512_p2), 3 bars each.
+        Same colour per frac across groups.
+
+    Both PNGs saved to the shared Volume (nanochat_cache/report/) and
+    logged as images to the part3_sweep W&B project.
+    """
+    import re
+    import os
+    import wandb
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as mpatches
+    import numpy as np
+
+    report_dir = os.path.join(NANOCHAT_CACHE, "report")
+    os.makedirs(report_dir, exist_ok=True)
+
+    # ── fetch runs ────────────────────────────────────────────────────────────
+    api = wandb.Api(timeout=120)
+    entity = ""
+    for getter in [
+        lambda: api.viewer()["entity"],
+        lambda: api.default_entity,
+        lambda: os.environ.get("WANDB_ENTITY", ""),
+    ]:
+        try:
+            entity = getter() or ""
+            if entity:
+                break
+        except Exception:
+            pass
+
+    project_path = f"{entity}/{WANDB_PROJECT_SWEEP_P3}" if entity else WANDB_PROJECT_SWEEP_P3
+    print(f"Fetching runs from: {project_path}  (entity={entity!r})")
+    all_runs = api.runs(project_path)
+
+    # ── layout constants ──────────────────────────────────────────────────────
+    SEQS   = [256, 512]
+    FRACS  = [0.2, 0.4, 0.6]
+    PHASES = [1, 2]
+
+    FRAC_LABELS = {f: f"frac={f}" for f in FRACS}
+    # 3 colours — one per frac, consistent across every panel/group
+    FRAC_COLORS = {f: c for f, c in zip(FRACS, plt.cm.tab10([0, 1, 2]))}
+
+    # run name pattern: sweep_s{seq}_f{frac*100:02d}_phase{phase}
+    # e.g. sweep_s256_f20_phase1
+    _RE = re.compile(r"^sweep_s(\d+)_f(\d+)_phase(\d+)$")
+
+    # histories[(seq, frac, phase)] = {"steps": [...], "loss": [...]}
+    histories: dict = {}
+    final_loss: dict = {}
+
+    for run in all_runs:
+        m = _RE.match(run.name)
+        if not m:
+            continue
+        seq   = int(m.group(1))
+        frac  = int(m.group(2)) / 100.0
+        phase = int(m.group(3))
+        if seq not in SEQS or frac not in FRACS or phase not in PHASES:
+            continue
+
+        try:
+            rows = list(run.scan_history())
+        except Exception as e:
+            print(f"  WARNING — could not fetch {run.name}: {e}")
+            continue
+
+        # auto-detect loss key
+        _LOSS_KEYS = ["train/loss", "loss", "train_loss"]
+        loss_key: str | None = None
+        for row in rows[:10]:
+            for k in _LOSS_KEYS:
+                if row.get(k) is not None:
+                    loss_key = k
+                    break
+            if loss_key:
+                break
+
+        steps, losses = [], []
+        for row in rows:
+            if loss_key and row.get(loss_key) is not None:
+                steps.append(row.get("_step", len(steps)))
+                losses.append(float(row[loss_key]))
+
+        if not losses:
+            print(f"  WARNING — empty history for {run.name}, skipping")
+            continue
+
+        key = (seq, frac, phase)
+        histories[key] = {"steps": steps, "loss": losses}
+        final_loss[key] = losses[-1]
+        print(f"  loaded {run.name}: {len(steps)} steps, final={losses[-1]:.4f}")
+
+    print(f"Loaded {len(histories)} / 12 expected sweep runs")
+
+    # ── Figure 1: 2×2 loss curves ─────────────────────────────────────────────
+    fig1, axes = plt.subplots(2, 2, figsize=(18, 10), constrained_layout=True)
+    fig1.suptitle(
+        "Part 3 Curriculum Sweep — Training Loss Curves (d16, 300 steps per phase)",
+        fontsize=13, y=1.02,
+    )
+    panel_titles = {
+        (0, 0): "seq=256 — Phase 1",
+        (0, 1): "seq=256 — Phase 2",
+        (1, 0): "seq=512 — Phase 1",
+        (1, 1): "seq=512 — Phase 2",
+    }
+    panel_keys = {
+        (0, 0): (256, 1),
+        (0, 1): (256, 2),
+        (1, 0): (512, 1),
+        (1, 1): (512, 2),
+    }
+
+    for (row_i, col_i), (seq, phase) in panel_keys.items():
+        ax = axes[row_i][col_i]
+        for frac in FRACS:
+            key = (seq, frac, phase)
+            if key in histories:
+                d = histories[key]
+                ax.plot(d["steps"], d["loss"],
+                        color=FRAC_COLORS[frac],
+                        label=FRAC_LABELS[frac],
+                        linewidth=1.5, alpha=0.85)
+        ax.set_title(panel_titles[(row_i, col_i)], fontsize=10, pad=4)
+        ax.set_xlabel("Step", fontsize=8)
+        ax.set_ylabel("Train Loss", fontsize=8)
+        ax.tick_params(labelsize=7)
+        ax.grid(True, alpha=0.25)
+
+    handles = [mpatches.Patch(color=FRAC_COLORS[f], label=FRAC_LABELS[f]) for f in FRACS]
+    fig1.legend(handles=handles, loc="lower center", ncol=3,
+                bbox_to_anchor=(0.5, -0.06), fontsize=9,
+                title="Phase-1 fraction of total budget  (colour consistent across all panels)",
+                title_fontsize=8)
+
+    fig1_path = os.path.join(report_dir, "p3_sweep_loss_curves.png")
+    fig1.savefig(fig1_path, dpi=150, bbox_inches="tight")
+    plt.close(fig1)
+    print(f"Saved: {fig1_path}")
+
+    # ── Figure 2: grouped bar chart — final loss ──────────────────────────────
+    # 4 groups: s256_p1 | s256_p2 | s512_p1 | s512_p2
+    # 3 bars per group (one per frac), same colours as Figure 1
+    GROUPS = [(256, 1), (256, 2), (512, 1), (512, 2)]
+    GROUP_LABELS = {
+        (256, 1): "seq=256\nPhase 1",
+        (256, 2): "seq=256\nPhase 2",
+        (512, 1): "seq=512\nPhase 1",
+        (512, 2): "seq=512\nPhase 2",
+    }
+    BAR_W     = 0.22
+    N_FRACS   = len(FRACS)
+    GROUP_GAP = 0.6
+
+    fig2, ax2 = plt.subplots(figsize=(14, 6), constrained_layout=True)
+    fig2.suptitle(
+        "Part 3 Sweep — Final Training Loss at Step 300  (lower is better)",
+        fontsize=13,
+    )
+
+    group_centers = []
+    x = 0.0
+    offsets = np.linspace(-(N_FRACS - 1) / 2 * BAR_W,
+                          (N_FRACS - 1) / 2 * BAR_W, N_FRACS)
+    xtick_pos, xtick_lbl = [], []
+
+    for grp in GROUPS:
+        cx = x
+        seq_g, phase_g = grp
+        for i, frac in enumerate(FRACS):
+            val = final_loss.get((seq_g, frac, phase_g))
+            bx  = cx + offsets[i]
+            if val is not None:
+                ax2.bar(bx, val, width=BAR_W, color=FRAC_COLORS[frac],
+                        edgecolor="white", linewidth=0.4, zorder=3)
+            else:
+                ax2.bar(bx, 0, width=BAR_W, color=FRAC_COLORS[frac],
+                        alpha=0.15, edgecolor="grey", linewidth=0.4, zorder=3)
+        xtick_pos.append(cx)
+        xtick_lbl.append(GROUP_LABELS[grp])
+        group_centers.append(cx)
+        x += 1.0 + GROUP_GAP
+
+    ax2.set_xticks(xtick_pos)
+    ax2.set_xticklabels(xtick_lbl, fontsize=9)
+    ax2.set_ylabel("Final Train Loss ↓", fontsize=10)
+    ax2.grid(axis="y", alpha=0.3, zorder=0)
+
+    handles2 = [mpatches.Patch(color=FRAC_COLORS[f], label=FRAC_LABELS[f]) for f in FRACS]
+    ax2.legend(handles=handles2, fontsize=9, title="Phase-1 fraction",
+               title_fontsize=8, loc="upper right")
+
+    fig2_path = os.path.join(report_dir, "p3_sweep_bar_chart.png")
+    fig2.savefig(fig2_path, dpi=150, bbox_inches="tight")
+    plt.close(fig2)
+    print(f"Saved: {fig2_path}")
+
+    # ── commit + log to W&B ───────────────────────────────────────────────────
+    volume.commit()
+
+    with wandb.init(
+        project=WANDB_PROJECT_SWEEP_P3,
+        entity=entity or None,
+        job_type="figures",
+        name="sweep_figures_p3",
+    ) as wrun:
+        wrun.log({
+            "sweep/loss_curves":  wandb.Image(fig1_path),
+            "sweep/final_loss_bar": wandb.Image(fig2_path),
+        })
+    print("Figures logged to W&B ✓")
