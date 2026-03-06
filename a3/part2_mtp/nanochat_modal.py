@@ -174,6 +174,13 @@ image = (
     )
 )
 
+# Lightweight CPU-only image used solely for figure generation.
+# No CUDA / Rust / uv needed — just matplotlib + wandb + numpy.
+figures_image = (
+    ModalImage.debian_slim(python_version="3.11")
+    .pip_install("wandb>=0.18", "matplotlib>=3.9", "numpy>=1.26")
+)
+
 
 # =============================================================================
 # HELPERS
@@ -926,6 +933,260 @@ def quick_test_d12() -> None:
 # =============================================================================
 # MAIN ENTRYPOINT — full a2_mtp pipeline
 # =============================================================================
+
+
+@app.function(
+    image=figures_image,
+    secrets=[secret],
+    volumes={VOLUME_MOUNT: volume},
+    cpu=4,
+    timeout=60 * 30,  # 30 min should be plenty for API calls + plotting
+)
+def stage_make_sweep_figures() -> None:
+    """CPU-only job: pull all 36 part2 sweep runs from W&B, produce:
+
+    Figure 1 — 4-panel training-loss curves (one panel per config, 9 lines each,
+                same 9 colours across all panels = LR × batch combo).
+    Figure 2 — big 2-row horizontal bar chart of final-step train loss across
+                all 36 runs; row 0 = baseline + mtp2 (18 bars),
+                row 1 = mtp4 + mtp2_yarn (18 bars); colours repeat to mean the
+                same LR/batch combo across quadrants.
+
+    Both PNGs are saved to the shared Volume and logged as W&B images in the
+    part2_sweep project.
+    """
+    import re
+    import os
+    import wandb
+    import matplotlib
+    matplotlib.use("Agg")                          # headless
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as mpatches
+    import numpy as np
+
+    # ── resolve output directory ───────────────────────────────────────────────
+    report_dir = os.path.join(NANOCHAT_CACHE, "report")
+    os.makedirs(report_dir, exist_ok=True)
+
+    # ── fetch runs from W&B ────────────────────────────────────────────────────
+    api = wandb.Api(timeout=120)
+    entity = ""
+    try:
+        entity = api.viewer()["entity"]
+    except Exception:
+        pass
+    if not entity:
+        entity = os.environ.get("WANDB_ENTITY", "")
+    if not entity:
+        # Last resort: parse from WANDB_API_KEY env context — use default entity
+        try:
+            entity = api.default_entity
+        except Exception:
+            pass
+    project_path = f"{entity}/{WANDB_PROJECT_SWEEP}" if entity else WANDB_PROJECT_SWEEP
+    print(f"Fetching runs from: {project_path}  (entity={entity!r})")
+    all_runs = api.runs(project_path)
+
+    # ── layout constants ───────────────────────────────────────────────────────
+    CONFIGS    = ["baseline", "mtp2", "mtp4", "mtp2_yarn"]
+    CONFIG_LABELS = {
+        "baseline":  "Baseline (k=0, RoPE)",
+        "mtp2":      "MTP-2 (k=2, RoPE)",
+        "mtp4":      "MTP-4 (k=4, RoPE)",
+        "mtp2_yarn": "MTP-2 + YaRN",
+    }
+    LRS  = [0.01, 0.02, 0.04]
+    BSS  = ["131k", "262k", "524k"]
+    COMBO_LABELS = [f"lr={lr}, bs={bs}" for lr in LRS for bs in BSS]
+
+    # 9 visually distinct colours — same mapping across ALL figures
+    PALETTE = plt.cm.tab10(np.arange(9) / 10.0)
+    COMBO_COLOR = {c: PALETTE[i] for i, c in enumerate(COMBO_LABELS)}
+
+    # ── parse runs into structured data ───────────────────────────────────────
+    # run name pattern: sweep_{config}_lr{lr}_bs{bs}k
+    # "mtp2_yarn" contains an underscore so we anchor on "_lr" before a float
+    _RE = re.compile(r"^sweep_(.+)_lr([\d.]+)_bs(\d+)k$")
+
+    # histories[config][combo_label] = {"steps": [...], "loss": [...]}
+    histories: dict[str, dict[str, dict]] = {c: {} for c in CONFIGS}
+    # final_loss[config][combo_label] = float (loss at last logged step)
+    final_loss: dict[str, dict[str, float]] = {c: {} for c in CONFIGS}
+    # core_metric[config][combo_label] = float (last core_metric logged, if any)
+    core_metric: dict[str, dict[str, float]] = {c: {} for c in CONFIGS}
+
+    for run in all_runs:
+        m = _RE.match(run.name)
+        if not m:
+            continue
+        cfg, lr_str, bs_str = m.group(1), m.group(2), m.group(3)
+        if cfg not in CONFIGS:
+            continue
+        combo = f"lr={float(lr_str)}, bs={bs_str}k"
+        if combo not in COMBO_LABELS:
+            continue
+
+        try:
+            # Fetch all columns — avoids key-name mismatches (e.g. "loss" vs "train/loss")
+            rows = list(run.scan_history())
+        except Exception as e:
+            print(f"  WARNING — could not fetch history for {run.name}: {e}")
+            continue
+
+        # Detect which key holds the training loss
+        _LOSS_KEYS = ["train/loss", "loss", "train_loss"]
+        loss_key: str | None = None
+        for row in rows[:10]:       # probe first few rows
+            for k in _LOSS_KEYS:
+                if row.get(k) is not None:
+                    loss_key = k
+                    break
+            if loss_key:
+                break
+
+        steps, losses = [], []
+        best_core: float | None = None
+        for row in rows:
+            if loss_key and row.get(loss_key) is not None:
+                steps.append(row.get("_step", len(steps)))
+                losses.append(float(row[loss_key]))
+            cm = row.get("core_metric")
+            if cm is not None:
+                best_core = float(cm)
+
+        if not losses:
+            print(f"  WARNING — empty history for {run.name}, skipping")
+            continue
+
+        histories[cfg][combo] = {"steps": steps, "loss": losses}
+        final_loss[cfg][combo] = losses[-1]
+        if best_core is not None:
+            core_metric[cfg][combo] = best_core
+        print(f"  loaded {run.name}: {len(steps)} steps, "
+              f"final_loss={losses[-1]:.4f}, core_metric={best_core}")
+
+    # ── Figure 1: 4-panel loss curves ─────────────────────────────────────────
+    fig1, axes = plt.subplots(1, 4, figsize=(24, 5), constrained_layout=True)
+    fig1.suptitle("Part 2 Hyperparameter Sweep — Training Loss Curves (d16, 300 steps)",
+                  fontsize=13, y=1.03)
+
+    for ax, cfg in zip(axes, CONFIGS):
+        for combo in COMBO_LABELS:
+            if combo not in histories[cfg]:
+                continue
+            d = histories[cfg][combo]
+            ax.plot(d["steps"], d["loss"],
+                    color=COMBO_COLOR[combo], label=combo,
+                    linewidth=1.4, alpha=0.85)
+        ax.set_title(CONFIG_LABELS[cfg], fontsize=9, pad=4)
+        ax.set_xlabel("Step", fontsize=8)
+        ax.set_ylabel("Train Loss", fontsize=8)
+        ax.tick_params(labelsize=7)
+        ax.grid(True, alpha=0.25)
+
+    # Shared legend below all panels
+    handles = [mpatches.Patch(color=COMBO_COLOR[c], label=c) for c in COMBO_LABELS]
+    fig1.legend(handles=handles, loc="lower center", ncol=5,
+                bbox_to_anchor=(0.5, -0.18), fontsize=8,
+                title="Hyperparameter combo (LR, batch size)", title_fontsize=8)
+
+    fig1_path = os.path.join(report_dir, "p2_sweep_loss_curves.png")
+    fig1.savefig(fig1_path, dpi=150, bbox_inches="tight")
+    plt.close(fig1)
+    print(f"Saved: {fig1_path}")
+
+    # ── Figure 2: big 2-row bar chart — CORE metric across all sweep runs ─────
+    # Y-axis = core_metric (aggregate CORE score, higher is better).
+    # Falls back to final train loss (inverted label) if core_metric was not
+    # logged for a run (e.g. sweep ran without periodic CORE eval).
+    # Layout (2 rows × 18 bars):
+    #   Row 0 → [baseline × 9 combos]  |  [mtp2 × 9 combos]
+    #   Row 1 → [mtp4    × 9 combos]  |  [mtp2_yarn × 9 combos]
+    # Same colour = same LR/batch combo across both rows/quadrants.
+
+    use_core = any(bool(core_metric[c]) for c in CONFIGS)
+    if use_core:
+        bar_data   = core_metric
+        y_label    = "CORE Metric ↑ (higher is better)"
+        fig2_title = "Part 2 Sweep — Aggregate CORE Metric by Hyperparameter Config"
+    else:
+        bar_data   = final_loss
+        y_label    = "Final Train Loss ↓ (lower is better)"
+        fig2_title = "Part 2 Sweep — Final Training Loss at Step 300"
+        print("NOTE: no core_metric logged for sweep runs — plotting final train loss instead")
+
+    ROW_PAIRS = [["baseline", "mtp2"], ["mtp4", "mtp2_yarn"]]
+    BAR_W     = 0.7
+    GROUP_GAP = 2.0
+
+    fig2, row_axes = plt.subplots(2, 1, figsize=(26, 9), constrained_layout=True)
+    fig2.suptitle(fig2_title, fontsize=13, y=1.02)
+
+    for ax, pair in zip(row_axes, ROW_PAIRS):
+        xtick_pos, xtick_lbl, group_center, group_cfgs = [], [], [], []
+        x = 0.0
+        for cfg in pair:
+            group_start = x
+            for combo in COMBO_LABELS:
+                val   = bar_data[cfg].get(combo)
+                color = COMBO_COLOR[combo]
+                if val is not None:
+                    ax.bar(x, val, width=BAR_W, color=color,
+                           edgecolor="white", linewidth=0.4, zorder=3)
+                else:
+                    ax.bar(x, 0, width=BAR_W, color=color, alpha=0.15,
+                           edgecolor="grey", linewidth=0.4, zorder=3)
+                lr_part = combo.split(",")[0]   # "lr=0.02"
+                bs_part = combo.split(",")[1].strip()  # "bs=524k"
+                xtick_pos.append(x)
+                xtick_lbl.append(f"{lr_part}\n{bs_part}")
+                x += 1.0
+            group_center.append((group_start + x - 1) / 2)
+            group_cfgs.append(cfg)
+            x += GROUP_GAP
+
+        ax.set_xticks(xtick_pos)
+        ax.set_xticklabels(xtick_lbl, fontsize=7)
+        ax.set_ylabel(y_label, fontsize=9)
+        ax.grid(axis="y", alpha=0.3, zorder=0)
+        ax.set_xlim(-0.8, x - GROUP_GAP + 0.8)
+
+        # Quadrant header labels (placed near the top of each group)
+        ax.figure.canvas.draw()   # force axis limits to update
+        ylo, yhi = ax.get_ylim()
+        label_y  = ylo + (yhi - ylo) * 0.93
+        for gc, cfg in zip(group_center, group_cfgs):
+            ax.text(gc, label_y, CONFIG_LABELS[cfg],
+                    ha="center", va="top", fontsize=10, fontweight="bold",
+                    bbox=dict(boxstyle="round,pad=0.25", facecolor="lightyellow",
+                              edgecolor="grey", alpha=0.85))
+
+    handles2 = [mpatches.Patch(color=COMBO_COLOR[c], label=c) for c in COMBO_LABELS]
+    fig2.legend(handles=handles2, loc="lower center", ncol=5,
+                bbox_to_anchor=(0.5, -0.10), fontsize=8,
+                title="Hyperparameter combo  (same colour = same combo across quadrants)",
+                title_fontsize=8)
+
+    fig2_path = os.path.join(report_dir, "p2_sweep_bar_chart.png")
+    fig2.savefig(fig2_path, dpi=150, bbox_inches="tight")
+    plt.close(fig2)
+    print(f"Saved: {fig2_path}")
+
+    # ── commit to volume ──────────────────────────────────────────────────────
+    volume.commit()
+
+    # ── log figures to W&B ────────────────────────────────────────────────────
+    with wandb.init(
+        project=WANDB_PROJECT_SWEEP,
+        entity=entity or None,
+        job_type="figures",
+        name="sweep_figures",
+    ) as wrun:
+        wrun.log({
+            "sweep/loss_curves":   wandb.Image(fig1_path),
+            "sweep/core_metric_bar": wandb.Image(fig2_path),
+        })
+    print("Figures logged to W&B ✓")
 
 
 @app.local_entrypoint()
