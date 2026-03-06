@@ -401,17 +401,16 @@ def stage_post_pretrain_eval() -> None:
     Evaluate the base model immediately after pretraining.
 
     speedrun.sh:
-        torchrun ... -m scripts.base_loss
-        torchrun ... -m scripts.base_eval
+        torchrun ... -m scripts.base_eval -- --eval=core,bpb
 
-    scripts.base_loss  -- computes val_bpb (validation bits per byte) on a
-        large chunk of held-out data. Lower is better. A successful d24 run
-        gets ~0.748. Results are written to the markdown report.
+    scripts.base_eval  -- computes val_bpb (validation bits per byte) and runs
+        the CORE metric in one pass. Lower BPB is better. A successful d24 run
+        gets ~0.748 val BPB, and ~0.258-0.260 CORE.
 
-    scripts.base_eval  -- runs the CORE metric: zero-shot evaluation across
+    CORE is a zero-shot evaluation across
         22 diverse benchmarks from the DCLM paper (HellaSwag, ARC, BoolQ,
         LAMBADA, TriviaQA, ...). The target is 0.256525 (GPT-2's score).
-        A successful d24 speedrun hits ~0.258-0.260. Takes ~20-40 min.
+        This evaluation takes ~20-40 min.
 
     The eval bundle (benchmark data files, ~1GB) is downloaded on first run
     and cached in the volume for subsequent runs.
@@ -429,13 +428,9 @@ def stage_post_pretrain_eval() -> None:
         _run(f"unzip -q {zip_path} -d {NANOCHAT_CACHE} && rm {zip_path}")
         volume.commit()
 
-    # speedrun.sh: torchrun ... -m scripts.base_loss
-    print("Computing bits-per-byte on train/val data...")
-    _torchrun("scripts.base_loss", nproc=_N_PRETRAIN_GPUS)
-
-    # speedrun.sh: torchrun ... -m scripts.base_eval
-    print("Running CORE evaluation (22 benchmarks, ~20-40 min)...")
-    _torchrun("scripts.base_eval", nproc=_N_PRETRAIN_GPUS)
+    # This repo does not ship scripts.base_loss; scripts.base_eval already handles both BPB and CORE.
+    print("Running base evaluation (bits-per-byte + CORE, ~20-40 min)...")
+    _torchrun("scripts.base_eval", ["--eval=core,bpb"], nproc=_N_PRETRAIN_GPUS)
 
     volume.commit()
     print("Post-pretrain eval complete.")
@@ -620,8 +615,7 @@ def main() -> None:
     stage_pretrain.remote(depth=DEPTH, device_batch_size=DEVICE_BATCH_SIZE, wandb_run=WANDB_RUN)
 
     # Stage 3: Post-pretrain eval
-    # speedrun.sh: torchrun ... -m scripts.base_loss
-    #              torchrun ... -m scripts.base_eval
+    # speedrun.sh equivalent in this checkout: torchrun ... -m scripts.base_eval -- --eval=core,bpb
     print("[3/5] Evaluating base model (bits-per-byte + CORE)...")
     stage_post_pretrain_eval.remote()
 
