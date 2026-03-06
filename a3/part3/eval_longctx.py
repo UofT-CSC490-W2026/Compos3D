@@ -268,18 +268,18 @@ def _score_code_teacher_forced(
     # Append all but the last digit to the context so the model predicts every
     # digit in one pass (classic teacher-forcing).
     prefix = torch.tensor([digit_ids[:-1]], dtype=torch.long, device=context.device)
-    inp = torch.cat([context, prefix], dim=1)          # shape [1, L + n - 1]
+    inp = torch.cat([context, prefix], dim=1)  # shape [1, L + n - 1]
 
     if inp.shape[1] > ctx_len:
         inp = inp[:, -ctx_len:]
 
-    logits = model(inp)                                # [1, T, vocab]
-    log_probs = F.log_softmax(logits[0], dim=-1)       # [T, vocab]
+    logits = model(inp)  # [1, T, vocab]
+    log_probs = F.log_softmax(logits[0], dim=-1)  # [T, vocab]
 
     # Positions [-n], [-n+1], ..., [-1] in the output predict digit_ids[0..n-1]
     total = 0.0
     for i, tok_id in enumerate(digit_ids):
-        pos = -(n - i)          # e.g. for n=4: -4, -3, -2, -1
+        pos = -(n - i)  # e.g. for n=4: -4, -3, -2, -1
         total += log_probs[pos, tok_id].item()
 
     return total
@@ -301,7 +301,10 @@ def _rank_correct_code(
         model, input_tensor, correct_digit_ids, ctx_len
     )
     for dist_ids in distractor_digit_ids_list:
-        if _score_code_teacher_forced(model, input_tensor, dist_ids, ctx_len) >= correct_score:
+        if (
+            _score_code_teacher_forced(model, input_tensor, dist_ids, ctx_len)
+            >= correct_score
+        ):
             return 0.0
     return 1.0
 
@@ -320,7 +323,9 @@ def eval_needle_in_haystack(
 
     Random-chance baseline accuracy = 1 / (N_DISTRACTORS + 1) = {:.1%}.
     """.format(1 / (N_DISTRACTORS + 1))
-    log.info("=== Needle in Haystack (likelihood ranking, %d-way) ===", N_DISTRACTORS + 1)
+    log.info(
+        "=== Needle in Haystack (likelihood ranking, %d-way) ===", N_DISTRACTORS + 1
+    )
 
     first = models_and_meta[0]
     tokenizer = first["tokenizer"]
@@ -430,7 +435,7 @@ def main():
         action="store_true",
         default=False,
         help="Skip BPB-by-position eval and only run needle-in-haystack. "
-             "If --output already exists the BPB section is preserved.",
+        "If --output already exists the BPB section is preserved.",
     )
     args = parser.parse_args()
 

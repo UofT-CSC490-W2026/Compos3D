@@ -54,8 +54,8 @@ GPU_TRAIN = "H100:8"
 GPU_EVAL = "H100:4"
 
 # Device batch sizes
-DEVICE_BATCH_PHASE1 = 32   # seq=512
-DEVICE_BATCH_PHASE2 = 32   # seq=2048, d16 comfortably fits 32/H100
+DEVICE_BATCH_PHASE1 = 32  # seq=512
+DEVICE_BATCH_PHASE2 = 32  # seq=2048, d16 comfortably fits 32/H100
 DEVICE_BATCH_BASELINE = 32
 
 TOTAL_BATCH_SIZE = 524288
@@ -63,10 +63,10 @@ CHINCHILLA_TOKENS = 2_460_000_000  # ≈ 10.5 × 234M scaling params
 PHASE1_FRAC = 0.40  # 40% at seq=512  (chosen from sweep)
 PHASE2_FRAC = 0.60  # 60% at seq=2048 (warm-started)
 
-N_TOTAL_STEPS = CHINCHILLA_TOKENS // TOTAL_BATCH_SIZE   # ≈ 4693
-N_PHASE1_STEPS = int(N_TOTAL_STEPS * PHASE1_FRAC)       # ≈ 1877
-N_PHASE2_STEPS = N_TOTAL_STEPS - N_PHASE1_STEPS         # ≈ 2816
-N_BASELINE_STEPS = N_TOTAL_STEPS                        # full budget ≈ 4693
+N_TOTAL_STEPS = CHINCHILLA_TOKENS // TOTAL_BATCH_SIZE  # ≈ 4693
+N_PHASE1_STEPS = int(N_TOTAL_STEPS * PHASE1_FRAC)  # ≈ 1877
+N_PHASE2_STEPS = N_TOTAL_STEPS - N_PHASE1_STEPS  # ≈ 2816
+N_BASELINE_STEPS = N_TOTAL_STEPS  # full budget ≈ 4693
 
 # d12 quick-test step counts (just enough to exercise all code paths)
 N_D12_PHASE1_STEPS = 300
@@ -74,25 +74,25 @@ N_D12_PHASE2_STEPS = 300
 N_D12_BASELINE_STEPS = 300
 
 # Model tags (become subdirectories under base_checkpoints/)
-TAG_PHASE1   = "part3/d16_ctx512"
-TAG_PHASE2   = "part3/d16_ctx2048"
+TAG_PHASE1 = "part3/d16_ctx512"
+TAG_PHASE2 = "part3/d16_ctx2048"
 TAG_BASELINE = "part3/d16_baseline"
 
-TAG_D12_PHASE1   = "part3/d12_ctx512"
-TAG_D12_PHASE2   = "part3/d12_ctx2048"
+TAG_D12_PHASE1 = "part3/d12_ctx512"
+TAG_D12_PHASE2 = "part3/d12_ctx2048"
 TAG_D12_BASELINE = "part3/d12_baseline"
 
-WANDB_PROJECT      = "nanochat-part3"
-WANDB_RUN_PHASE1   = "p3_d16_phase1"
-WANDB_RUN_PHASE2   = "p3_d16_phase2"
+WANDB_PROJECT = "nanochat-part3"
+WANDB_RUN_PHASE1 = "p3_d16_phase1"
+WANDB_RUN_PHASE2 = "p3_d16_phase2"
 WANDB_RUN_BASELINE = "p3_d16_baseline"
 
 # Timeouts (d16 is roughly half the cost of d20)
-TIMEOUT_PHASE1   = 60 * 60 * 1    # 1 h
-TIMEOUT_PHASE2   = 60 * 60 * 2    # 2 h
-TIMEOUT_BASELINE = 60 * 60 * 2    # 2 h
-TIMEOUT_EVAL     = 60 * 60 * 2    # 2 h
-TIMEOUT_QUICKTEST = 60 * 60 * 1   # 1 h
+TIMEOUT_PHASE1 = 60 * 60 * 1  # 1 h
+TIMEOUT_PHASE2 = 60 * 60 * 2  # 2 h
+TIMEOUT_BASELINE = 60 * 60 * 2  # 2 h
+TIMEOUT_EVAL = 60 * 60 * 2  # 2 h
+TIMEOUT_QUICKTEST = 60 * 60 * 1  # 1 h
 
 # =============================================================================
 # HYPERPARAMETER SWEEP — 6 curriculum configs, H100:4, 300 steps per phase
@@ -104,11 +104,11 @@ TIMEOUT_QUICKTEST = 60 * 60 * 1   # 1 h
 # Each combo runs 300 phase-1 steps then 300 phase-2 steps at seq=2048.
 # Baseline (seq=2048 from scratch) is reused from Part 2 — not re-swept here.
 
-SWEEP_P3_SEQS   = [256, 512]
-SWEEP_P3_FRACS  = [0.2, 0.4, 0.6]
-SWEEP_P3_STEPS  = 300            # steps per phase within each sweep run
-GPU_SWEEP_P3    = "H100:2"
-DEVICE_BATCH_SWEEP_P3 = 16      # conservative; works for both seq=256 and seq=2048
+SWEEP_P3_SEQS = [256, 512]
+SWEEP_P3_FRACS = [0.2, 0.4, 0.6]
+SWEEP_P3_STEPS = 300  # steps per phase within each sweep run
+GPU_SWEEP_P3 = "H100:2"
+DEVICE_BATCH_SWEEP_P3 = 16  # conservative; works for both seq=256 and seq=2048
 TIMEOUT_SWEEP_P3 = 60 * 60 * 3  # 3 h for 3 combos × 2 phases sequentially
 WANDB_PROJECT_SWEEP_P3 = "part3_sweep"
 
@@ -181,9 +181,8 @@ image = (
 )
 
 # Lightweight CPU-only image for figure generation (no CUDA needed).
-figures_image = (
-    ModalImage.debian_slim(python_version="3.11")
-    .pip_install("wandb>=0.18", "matplotlib>=3.9", "numpy>=1.26")
+figures_image = ModalImage.debian_slim(python_version="3.11").pip_install(
+    "wandb>=0.18", "matplotlib>=3.9", "numpy>=1.26"
 )
 
 
@@ -526,8 +525,8 @@ def _find_last_step(model_tag: str) -> int:
     return max(int(os.path.basename(f).split("_")[1].split(".")[0]) for f in files)
 
 
-_N_TRAIN_GPUS    = int(GPU_TRAIN.split(":")[1])    if ":" in GPU_TRAIN    else 1
-_N_EVAL_GPUS     = int(GPU_EVAL.split(":")[1])     if ":" in GPU_EVAL     else 1
+_N_TRAIN_GPUS = int(GPU_TRAIN.split(":")[1]) if ":" in GPU_TRAIN else 1
+_N_EVAL_GPUS = int(GPU_EVAL.split(":")[1]) if ":" in GPU_EVAL else 1
 _N_SWEEP_P3_GPUS = int(GPU_SWEEP_P3.split(":")[1]) if ":" in GPU_SWEEP_P3 else 1
 
 
@@ -543,16 +542,18 @@ def _run_sweep_combo_p3(phase1_seq: int, phase1_frac: float, depth: int) -> None
       2. Warm-start, train SWEEP_P3_STEPS at seq=2048 (Phase 2 mini-run)
     Both phases log to WandB project part3_sweep as separate runs.
     """
-    n_steps   = SWEEP_P3_STEPS
-    bs        = DEVICE_BATCH_SWEEP_P3
-    nproc     = _N_SWEEP_P3_GPUS
-    frac_str  = f"f{int(phase1_frac * 100):02d}"
-    combo     = f"s{phase1_seq}_{frac_str}"
+    n_steps = SWEEP_P3_STEPS
+    bs = DEVICE_BATCH_SWEEP_P3
+    nproc = _N_SWEEP_P3_GPUS
+    frac_str = f"f{int(phase1_frac * 100):02d}"
+    combo = f"s{phase1_seq}_{frac_str}"
 
     # ── Phase 1 mini-run ──────────────────────────────────────────────────────
-    tag_p1   = f"part3/sweep/{combo}_p1"
-    run_p1   = f"sweep_{combo}_phase1"
-    print(f"\n{'=' * 64}\nSweep Phase 1: seq={phase1_seq}  frac={phase1_frac}  steps={n_steps}\n{'=' * 64}")
+    tag_p1 = f"part3/sweep/{combo}_p1"
+    run_p1 = f"sweep_{combo}_phase1"
+    print(
+        f"\n{'=' * 64}\nSweep Phase 1: seq={phase1_seq}  frac={phase1_frac}  steps={n_steps}\n{'=' * 64}"
+    )
     _torchrun(
         "scripts.base_train",
         [
@@ -577,7 +578,9 @@ def _run_sweep_combo_p3(phase1_seq: int, phase1_frac: float, depth: int) -> None
     p2_total_iters = p1_last_step + n_steps
     tag_p2 = f"part3/sweep/{combo}_p2"
     run_p2 = f"sweep_{combo}_phase2"
-    print(f"\n{'=' * 64}\nSweep Phase 2: seq=2048  warm-start step={p1_last_step}\n{'=' * 64}")
+    print(
+        f"\n{'=' * 64}\nSweep Phase 2: seq=2048  warm-start step={p1_last_step}\n{'=' * 64}"
+    )
     _torchrun(
         "scripts.base_train",
         [
@@ -602,8 +605,13 @@ def _run_sweep_combo_p3(phase1_seq: int, phase1_frac: float, depth: int) -> None
     print(f"  Done combo: {combo}  (phase1 run={run_p1}, phase2 run={run_p2})")
 
 
-@app.function(image=image, secrets=[secret], volumes={VOLUME_MOUNT: volume},
-              gpu=GPU_SWEEP_P3, timeout=TIMEOUT_SWEEP_P3)
+@app.function(
+    image=image,
+    secrets=[secret],
+    volumes={VOLUME_MOUNT: volume},
+    gpu=GPU_SWEEP_P3,
+    timeout=TIMEOUT_SWEEP_P3,
+)
 def stage_sweep_p3_s256(depth: int = DEPTH) -> None:
     """
     Curriculum sweep — Phase 1 seq=256, three phase-fractions: 0.2 / 0.4 / 0.6.
@@ -618,11 +626,18 @@ def stage_sweep_p3_s256(depth: int = DEPTH) -> None:
     for i, frac in enumerate(SWEEP_P3_FRACS, 1):
         print(f"\n{'#' * 64}\n[{i}/{total}] seq=256  frac={frac}\n{'#' * 64}")
         _run_sweep_combo_p3(phase1_seq=256, phase1_frac=frac, depth=depth)
-    print(f"\n{'=' * 64}\nseq=256 sweep done — {total} combos in '{WANDB_PROJECT_SWEEP_P3}'.\n{'=' * 64}")
+    print(
+        f"\n{'=' * 64}\nseq=256 sweep done — {total} combos in '{WANDB_PROJECT_SWEEP_P3}'.\n{'=' * 64}"
+    )
 
 
-@app.function(image=image, secrets=[secret], volumes={VOLUME_MOUNT: volume},
-              gpu=GPU_SWEEP_P3, timeout=TIMEOUT_SWEEP_P3)
+@app.function(
+    image=image,
+    secrets=[secret],
+    volumes={VOLUME_MOUNT: volume},
+    gpu=GPU_SWEEP_P3,
+    timeout=TIMEOUT_SWEEP_P3,
+)
 def stage_sweep_p3_s512(depth: int = DEPTH) -> None:
     """
     Curriculum sweep — Phase 1 seq=512, three phase-fractions: 0.2 / 0.4 / 0.6.
@@ -637,7 +652,9 @@ def stage_sweep_p3_s512(depth: int = DEPTH) -> None:
     for i, frac in enumerate(SWEEP_P3_FRACS, 1):
         print(f"\n{'#' * 64}\n[{i}/{total}] seq=512  frac={frac}\n{'#' * 64}")
         _run_sweep_combo_p3(phase1_seq=512, phase1_frac=frac, depth=depth)
-    print(f"\n{'=' * 64}\nseq=512 sweep done — {total} combos in '{WANDB_PROJECT_SWEEP_P3}'.\n{'=' * 64}")
+    print(
+        f"\n{'=' * 64}\nseq=512 sweep done — {total} combos in '{WANDB_PROJECT_SWEEP_P3}'.\n{'=' * 64}"
+    )
 
 
 # =============================================================================
@@ -909,6 +926,7 @@ def stage_eval_and_report() -> None:
     print("FULL REPORT:")
     print("=" * 60)
     print(report_md)
+
 
 @app.function(
     image=image,
@@ -1317,6 +1335,7 @@ def stage_make_eval_figures_p3() -> None:
     import json
 
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     import matplotlib.patches as mpatches
@@ -1332,20 +1351,20 @@ def stage_make_eval_figures_p3() -> None:
     with open(results_path) as f:
         results = json.load(f)
 
-    tags    = [TAG_PHASE1, TAG_PHASE2, TAG_BASELINE]
-    labels  = {
-        TAG_PHASE1:   "Phase 1 (ctx=512)",
-        TAG_PHASE2:   "Phase 2 (ctx=2048, warm-start)",
+    tags = [TAG_PHASE1, TAG_PHASE2, TAG_BASELINE]
+    labels = {
+        TAG_PHASE1: "Phase 1 (ctx=512)",
+        TAG_PHASE2: "Phase 2 (ctx=2048, warm-start)",
         TAG_BASELINE: "Baseline (ctx=2048, full)",
     }
-    colors  = {
-        TAG_PHASE1:   "#4C72B0",   # blue
-        TAG_PHASE2:   "#DD8452",   # orange
-        TAG_BASELINE: "#55A868",   # green
+    colors = {
+        TAG_PHASE1: "#4C72B0",  # blue
+        TAG_PHASE2: "#DD8452",  # orange
+        TAG_BASELINE: "#55A868",  # green
     }
     run_names = {
-        TAG_PHASE1:   WANDB_RUN_PHASE1,
-        TAG_PHASE2:   WANDB_RUN_PHASE2,
+        TAG_PHASE1: WANDB_RUN_PHASE1,
+        TAG_PHASE2: WANDB_RUN_PHASE2,
         TAG_BASELINE: WANDB_RUN_BASELINE,
     }
 
@@ -1397,14 +1416,28 @@ def stage_make_eval_figures_p3() -> None:
         steps, vals = fetch_run_history(run_names[tag])
         if steps:
             ls = "--" if tag == TAG_BASELINE else "-"
-            ax1.plot(steps, vals, label=labels[tag], color=colors[tag],
-                     linewidth=1.6, linestyle=ls, alpha=0.92)
+            ax1.plot(
+                steps,
+                vals,
+                label=labels[tag],
+                color=colors[tag],
+                linewidth=1.6,
+                linestyle=ls,
+                alpha=0.92,
+            )
 
-    ax1.axvline(x=N_PHASE1_STEPS, color="grey", linestyle=":", linewidth=1.4,
-                label=f"Phase 1→2 boundary (step {N_PHASE1_STEPS})")
+    ax1.axvline(
+        x=N_PHASE1_STEPS,
+        color="grey",
+        linestyle=":",
+        linewidth=1.4,
+        label=f"Phase 1→2 boundary (step {N_PHASE1_STEPS})",
+    )
     ax1.set_xlabel("Training Step", fontsize=11)
     ax1.set_ylabel("Loss / BPB ↓", fontsize=11)
-    ax1.set_title("Part 3 d16: Training Curves  (Phase 1, Phase 2, Baseline)", fontsize=12)
+    ax1.set_title(
+        "Part 3 d16: Training Curves  (Phase 1, Phase 2, Baseline)", fontsize=12
+    )
     ax1.legend(fontsize=9, loc="upper right")
     ax1.grid(alpha=0.3)
 
@@ -1414,28 +1447,39 @@ def stage_make_eval_figures_p3() -> None:
     print(f"Saved: {fig1_path}")
 
     # ── Figure 2: BPB by context position ─────────────────────────────────────
-    seg_keys   = ["seg0", "seg1", "seg2", "seg3"]
+    seg_keys = ["seg0", "seg1", "seg2", "seg3"]
     seg_labels = [
-        "seg0\n(0–511)", "seg1\n(512–1023)",
-        "seg2\n(1024–1535)", "seg3\n(1536–2047)",
+        "seg0\n(0–511)",
+        "seg1\n(512–1023)",
+        "seg2\n(1024–1535)",
+        "seg3\n(1536–2047)",
     ]
     bpb_data = results.get("bpb_by_position", {})
 
-    x       = np.arange(len(seg_keys))
-    n_mdl   = len(tags)
-    bar_w   = 0.22
+    x = np.arange(len(seg_keys))
+    n_mdl = len(tags)
+    bar_w = 0.22
     offsets = np.linspace(-(n_mdl - 1) / 2 * bar_w, (n_mdl - 1) / 2 * bar_w, n_mdl)
 
     fig2, ax2 = plt.subplots(figsize=(9, 5), constrained_layout=True)
     for i, tag in enumerate(tags):
         vals = [bpb_data.get(tag, {}).get(sk, float("nan")) for sk in seg_keys]
-        ax2.bar(x + offsets[i], vals, width=bar_w, label=labels[tag],
-                color=colors[tag], edgecolor="white", linewidth=0.5)
+        ax2.bar(
+            x + offsets[i],
+            vals,
+            width=bar_w,
+            label=labels[tag],
+            color=colors[tag],
+            edgecolor="white",
+            linewidth=0.5,
+        )
 
     ax2.set_xticks(x)
     ax2.set_xticklabels(seg_labels, fontsize=9)
     ax2.set_ylabel("BPB ↓", fontsize=11)
-    ax2.set_title("Part 3 d16: BPB by Context Position (512-token segments)", fontsize=12)
+    ax2.set_title(
+        "Part 3 d16: BPB by Context Position (512-token segments)", fontsize=12
+    )
     ax2.legend(fontsize=9)
     ax2.grid(axis="y", alpha=0.3)
 
@@ -1446,23 +1490,45 @@ def stage_make_eval_figures_p3() -> None:
 
     # ── Figure 3: Needle-in-Haystack ──────────────────────────────────────────
     needle_data = results.get("needle", {})
-    distances   = needle_data.get("distances", [64, 256, 512, 768, 1024, 1536])
+    distances = needle_data.get("distances", [64, 256, 512, 768, 1024, 1536])
 
     fig3, ax3 = plt.subplots(figsize=(9, 5), constrained_layout=True)
-    ax3.axhline(y=0.10, color="black", linestyle=":", linewidth=1.2,
-                label="Random chance (10%)", zorder=2)
+    ax3.axhline(
+        y=0.10,
+        color="black",
+        linestyle=":",
+        linewidth=1.2,
+        label="Random chance (10%)",
+        zorder=2,
+    )
 
     for tag in tags:
         accs = [needle_data.get(tag, {}).get(str(d), float("nan")) for d in distances]
-        ax3.plot(distances, accs, marker="o", markersize=5,
-                 label=labels[tag], color=colors[tag], linewidth=1.8, zorder=3)
+        ax3.plot(
+            distances,
+            accs,
+            marker="o",
+            markersize=5,
+            label=labels[tag],
+            color=colors[tag],
+            linewidth=1.8,
+            zorder=3,
+        )
         if tag == TAG_PHASE1:
-            ax3.axvspan(512.5, max(distances) + 50, alpha=0.06, color=colors[tag],
-                        label="Beyond Phase 1 context (>512)", zorder=1)
+            ax3.axvspan(
+                512.5,
+                max(distances) + 50,
+                alpha=0.06,
+                color=colors[tag],
+                label="Beyond Phase 1 context (>512)",
+                zorder=1,
+            )
 
     ax3.set_xlabel("Needle Distance from End of Context (tokens)", fontsize=11)
     ax3.set_ylabel("10-way Retrieval Accuracy ↑", fontsize=11)
-    ax3.set_title("Part 3 d16: Needle-in-Haystack  (200 trials per distance)", fontsize=12)
+    ax3.set_title(
+        "Part 3 d16: Needle-in-Haystack  (200 trials per distance)", fontsize=12
+    )
     ax3.set_xticks(distances)
     ax3.set_ylim(0, None)
     ax3.legend(fontsize=9, loc="upper right")
@@ -1482,17 +1548,20 @@ def stage_make_eval_figures_p3() -> None:
         job_type="figures",
         name="p3_eval_figures",
     ) as wrun:
-        wrun.log({
-            "eval/training_curves":  wandb.Image(fig1_path),
-            "eval/bpb_by_position":  wandb.Image(fig2_path),
-            "eval/needle_accuracy":  wandb.Image(fig3_path),
-        })
+        wrun.log(
+            {
+                "eval/training_curves": wandb.Image(fig1_path),
+                "eval/bpb_by_position": wandb.Image(fig2_path),
+                "eval/needle_accuracy": wandb.Image(fig3_path),
+            }
+        )
     print("Eval figures logged to W&B ✓")
 
 
 # =============================================================================
 # STAGE: SWEEP FIGURES  (CPU-only, no GPU)
 # =============================================================================
+
 
 @app.function(
     image=figures_image,
@@ -1520,6 +1589,7 @@ def stage_make_sweep_figures_p3() -> None:
     import os
     import wandb
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     import matplotlib.patches as mpatches
@@ -1543,13 +1613,15 @@ def stage_make_sweep_figures_p3() -> None:
         except Exception:
             pass
 
-    project_path = f"{entity}/{WANDB_PROJECT_SWEEP_P3}" if entity else WANDB_PROJECT_SWEEP_P3
+    project_path = (
+        f"{entity}/{WANDB_PROJECT_SWEEP_P3}" if entity else WANDB_PROJECT_SWEEP_P3
+    )
     print(f"Fetching runs from: {project_path}  (entity={entity!r})")
     all_runs = api.runs(project_path)
 
     # ── layout constants ──────────────────────────────────────────────────────
-    SEQS   = [256, 512]
-    FRACS  = [0.2, 0.4, 0.6]
+    SEQS = [256, 512]
+    FRACS = [0.2, 0.4, 0.6]
     PHASES = [1, 2]
 
     FRAC_LABELS = {f: f"frac={f}" for f in FRACS}
@@ -1568,8 +1640,8 @@ def stage_make_sweep_figures_p3() -> None:
         m = _RE.match(run.name)
         if not m:
             continue
-        seq   = int(m.group(1))
-        frac  = int(m.group(2)) / 100.0
+        seq = int(m.group(1))
+        frac = int(m.group(2)) / 100.0
         phase = int(m.group(3))
         if seq not in SEQS or frac not in FRACS or phase not in PHASES:
             continue
@@ -1612,7 +1684,8 @@ def stage_make_sweep_figures_p3() -> None:
     fig1, axes = plt.subplots(2, 2, figsize=(18, 10), constrained_layout=True)
     fig1.suptitle(
         "Part 3 Curriculum Sweep — Training Loss Curves (d16, 300 steps per phase)",
-        fontsize=13, y=1.02,
+        fontsize=13,
+        y=1.02,
     )
     panel_titles = {
         (0, 0): "seq=256 — Phase 1",
@@ -1633,21 +1706,32 @@ def stage_make_sweep_figures_p3() -> None:
             key = (seq, frac, phase)
             if key in histories:
                 d = histories[key]
-                ax.plot(d["steps"], d["loss"],
-                        color=FRAC_COLORS[frac],
-                        label=FRAC_LABELS[frac],
-                        linewidth=1.5, alpha=0.85)
+                ax.plot(
+                    d["steps"],
+                    d["loss"],
+                    color=FRAC_COLORS[frac],
+                    label=FRAC_LABELS[frac],
+                    linewidth=1.5,
+                    alpha=0.85,
+                )
         ax.set_title(panel_titles[(row_i, col_i)], fontsize=10, pad=4)
         ax.set_xlabel("Step", fontsize=8)
         ax.set_ylabel("Train Loss", fontsize=8)
         ax.tick_params(labelsize=7)
         ax.grid(True, alpha=0.25)
 
-    handles = [mpatches.Patch(color=FRAC_COLORS[f], label=FRAC_LABELS[f]) for f in FRACS]
-    fig1.legend(handles=handles, loc="lower center", ncol=3,
-                bbox_to_anchor=(0.5, -0.06), fontsize=9,
-                title="Phase-1 fraction of total budget  (colour consistent across all panels)",
-                title_fontsize=8)
+    handles = [
+        mpatches.Patch(color=FRAC_COLORS[f], label=FRAC_LABELS[f]) for f in FRACS
+    ]
+    fig1.legend(
+        handles=handles,
+        loc="lower center",
+        ncol=3,
+        bbox_to_anchor=(0.5, -0.06),
+        fontsize=9,
+        title="Phase-1 fraction of total budget  (colour consistent across all panels)",
+        title_fontsize=8,
+    )
 
     fig1_path = os.path.join(report_dir, "p3_sweep_loss_curves.png")
     fig1.savefig(fig1_path, dpi=150, bbox_inches="tight")
@@ -1664,8 +1748,8 @@ def stage_make_sweep_figures_p3() -> None:
         (512, 1): "seq=512\nPhase 1",
         (512, 2): "seq=512\nPhase 2",
     }
-    BAR_W     = 0.22
-    N_FRACS   = len(FRACS)
+    BAR_W = 0.22
+    N_FRACS = len(FRACS)
     GROUP_GAP = 0.6
 
     fig2, ax2 = plt.subplots(figsize=(14, 6), constrained_layout=True)
@@ -1676,8 +1760,9 @@ def stage_make_sweep_figures_p3() -> None:
 
     group_centers = []
     x = 0.0
-    offsets = np.linspace(-(N_FRACS - 1) / 2 * BAR_W,
-                          (N_FRACS - 1) / 2 * BAR_W, N_FRACS)
+    offsets = np.linspace(
+        -(N_FRACS - 1) / 2 * BAR_W, (N_FRACS - 1) / 2 * BAR_W, N_FRACS
+    )
     xtick_pos, xtick_lbl = [], []
 
     for grp in GROUPS:
@@ -1685,13 +1770,28 @@ def stage_make_sweep_figures_p3() -> None:
         seq_g, phase_g = grp
         for i, frac in enumerate(FRACS):
             val = final_loss.get((seq_g, frac, phase_g))
-            bx  = cx + offsets[i]
+            bx = cx + offsets[i]
             if val is not None:
-                ax2.bar(bx, val, width=BAR_W, color=FRAC_COLORS[frac],
-                        edgecolor="white", linewidth=0.4, zorder=3)
+                ax2.bar(
+                    bx,
+                    val,
+                    width=BAR_W,
+                    color=FRAC_COLORS[frac],
+                    edgecolor="white",
+                    linewidth=0.4,
+                    zorder=3,
+                )
             else:
-                ax2.bar(bx, 0, width=BAR_W, color=FRAC_COLORS[frac],
-                        alpha=0.15, edgecolor="grey", linewidth=0.4, zorder=3)
+                ax2.bar(
+                    bx,
+                    0,
+                    width=BAR_W,
+                    color=FRAC_COLORS[frac],
+                    alpha=0.15,
+                    edgecolor="grey",
+                    linewidth=0.4,
+                    zorder=3,
+                )
         xtick_pos.append(cx)
         xtick_lbl.append(GROUP_LABELS[grp])
         group_centers.append(cx)
@@ -1702,9 +1802,16 @@ def stage_make_sweep_figures_p3() -> None:
     ax2.set_ylabel("Final Train Loss ↓", fontsize=10)
     ax2.grid(axis="y", alpha=0.3, zorder=0)
 
-    handles2 = [mpatches.Patch(color=FRAC_COLORS[f], label=FRAC_LABELS[f]) for f in FRACS]
-    ax2.legend(handles=handles2, fontsize=9, title="Phase-1 fraction",
-               title_fontsize=8, loc="upper right")
+    handles2 = [
+        mpatches.Patch(color=FRAC_COLORS[f], label=FRAC_LABELS[f]) for f in FRACS
+    ]
+    ax2.legend(
+        handles=handles2,
+        fontsize=9,
+        title="Phase-1 fraction",
+        title_fontsize=8,
+        loc="upper right",
+    )
 
     fig2_path = os.path.join(report_dir, "p3_sweep_bar_chart.png")
     fig2.savefig(fig2_path, dpi=150, bbox_inches="tight")
@@ -1720,8 +1827,10 @@ def stage_make_sweep_figures_p3() -> None:
         job_type="figures",
         name="sweep_figures_p3",
     ) as wrun:
-        wrun.log({
-            "sweep/loss_curves":  wandb.Image(fig1_path),
-            "sweep/final_loss_bar": wandb.Image(fig2_path),
-        })
+        wrun.log(
+            {
+                "sweep/loss_curves": wandb.Image(fig1_path),
+                "sweep/final_loss_bar": wandb.Image(fig2_path),
+            }
+        )
     print("Figures logged to W&B ✓")

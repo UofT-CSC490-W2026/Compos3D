@@ -60,42 +60,42 @@ N_D12_STEPS = 200
 
 # Model tags (subdirectories under base_checkpoints/)
 TAG_BASELINE = "a2arch/d16_baseline"
-TAG_SWIGLU   = "a2arch/d16_swiglu"
-TAG_YARN     = "a2arch/d16_yarn"
+TAG_SWIGLU = "a2arch/d16_swiglu"
+TAG_YARN = "a2arch/d16_yarn"
 
 TAG_D12_BASELINE = "a2arch/d12_baseline"
-TAG_D12_SWIGLU   = "a2arch/d12_swiglu"
-TAG_D12_YARN     = "a2arch/d12_yarn"
+TAG_D12_SWIGLU = "a2arch/d12_swiglu"
+TAG_D12_YARN = "a2arch/d12_yarn"
 
-WANDB_PROJECT       = "part2_arch"
-WANDB_RUN_BASELINE  = "d16_baseline"
-WANDB_RUN_SWIGLU    = "d16_swiglu"
-WANDB_RUN_YARN      = "d16_yarn"
+WANDB_PROJECT = "part2_arch"
+WANDB_RUN_BASELINE = "d16_baseline"
+WANDB_RUN_SWIGLU = "d16_swiglu"
+WANDB_RUN_YARN = "d16_yarn"
 
 # YaRN scale factor for the yarn experiment
 YARN_SCALE = 8.0
 
 # Timeouts
-TIMEOUT_TRAIN     = 60 * 60 * 2   # 2 h per training run
-TIMEOUT_EVAL      = 60 * 60 * 2   # 2 h for eval on 3 checkpoints
-TIMEOUT_QUICKTEST = 60 * 60 * 1   # 1 h
+TIMEOUT_TRAIN = 60 * 60 * 2  # 2 h per training run
+TIMEOUT_EVAL = 60 * 60 * 2  # 2 h for eval on 3 checkpoints
+TIMEOUT_QUICKTEST = 60 * 60 * 1  # 1 h
 
 # Volume / cache paths
-VOLUME_MOUNT  = "/vol"
+VOLUME_MOUNT = "/vol"
 NANOCHAT_CACHE = f"{VOLUME_MOUNT}/nanochat_cache"
-BASE_DIR       = "/data/.cache/nanochat"
+BASE_DIR = "/data/.cache/nanochat"
 
 # =============================================================================
 # MODAL PRIMITIVES
 # =============================================================================
 
-app    = modal.App("nanochat-part2-arch")
+app = modal.App("nanochat-part2-arch")
 volume = Volume.from_name("nanochat-vol", create_if_missing=True)
 secret = Secret.from_name("nanochat-secrets")
 
-_THIS_DIR    = os.path.dirname(os.path.abspath(__file__))
+_THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 _NANOCHAT_DIR = os.path.join(_THIS_DIR, "..", "nanochat")
-_PATCHES_DIR  = os.path.join(_THIS_DIR, "patches")
+_PATCHES_DIR = os.path.join(_THIS_DIR, "patches")
 
 image = (
     ModalImage.from_registry("nvidia/cuda:12.8.1-devel-ubuntu24.04", add_python="3.11")
@@ -157,7 +157,9 @@ def _run(cmd: str) -> None:
         raise RuntimeError(f"Command exited with code {result.returncode}:\n  {cmd}")
 
 
-def _python(module: str, args: list | None = None, *, cwd: str = "/root/nanochat") -> None:
+def _python(
+    module: str, args: list | None = None, *, cwd: str = "/root/nanochat"
+) -> None:
     args = args or []
     _run(
         f"cd {cwd} && PYTHONPATH=/root/nanochat:$PYTHONPATH "
@@ -188,6 +190,7 @@ def _setup_cache() -> None:
 
 def _find_last_step(model_tag: str) -> int:
     import glob
+
     ckpt_dir = os.path.join(BASE_DIR, "base_checkpoints", model_tag)
     files = glob.glob(os.path.join(ckpt_dir, "model_*.pt"))
     if not files:
@@ -201,6 +204,7 @@ def _collect_core_csv(tag: str) -> dict:
     { "core_metric": float | None, "tasks": { task_name: score, ... } }
     """
     import csv as _csv
+
     step = _find_last_step(tag)
     tag_slug = tag.replace("/", "-").replace("\\", "-")
     csv_path = os.path.join(NANOCHAT_CACHE, "base_eval", f"{tag_slug}_{step:06d}.csv")
@@ -270,12 +274,12 @@ def _build_report_markdown(
     table(
         ["Parameter", "Baseline", "SwiGLU", "YaRN"],
         [
-            ["depth (n_layer)",   str(depth)]  * 3 + [str(depth)],
-            ["n_embd",            str(n_embd)] * 3 + [str(n_embd)],
-            ["approx params",     f"~{approx_params_m}M"] * 3 + [f"~{approx_params_m}M"],
-            ["activation",        "ReLU²", "SwiGLU", "ReLU²"],
-            ["positional enc.",   "RoPE",  "RoPE",   "YaRN (scale=8)"],
-            ["extra params",      "—",     "~0%",    "—"],
+            ["depth (n_layer)", str(depth)] * 3 + [str(depth)],
+            ["n_embd", str(n_embd)] * 3 + [str(n_embd)],
+            ["approx params", f"~{approx_params_m}M"] * 3 + [f"~{approx_params_m}M"],
+            ["activation", "ReLU²", "SwiGLU", "ReLU²"],
+            ["positional enc.", "RoPE", "RoPE", "YaRN (scale=8)"],
+            ["extra params", "—", "~0%", "—"],
         ],
     )
 
@@ -284,28 +288,36 @@ def _build_report_markdown(
     table(
         ["Parameter", "Value"],
         [
-            ["seq_len",                 "2048"],
-            ["steps",                   str(n_steps)],
-            ["tokens",                  f"{chinchilla_tokens / 1e9:.3f}B"],
+            ["seq_len", "2048"],
+            ["steps", str(n_steps)],
+            ["tokens", f"{chinchilla_tokens / 1e9:.3f}B"],
             ["total_batch_size (tokens)", str(total_batch_size)],
-            ["device_batch_size",        str(device_batch)],
-            ["grad_accum_steps",         str(grad_accum)],
-            ["GPUs",                     f"{n_gpus}×H100"],
+            ["device_batch_size", str(device_batch)],
+            ["grad_accum_steps", str(grad_accum)],
+            ["GPUs", f"{n_gpus}×H100"],
             ["optimizer (matrix params)", "Muon"],
-            ["optimizer (embeddings)",    "AdamW"],
-            ["WandB project",            WANDB_PROJECT],
+            ["optimizer (embeddings)", "AdamW"],
+            ["WandB project", WANDB_PROJECT],
         ],
     )
 
     # ── 3. CORE Results ────────────────────────────────────────────────────────
     section("3. CORE Results")
     result_rows = []
-    for label, tag in [("Baseline", tag_baseline), ("SwiGLU", tag_swiglu), ("YaRN", tag_yarn)]:
+    for label, tag in [
+        ("Baseline", tag_baseline),
+        ("SwiGLU", tag_swiglu),
+        ("YaRN", tag_yarn),
+    ]:
         r = results.get("training", {}).get(tag, {})
-        result_rows.append([
-            label,
-            f"{r['core_metric']:.4f}" if isinstance(r.get("core_metric"), float) else "N/A",
-        ])
+        result_rows.append(
+            [
+                label,
+                f"{r['core_metric']:.4f}"
+                if isinstance(r.get("core_metric"), float)
+                else "N/A",
+            ]
+        )
     table(["Run", "CORE score ↑"], result_rows)
 
     # ── 4. CORE Per-Task Breakdown ─────────────────────────────────────────────
@@ -325,7 +337,9 @@ def _build_report_markdown(
             ["**CORE aggregate**"]
             + [
                 f"**{results['training'][tag]['core_metric']:.4f}**"
-                if isinstance(results.get("training", {}).get(tag, {}).get("core_metric"), float)
+                if isinstance(
+                    results.get("training", {}).get(tag, {}).get("core_metric"), float
+                )
                 else "N/A"
                 for tag in [tag_baseline, tag_swiglu, tag_yarn]
             ]
@@ -338,7 +352,7 @@ def _build_report_markdown(
 
 
 _N_TRAIN_GPUS = int(GPU_TRAIN.split(":")[1]) if ":" in GPU_TRAIN else 1
-_N_EVAL_GPUS  = int(GPU_EVAL.split(":")[1])  if ":" in GPU_EVAL  else 1
+_N_EVAL_GPUS = int(GPU_EVAL.split(":")[1]) if ":" in GPU_EVAL else 1
 
 
 # =============================================================================
@@ -398,8 +412,12 @@ def _train_run(
 def stage_train_baseline(depth: int = DEPTH, n_steps: int = N_TOTAL_STEPS) -> None:
     """Baseline: d16, seq=2048, ReLU², standard RoPE."""
     _train_run(
-        depth=depth, activation="relu2", rope_type="rope",
-        tag=TAG_BASELINE, wandb_run=WANDB_RUN_BASELINE, n_steps=n_steps,
+        depth=depth,
+        activation="relu2",
+        rope_type="rope",
+        tag=TAG_BASELINE,
+        wandb_run=WANDB_RUN_BASELINE,
+        n_steps=n_steps,
     )
 
 
@@ -413,8 +431,12 @@ def stage_train_baseline(depth: int = DEPTH, n_steps: int = N_TOTAL_STEPS) -> No
 def stage_train_swiglu(depth: int = DEPTH, n_steps: int = N_TOTAL_STEPS) -> None:
     """SwiGLU: d16, seq=2048, SwiGLU MLP (parameter-equivalent), standard RoPE."""
     _train_run(
-        depth=depth, activation="swiglu", rope_type="rope",
-        tag=TAG_SWIGLU, wandb_run=WANDB_RUN_SWIGLU, n_steps=n_steps,
+        depth=depth,
+        activation="swiglu",
+        rope_type="rope",
+        tag=TAG_SWIGLU,
+        wandb_run=WANDB_RUN_SWIGLU,
+        n_steps=n_steps,
     )
 
 
@@ -428,8 +450,13 @@ def stage_train_swiglu(depth: int = DEPTH, n_steps: int = N_TOTAL_STEPS) -> None
 def stage_train_yarn(depth: int = DEPTH, n_steps: int = N_TOTAL_STEPS) -> None:
     """YaRN: d16, seq=2048, ReLU², YaRN NTK-by-Parts RoPE (scale=8)."""
     _train_run(
-        depth=depth, activation="relu2", rope_type="yarn", yarn_scale=YARN_SCALE,
-        tag=TAG_YARN, wandb_run=WANDB_RUN_YARN, n_steps=n_steps,
+        depth=depth,
+        activation="relu2",
+        rope_type="yarn",
+        yarn_scale=YARN_SCALE,
+        tag=TAG_YARN,
+        wandb_run=WANDB_RUN_YARN,
+        n_steps=n_steps,
     )
 
 
@@ -465,7 +492,9 @@ def stage_eval_and_report() -> None:
     if not os.path.isdir(eval_bundle_dir):
         print("Downloading eval bundle (~1GB)...")
         zip_path = "/tmp/eval_bundle.zip"
-        _run(f"curl -L -o {zip_path} https://karpathy-public.s3.us-west-2.amazonaws.com/eval_bundle.zip")
+        _run(
+            f"curl -L -o {zip_path} https://karpathy-public.s3.us-west-2.amazonaws.com/eval_bundle.zip"
+        )
         _run(f"unzip -q {zip_path} -d {NANOCHAT_CACHE} && rm {zip_path}")
         volume.commit()
 
@@ -554,10 +583,10 @@ def quick_test_d12() -> None:
       - Eval:     CORE on all 3 d12 checkpoints
     """
     _setup_cache()
-    nproc    = 4
-    bs       = 8
+    nproc = 4
+    bs = 8
     total_bs = 65536
-    n_steps  = N_D12_STEPS
+    n_steps = N_D12_STEPS
 
     common_args = [
         "--depth=12",
@@ -575,7 +604,8 @@ def quick_test_d12() -> None:
     print("=== Quick test: Baseline (d12, relu2, rope, 200 steps) ===")
     _torchrun(
         "scripts.base_train",
-        common_args + [
+        common_args
+        + [
             f"--model-tag={TAG_D12_BASELINE}",
             "--activation=relu2",
             "--rope-type=rope",
@@ -589,7 +619,8 @@ def quick_test_d12() -> None:
     print("=== Quick test: SwiGLU (d12, swiglu, rope, 200 steps) ===")
     _torchrun(
         "scripts.base_train",
-        common_args + [
+        common_args
+        + [
             f"--model-tag={TAG_D12_SWIGLU}",
             "--activation=swiglu",
             "--rope-type=rope",
@@ -603,7 +634,8 @@ def quick_test_d12() -> None:
     print("=== Quick test: YaRN (d12, relu2, yarn, 200 steps) ===")
     _torchrun(
         "scripts.base_train",
-        common_args + [
+        common_args
+        + [
             f"--model-tag={TAG_D12_YARN}",
             "--activation=relu2",
             "--rope-type=yarn",
@@ -619,12 +651,14 @@ def quick_test_d12() -> None:
     if not os.path.isdir(eval_bundle_dir):
         print("Downloading eval bundle (~1GB)...")
         zip_path = "/tmp/eval_bundle.zip"
-        _run(f"curl -L -o {zip_path} https://karpathy-public.s3.us-west-2.amazonaws.com/eval_bundle.zip")
+        _run(
+            f"curl -L -o {zip_path} https://karpathy-public.s3.us-west-2.amazonaws.com/eval_bundle.zip"
+        )
         _run(f"unzip -q {zip_path} -d {NANOCHAT_CACHE} && rm {zip_path}")
         volume.commit()
 
     # --- CORE eval on all 3 d12 checkpoints ---
-    d12_tags  = [TAG_D12_BASELINE, TAG_D12_SWIGLU, TAG_D12_YARN]
+    d12_tags = [TAG_D12_BASELINE, TAG_D12_SWIGLU, TAG_D12_YARN]
     core_data: dict = {}
     for tag in d12_tags:
         print(f"\n=== Quick test CORE eval: {tag} ===")
@@ -644,7 +678,10 @@ def quick_test_d12() -> None:
     results: dict = {"training": {}, "core_tasks": {}}
     for tag in d12_tags:
         d = core_data.get(tag, {})
-        results["training"][tag] = {"core_metric": d.get("core_metric"), "val_bpb": None}
+        results["training"][tag] = {
+            "core_metric": d.get("core_metric"),
+            "val_bpb": None,
+        }
         if d.get("tasks"):
             results["core_tasks"][tag] = d["tasks"]
 
@@ -697,7 +734,9 @@ def main() -> None:
     print("\n" + "=" * w)
     print("part2_arch: Architecture Ablations (SwiGLU & YaRN)")
     print(f"  depth={DEPTH}  seq=2048  steps={N_TOTAL_STEPS}")
-    print(f"  chinchilla_tokens={CHINCHILLA_TOKENS / 1e9:.2f}B  batch={TOTAL_BATCH_SIZE}")
+    print(
+        f"  chinchilla_tokens={CHINCHILLA_TOKENS / 1e9:.2f}B  batch={TOTAL_BATCH_SIZE}"
+    )
     print("=" * w + "\n")
 
     # Step 1: Smoke test
@@ -707,8 +746,8 @@ def main() -> None:
     # Step 2: All 3 d16 training runs in parallel
     print("[1/3] Training baseline, SwiGLU, YaRN in parallel...")
     baseline_h = stage_train_baseline.spawn()
-    swiglu_h   = stage_train_swiglu.spawn()
-    yarn_h     = stage_train_yarn.spawn()
+    swiglu_h = stage_train_swiglu.spawn()
+    yarn_h = stage_train_yarn.spawn()
     baseline_h.get()
     swiglu_h.get()
     yarn_h.get()

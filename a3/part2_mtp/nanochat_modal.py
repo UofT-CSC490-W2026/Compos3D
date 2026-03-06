@@ -55,14 +55,14 @@ N_TOTAL_STEPS = CHINCHILLA_TOKENS // TOTAL_BATCH_SIZE  # ≈ 4693
 N_D12_STEPS = 200
 
 # Model tags (subdirectories under base_checkpoints/)
-TAG_BASELINE   = "a2mtp/d16_baseline"
-TAG_MTP2       = "a2mtp/d16_mtp2"
-TAG_MTP4       = "a2mtp/d16_mtp4"
-TAG_MTP2_YARN  = "a2mtp/d16_mtp2_yarn"
+TAG_BASELINE = "a2mtp/d16_baseline"
+TAG_MTP2 = "a2mtp/d16_mtp2"
+TAG_MTP4 = "a2mtp/d16_mtp4"
+TAG_MTP2_YARN = "a2mtp/d16_mtp2_yarn"
 
-TAG_D12_BASELINE  = "a2mtp/d12_baseline"
-TAG_D12_MTP2      = "a2mtp/d12_mtp2"
-TAG_D12_MTP4      = "a2mtp/d12_mtp4"
+TAG_D12_BASELINE = "a2mtp/d12_baseline"
+TAG_D12_MTP2 = "a2mtp/d12_mtp2"
+TAG_D12_MTP4 = "a2mtp/d12_mtp4"
 TAG_D12_MTP2_YARN = "a2mtp/d12_mtp2_yarn"
 
 YARN_SCALE = 8.0  # YaRN context extension factor
@@ -71,31 +71,31 @@ YARN_SCALE = 8.0  # YaRN context extension factor
 # HYPERPARAMETER SWEEP — 9 short d16 runs, H100:2, 300 steps each
 # =============================================================================
 
-SWEEP_LRS      = [0.01, 0.02, 0.04]        # matrix LR values to test
-SWEEP_BATCHES  = [131072, 262144, 524288]   # total batch sizes to test
-SWEEP_STEPS    = 300
-GPU_SWEEP      = "H100:2"
-DEVICE_BATCH_SWEEP = 16                    # per-GPU device batch; grad_accum derived automatically
-TIMEOUT_SWEEP  = 60 * 60 * 14             # 14 h for 4 configs × 9 runs = 36 sequential runs
+SWEEP_LRS = [0.01, 0.02, 0.04]  # matrix LR values to test
+SWEEP_BATCHES = [131072, 262144, 524288]  # total batch sizes to test
+SWEEP_STEPS = 300
+GPU_SWEEP = "H100:2"
+DEVICE_BATCH_SWEEP = 16  # per-GPU device batch; grad_accum derived automatically
+TIMEOUT_SWEEP = 60 * 60 * 14  # 14 h for 4 configs × 9 runs = 36 sequential runs
 WANDB_PROJECT_SWEEP = "part2_sweep"
 
 # All 4 configs to sweep — each gets its own 9-run LR×batch grid
 SWEEP_CONFIGS = [
-    dict(name="baseline",  mtp_k=0, rope_type="rope",  yarn_scale=YARN_SCALE),
-    dict(name="mtp2",      mtp_k=2, rope_type="rope",  yarn_scale=YARN_SCALE),
-    dict(name="mtp4",      mtp_k=4, rope_type="rope",  yarn_scale=YARN_SCALE),
-    dict(name="mtp2_yarn", mtp_k=2, rope_type="yarn",  yarn_scale=YARN_SCALE),
+    dict(name="baseline", mtp_k=0, rope_type="rope", yarn_scale=YARN_SCALE),
+    dict(name="mtp2", mtp_k=2, rope_type="rope", yarn_scale=YARN_SCALE),
+    dict(name="mtp4", mtp_k=4, rope_type="rope", yarn_scale=YARN_SCALE),
+    dict(name="mtp2_yarn", mtp_k=2, rope_type="yarn", yarn_scale=YARN_SCALE),
 ]
 
-WANDB_PROJECT         = "part2_mtp"
-WANDB_RUN_BASELINE    = "d16_baseline"
-WANDB_RUN_MTP2        = "d16_mtp2"
-WANDB_RUN_MTP4        = "d16_mtp4"
-WANDB_RUN_MTP2_YARN   = "d16_mtp2_yarn"
+WANDB_PROJECT = "part2_mtp"
+WANDB_RUN_BASELINE = "d16_baseline"
+WANDB_RUN_MTP2 = "d16_mtp2"
+WANDB_RUN_MTP4 = "d16_mtp4"
+WANDB_RUN_MTP2_YARN = "d16_mtp2_yarn"
 
 # Timeouts
-TIMEOUT_TRAIN = 60 * 60 * 2    # 2 h per training run
-TIMEOUT_EVAL = 60 * 60 * 2     # 2 h for eval on 3 checkpoints
+TIMEOUT_TRAIN = 60 * 60 * 2  # 2 h per training run
+TIMEOUT_EVAL = 60 * 60 * 2  # 2 h for eval on 3 checkpoints
 TIMEOUT_QUICKTEST = 60 * 60 * 1  # 1 h
 
 # Volume / cache paths
@@ -165,9 +165,8 @@ image = (
 
 # Lightweight CPU-only image used solely for figure generation.
 # No CUDA / Rust / uv needed — just matplotlib + wandb + numpy.
-figures_image = (
-    ModalImage.debian_slim(python_version="3.11")
-    .pip_install("wandb>=0.18", "matplotlib>=3.9", "numpy>=1.26")
+figures_image = ModalImage.debian_slim(python_version="3.11").pip_install(
+    "wandb>=0.18", "matplotlib>=3.9", "numpy>=1.26"
 )
 
 
@@ -184,7 +183,9 @@ def _run(cmd: str) -> None:
         raise RuntimeError(f"Command exited with code {result.returncode}:\n  {cmd}")
 
 
-def _python(module: str, args: list | None = None, *, cwd: str = "/root/nanochat") -> None:
+def _python(
+    module: str, args: list | None = None, *, cwd: str = "/root/nanochat"
+) -> None:
     """Run `uv run python -m {module} [args]` — for non-distributed scripts."""
     args = args or []
     _run(
@@ -219,6 +220,7 @@ def _setup_cache() -> None:
 def _find_last_step(model_tag: str) -> int:
     """Return the highest checkpoint step saved under base_checkpoints/{model_tag}."""
     import glob
+
     ckpt_dir = os.path.join(BASE_DIR, "base_checkpoints", model_tag)
     files = glob.glob(os.path.join(ckpt_dir, "model_*.pt"))
     if not files:
@@ -351,38 +353,48 @@ def _build_report_markdown(
     table(
         ["Parameter", "Baseline", "MTP-2", "MTP-4", "MTP-2+YaRN"],
         [
-            ["mtp_k",            "0",      "2",      "4",      "2"],
-            ["rope_type",        "rope",   "rope",   "rope",   "yarn"],
-            ["yarn_scale",       "—",      "—",      "—",      "8.0"],
-            ["seq_len",          "2048",   "2048",   "2048",   "2048"],
-            ["warm-start from",  "—",      "—",      "—",      "—"],
-            ["steps",            str(n_steps)] * 4,
-            ["tokens",           f"{chinchilla_tokens / 1e9:.3f}B"] * 4,
+            ["mtp_k", "0", "2", "4", "2"],
+            ["rope_type", "rope", "rope", "rope", "yarn"],
+            ["yarn_scale", "—", "—", "—", "8.0"],
+            ["seq_len", "2048", "2048", "2048", "2048"],
+            ["warm-start from", "—", "—", "—", "—"],
+            ["steps", str(n_steps)] * 4,
+            ["tokens", f"{chinchilla_tokens / 1e9:.3f}B"] * 4,
             ["total_batch_size", str(total_batch_size)] * 4,
-            ["device_batch",     str(device_batch)] * 4,
-            ["grad_accum",       str(grad_accum)] * 4,
-            ["GPUs",             f"{n_gpus}×H100"] * 4,
-            ["WandB run",        wandb_run_baseline, wandb_run_mtp2, wandb_run_mtp4, wandb_run_mtp2_yarn],
+            ["device_batch", str(device_batch)] * 4,
+            ["grad_accum", str(grad_accum)] * 4,
+            ["GPUs", f"{n_gpus}×H100"] * 4,
+            [
+                "WandB run",
+                wandb_run_baseline,
+                wandb_run_mtp2,
+                wandb_run_mtp4,
+                wandb_run_mtp2_yarn,
+            ],
         ],
     )
 
     # ── 3. Training Metrics ────────────────────────────────────────────────────
     section("3. Training Metrics")
     all_tags_labels = [
-        ("Baseline",    tag_baseline),
-        ("MTP-2",       tag_mtp2),
-        ("MTP-4",       tag_mtp4),
-        ("MTP-2+YaRN",  tag_mtp2_yarn),
+        ("Baseline", tag_baseline),
+        ("MTP-2", tag_mtp2),
+        ("MTP-4", tag_mtp4),
+        ("MTP-2+YaRN", tag_mtp2_yarn),
     ]
     training_rows = []
     for label, tag in all_tags_labels:
         r = results.get("training", {}).get(tag, {})
-        training_rows.append([
-            label,
-            f"{r['val_bpb']:.6f}" if isinstance(r.get("val_bpb"), float) else "N/A",
-            f"{r['core_metric']:.4f}" if isinstance(r.get("core_metric"), float) else "N/A",
-            f"{r.get('training_time_min', 'N/A')}",
-        ])
+        training_rows.append(
+            [
+                label,
+                f"{r['val_bpb']:.6f}" if isinstance(r.get("val_bpb"), float) else "N/A",
+                f"{r['core_metric']:.4f}"
+                if isinstance(r.get("core_metric"), float)
+                else "N/A",
+                f"{r.get('training_time_min', 'N/A')}",
+            ]
+        )
     table(["Run", "Final val BPB ↓", "CORE score ↑", "Train time (min)"], training_rows)
 
     # ── 4. CORE Per-Task Breakdown ─────────────────────────────────────────────
@@ -404,7 +416,9 @@ def _build_report_markdown(
             ["**CORE aggregate**"]
             + [
                 f"**{results['training'][tag]['core_metric']:.4f}**"
-                if isinstance(results.get("training", {}).get(tag, {}).get("core_metric"), float)
+                if isinstance(
+                    results.get("training", {}).get(tag, {}).get("core_metric"), float
+                )
                 else "N/A"
                 for tag in ordered_tags
             ]
@@ -433,25 +447,27 @@ def _run_sweep_for_config(cfg: dict, depth: int) -> None:
     Called by each of the four per-config sweep stages.
     """
     _setup_cache()
-    cfg_name   = cfg["name"]
-    mtp_k      = cfg["mtp_k"]
-    rope_type  = cfg["rope_type"]
+    cfg_name = cfg["name"]
+    mtp_k = cfg["mtp_k"]
+    rope_type = cfg["rope_type"]
     yarn_scale = cfg["yarn_scale"]
-    lrs        = SWEEP_LRS
-    batches    = SWEEP_BATCHES
-    n_steps    = SWEEP_STEPS
-    bs         = DEVICE_BATCH_SWEEP
-    nproc      = _N_SWEEP_GPUS
-    total      = len(lrs) * len(batches)
+    lrs = SWEEP_LRS
+    batches = SWEEP_BATCHES
+    n_steps = SWEEP_STEPS
+    bs = DEVICE_BATCH_SWEEP
+    nproc = _N_SWEEP_GPUS
+    total = len(lrs) * len(batches)
 
-    print(f"\n{'#' * 64}\nSweep config: {cfg_name}  mtp_k={mtp_k}  rope_type={rope_type}\n{'#' * 64}")
+    print(
+        f"\n{'#' * 64}\nSweep config: {cfg_name}  mtp_k={mtp_k}  rope_type={rope_type}\n{'#' * 64}"
+    )
 
     idx = 0
     for lr in lrs:
         for batch in batches:
             idx += 1
             run_name = f"sweep_{cfg_name}_lr{lr:g}_bs{batch // 1000}k"
-            tag      = f"a2mtp/sweep/{run_name}"
+            tag = f"a2mtp/sweep/{run_name}"
             print(f"\n{'=' * 64}\n[{idx}/{total}] {run_name}\n{'=' * 64}")
             _torchrun(
                 "scripts.base_train",
@@ -466,8 +482,8 @@ def _run_sweep_for_config(cfg: dict, depth: int) -> None:
                     f"--device-batch-size={bs}",
                     f"--total-batch-size={batch}",
                     f"--num-iterations={n_steps}",
-                    "--save-every=9999",        # no mid-run checkpoints
-                    "--core-metric-every=9999", # skip CORE eval
+                    "--save-every=9999",  # no mid-run checkpoints
+                    "--core-metric-every=9999",  # skip CORE eval
                     "--sample-every=-1",
                     f"--wandb-project={WANDB_PROJECT_SWEEP}",
                     f"--run={run_name}",
@@ -485,29 +501,49 @@ def _run_sweep_for_config(cfg: dict, depth: int) -> None:
     )
 
 
-@app.function(image=image, secrets=[secret], volumes={VOLUME_MOUNT: volume},
-              gpu=GPU_SWEEP, timeout=TIMEOUT_SWEEP)
+@app.function(
+    image=image,
+    secrets=[secret],
+    volumes={VOLUME_MOUNT: volume},
+    gpu=GPU_SWEEP,
+    timeout=TIMEOUT_SWEEP,
+)
 def stage_sweep_baseline(depth: int = DEPTH) -> None:
     """Sweep: baseline (mtp_k=0, rope=rope) — 9 runs, 300 steps each, 2×H100."""
     _run_sweep_for_config(SWEEP_CONFIGS[0], depth)
 
 
-@app.function(image=image, secrets=[secret], volumes={VOLUME_MOUNT: volume},
-              gpu=GPU_SWEEP, timeout=TIMEOUT_SWEEP)
+@app.function(
+    image=image,
+    secrets=[secret],
+    volumes={VOLUME_MOUNT: volume},
+    gpu=GPU_SWEEP,
+    timeout=TIMEOUT_SWEEP,
+)
 def stage_sweep_mtp2(depth: int = DEPTH) -> None:
     """Sweep: MTP-2 (mtp_k=2, rope=rope) — 9 runs, 300 steps each, 2×H100."""
     _run_sweep_for_config(SWEEP_CONFIGS[1], depth)
 
 
-@app.function(image=image, secrets=[secret], volumes={VOLUME_MOUNT: volume},
-              gpu=GPU_SWEEP, timeout=TIMEOUT_SWEEP)
+@app.function(
+    image=image,
+    secrets=[secret],
+    volumes={VOLUME_MOUNT: volume},
+    gpu=GPU_SWEEP,
+    timeout=TIMEOUT_SWEEP,
+)
 def stage_sweep_mtp4(depth: int = DEPTH) -> None:
     """Sweep: MTP-4 (mtp_k=4, rope=rope) — 9 runs, 300 steps each, 2×H100."""
     _run_sweep_for_config(SWEEP_CONFIGS[2], depth)
 
 
-@app.function(image=image, secrets=[secret], volumes={VOLUME_MOUNT: volume},
-              gpu=GPU_SWEEP, timeout=TIMEOUT_SWEEP)
+@app.function(
+    image=image,
+    secrets=[secret],
+    volumes={VOLUME_MOUNT: volume},
+    gpu=GPU_SWEEP,
+    timeout=TIMEOUT_SWEEP,
+)
 def stage_sweep_mtp2_yarn(depth: int = DEPTH) -> None:
     """Sweep: MTP-2+YaRN (mtp_k=2, rope=yarn) — 9 runs, 300 steps each, 2×H100."""
     _run_sweep_for_config(SWEEP_CONFIGS[3], depth)
@@ -516,6 +552,7 @@ def stage_sweep_mtp2_yarn(depth: int = DEPTH) -> None:
 # =============================================================================
 # TRAINING STAGES — all d16, seq=2048, from scratch
 # =============================================================================
+
 
 def _train_run(
     *,
@@ -532,7 +569,9 @@ def _train_run(
 ) -> None:
     """Shared training logic for all MTP/YaRN experiments."""
     _setup_cache()
-    print(f"Training: depth={depth} seq=2048 mtp_k={mtp_k} rope_type={rope_type} steps={n_steps} tag={tag}")
+    print(
+        f"Training: depth={depth} seq=2048 mtp_k={mtp_k} rope_type={rope_type} steps={n_steps} tag={tag}"
+    )
     _torchrun(
         "scripts.base_train",
         [
@@ -566,8 +605,11 @@ def _train_run(
 def stage_train_baseline(depth: int = DEPTH, n_steps: int = N_TOTAL_STEPS) -> None:
     """Baseline: d16, seq=2048, mtp_k=0, full Chinchilla budget from scratch."""
     _train_run(
-        depth=depth, mtp_k=0, tag=TAG_BASELINE,
-        wandb_run=WANDB_RUN_BASELINE, n_steps=n_steps,
+        depth=depth,
+        mtp_k=0,
+        tag=TAG_BASELINE,
+        wandb_run=WANDB_RUN_BASELINE,
+        n_steps=n_steps,
     )
 
 
@@ -581,8 +623,11 @@ def stage_train_baseline(depth: int = DEPTH, n_steps: int = N_TOTAL_STEPS) -> No
 def stage_train_mtp2(depth: int = DEPTH, n_steps: int = N_TOTAL_STEPS) -> None:
     """MTP-2: d16, seq=2048, mtp_k=2 (predict 2 tokens ahead, weight-tied)."""
     _train_run(
-        depth=depth, mtp_k=2, tag=TAG_MTP2,
-        wandb_run=WANDB_RUN_MTP2, n_steps=n_steps,
+        depth=depth,
+        mtp_k=2,
+        tag=TAG_MTP2,
+        wandb_run=WANDB_RUN_MTP2,
+        n_steps=n_steps,
     )
 
 
@@ -596,8 +641,11 @@ def stage_train_mtp2(depth: int = DEPTH, n_steps: int = N_TOTAL_STEPS) -> None:
 def stage_train_mtp4(depth: int = DEPTH, n_steps: int = N_TOTAL_STEPS) -> None:
     """MTP-4: d16, seq=2048, mtp_k=4 (predict 4 tokens ahead, weight-tied)."""
     _train_run(
-        depth=depth, mtp_k=4, tag=TAG_MTP4,
-        wandb_run=WANDB_RUN_MTP4, n_steps=n_steps,
+        depth=depth,
+        mtp_k=4,
+        tag=TAG_MTP4,
+        wandb_run=WANDB_RUN_MTP4,
+        n_steps=n_steps,
     )
 
 
@@ -614,9 +662,13 @@ def stage_train_mtp2_yarn(depth: int = DEPTH, n_steps: int = N_TOTAL_STEPS) -> N
     YaRN NTK-by-Parts RoPE (8× scale), everything else identical to baseline.
     """
     _train_run(
-        depth=depth, mtp_k=2, rope_type="yarn", yarn_scale=YARN_SCALE,
+        depth=depth,
+        mtp_k=2,
+        rope_type="yarn",
+        yarn_scale=YARN_SCALE,
         tag=TAG_MTP2_YARN,
-        wandb_run=WANDB_RUN_MTP2_YARN, n_steps=n_steps,
+        wandb_run=WANDB_RUN_MTP2_YARN,
+        n_steps=n_steps,
     )
 
 
@@ -853,7 +905,9 @@ def quick_test_d12() -> None:
     if not os.path.isdir(eval_bundle_dir):
         print("Downloading eval bundle (~1GB)...")
         zip_path = "/tmp/eval_bundle.zip"
-        _run(f"curl -L -o {zip_path} https://karpathy-public.s3.us-west-2.amazonaws.com/eval_bundle.zip")
+        _run(
+            f"curl -L -o {zip_path} https://karpathy-public.s3.us-west-2.amazonaws.com/eval_bundle.zip"
+        )
         _run(f"unzip -q {zip_path} -d {NANOCHAT_CACHE} && rm {zip_path}")
         volume.commit()
 
@@ -878,7 +932,10 @@ def quick_test_d12() -> None:
     results: dict = {"training": {}, "core_tasks": {}}
     for tag in d12_tags:
         d = core_data.get(tag, {})
-        results["training"][tag] = {"core_metric": d.get("core_metric"), "val_bpb": None}
+        results["training"][tag] = {
+            "core_metric": d.get("core_metric"),
+            "val_bpb": None,
+        }
         if d.get("tasks"):
             results["core_tasks"][tag] = d["tasks"]
 
@@ -948,7 +1005,8 @@ def stage_make_sweep_figures() -> None:
     import os
     import wandb
     import matplotlib
-    matplotlib.use("Agg")                          # headless
+
+    matplotlib.use("Agg")  # headless
     import matplotlib.pyplot as plt
     import matplotlib.patches as mpatches
     import numpy as np
@@ -977,15 +1035,15 @@ def stage_make_sweep_figures() -> None:
     all_runs = api.runs(project_path)
 
     # ── layout constants ───────────────────────────────────────────────────────
-    CONFIGS    = ["baseline", "mtp2", "mtp4", "mtp2_yarn"]
+    CONFIGS = ["baseline", "mtp2", "mtp4", "mtp2_yarn"]
     CONFIG_LABELS = {
-        "baseline":  "Baseline (k=0, RoPE)",
-        "mtp2":      "MTP-2 (k=2, RoPE)",
-        "mtp4":      "MTP-4 (k=4, RoPE)",
+        "baseline": "Baseline (k=0, RoPE)",
+        "mtp2": "MTP-2 (k=2, RoPE)",
+        "mtp4": "MTP-4 (k=4, RoPE)",
         "mtp2_yarn": "MTP-2 + YaRN",
     }
-    LRS  = [0.01, 0.02, 0.04]
-    BSS  = ["131k", "262k", "524k"]
+    LRS = [0.01, 0.02, 0.04]
+    BSS = ["131k", "262k", "524k"]
     COMBO_LABELS = [f"lr={lr}, bs={bs}" for lr in LRS for bs in BSS]
 
     # 9 visually distinct colours — same mapping across ALL figures
@@ -1025,7 +1083,7 @@ def stage_make_sweep_figures() -> None:
         # Detect which key holds the training loss
         _LOSS_KEYS = ["train/loss", "loss", "train_loss"]
         loss_key: str | None = None
-        for row in rows[:10]:       # probe first few rows
+        for row in rows[:10]:  # probe first few rows
             for k in _LOSS_KEYS:
                 if row.get(k) is not None:
                     loss_key = k
@@ -1051,22 +1109,32 @@ def stage_make_sweep_figures() -> None:
         final_loss[cfg][combo] = losses[-1]
         if best_core is not None:
             core_metric[cfg][combo] = best_core
-        print(f"  loaded {run.name}: {len(steps)} steps, "
-              f"final_loss={losses[-1]:.4f}, core_metric={best_core}")
+        print(
+            f"  loaded {run.name}: {len(steps)} steps, "
+            f"final_loss={losses[-1]:.4f}, core_metric={best_core}"
+        )
 
     # ── Figure 1: 4-panel loss curves ─────────────────────────────────────────
     fig1, axes = plt.subplots(1, 4, figsize=(24, 5), constrained_layout=True)
-    fig1.suptitle("Part 2 Hyperparameter Sweep — Training Loss Curves (d16, 300 steps)",
-                  fontsize=13, y=1.03)
+    fig1.suptitle(
+        "Part 2 Hyperparameter Sweep — Training Loss Curves (d16, 300 steps)",
+        fontsize=13,
+        y=1.03,
+    )
 
     for ax, cfg in zip(axes, CONFIGS):
         for combo in COMBO_LABELS:
             if combo not in histories[cfg]:
                 continue
             d = histories[cfg][combo]
-            ax.plot(d["steps"], d["loss"],
-                    color=COMBO_COLOR[combo], label=combo,
-                    linewidth=1.4, alpha=0.85)
+            ax.plot(
+                d["steps"],
+                d["loss"],
+                color=COMBO_COLOR[combo],
+                label=combo,
+                linewidth=1.4,
+                alpha=0.85,
+            )
         ax.set_title(CONFIG_LABELS[cfg], fontsize=9, pad=4)
         ax.set_xlabel("Step", fontsize=8)
         ax.set_ylabel("Train Loss", fontsize=8)
@@ -1075,9 +1143,15 @@ def stage_make_sweep_figures() -> None:
 
     # Shared legend below all panels
     handles = [mpatches.Patch(color=COMBO_COLOR[c], label=c) for c in COMBO_LABELS]
-    fig1.legend(handles=handles, loc="lower center", ncol=5,
-                bbox_to_anchor=(0.5, -0.18), fontsize=8,
-                title="Hyperparameter combo (LR, batch size)", title_fontsize=8)
+    fig1.legend(
+        handles=handles,
+        loc="lower center",
+        ncol=5,
+        bbox_to_anchor=(0.5, -0.18),
+        fontsize=8,
+        title="Hyperparameter combo (LR, batch size)",
+        title_fontsize=8,
+    )
 
     fig1_path = os.path.join(report_dir, "p2_sweep_loss_curves.png")
     fig1.savefig(fig1_path, dpi=150, bbox_inches="tight")
@@ -1095,17 +1169,19 @@ def stage_make_sweep_figures() -> None:
 
     use_core = any(bool(core_metric[c]) for c in CONFIGS)
     if use_core:
-        bar_data   = core_metric
-        y_label    = "CORE Metric ↑ (higher is better)"
+        bar_data = core_metric
+        y_label = "CORE Metric ↑ (higher is better)"
         fig2_title = "Part 2 Sweep — Aggregate CORE Metric by Hyperparameter Config"
     else:
-        bar_data   = final_loss
-        y_label    = "Final Train Loss ↓ (lower is better)"
+        bar_data = final_loss
+        y_label = "Final Train Loss ↓ (lower is better)"
         fig2_title = "Part 2 Sweep — Final Training Loss at Step 300"
-        print("NOTE: no core_metric logged for sweep runs — plotting final train loss instead")
+        print(
+            "NOTE: no core_metric logged for sweep runs — plotting final train loss instead"
+        )
 
     ROW_PAIRS = [["baseline", "mtp2"], ["mtp4", "mtp2_yarn"]]
-    BAR_W     = 0.7
+    BAR_W = 0.7
     GROUP_GAP = 2.0
 
     fig2, row_axes = plt.subplots(2, 1, figsize=(26, 9), constrained_layout=True)
@@ -1117,15 +1193,30 @@ def stage_make_sweep_figures() -> None:
         for cfg in pair:
             group_start = x
             for combo in COMBO_LABELS:
-                val   = bar_data[cfg].get(combo)
+                val = bar_data[cfg].get(combo)
                 color = COMBO_COLOR[combo]
                 if val is not None:
-                    ax.bar(x, val, width=BAR_W, color=color,
-                           edgecolor="white", linewidth=0.4, zorder=3)
+                    ax.bar(
+                        x,
+                        val,
+                        width=BAR_W,
+                        color=color,
+                        edgecolor="white",
+                        linewidth=0.4,
+                        zorder=3,
+                    )
                 else:
-                    ax.bar(x, 0, width=BAR_W, color=color, alpha=0.15,
-                           edgecolor="grey", linewidth=0.4, zorder=3)
-                lr_part = combo.split(",")[0]   # "lr=0.02"
+                    ax.bar(
+                        x,
+                        0,
+                        width=BAR_W,
+                        color=color,
+                        alpha=0.15,
+                        edgecolor="grey",
+                        linewidth=0.4,
+                        zorder=3,
+                    )
+                lr_part = combo.split(",")[0]  # "lr=0.02"
                 bs_part = combo.split(",")[1].strip()  # "bs=524k"
                 xtick_pos.append(x)
                 xtick_lbl.append(f"{lr_part}\n{bs_part}")
@@ -1141,20 +1232,36 @@ def stage_make_sweep_figures() -> None:
         ax.set_xlim(-0.8, x - GROUP_GAP + 0.8)
 
         # Quadrant header labels (placed near the top of each group)
-        ax.figure.canvas.draw()   # force axis limits to update
+        ax.figure.canvas.draw()  # force axis limits to update
         ylo, yhi = ax.get_ylim()
-        label_y  = ylo + (yhi - ylo) * 0.93
+        label_y = ylo + (yhi - ylo) * 0.93
         for gc, cfg in zip(group_center, group_cfgs):
-            ax.text(gc, label_y, CONFIG_LABELS[cfg],
-                    ha="center", va="top", fontsize=10, fontweight="bold",
-                    bbox=dict(boxstyle="round,pad=0.25", facecolor="lightyellow",
-                              edgecolor="grey", alpha=0.85))
+            ax.text(
+                gc,
+                label_y,
+                CONFIG_LABELS[cfg],
+                ha="center",
+                va="top",
+                fontsize=10,
+                fontweight="bold",
+                bbox=dict(
+                    boxstyle="round,pad=0.25",
+                    facecolor="lightyellow",
+                    edgecolor="grey",
+                    alpha=0.85,
+                ),
+            )
 
     handles2 = [mpatches.Patch(color=COMBO_COLOR[c], label=c) for c in COMBO_LABELS]
-    fig2.legend(handles=handles2, loc="lower center", ncol=5,
-                bbox_to_anchor=(0.5, -0.10), fontsize=8,
-                title="Hyperparameter combo  (same colour = same combo across quadrants)",
-                title_fontsize=8)
+    fig2.legend(
+        handles=handles2,
+        loc="lower center",
+        ncol=5,
+        bbox_to_anchor=(0.5, -0.10),
+        fontsize=8,
+        title="Hyperparameter combo  (same colour = same combo across quadrants)",
+        title_fontsize=8,
+    )
 
     fig2_path = os.path.join(report_dir, "p2_sweep_bar_chart.png")
     fig2.savefig(fig2_path, dpi=150, bbox_inches="tight")
@@ -1171,10 +1278,12 @@ def stage_make_sweep_figures() -> None:
         job_type="figures",
         name="sweep_figures",
     ) as wrun:
-        wrun.log({
-            "sweep/loss_curves":   wandb.Image(fig1_path),
-            "sweep/core_metric_bar": wandb.Image(fig2_path),
-        })
+        wrun.log(
+            {
+                "sweep/loss_curves": wandb.Image(fig1_path),
+                "sweep/core_metric_bar": wandb.Image(fig2_path),
+            }
+        )
     print("Figures logged to W&B ✓")
 
 
@@ -1190,7 +1299,9 @@ def main() -> None:
     print("\n" + "=" * w)
     print("a2_mtp: Meta-Style Multi-Token Prediction (Weight-Tied)")
     print(f"  depth={DEPTH}  seq=2048  steps={N_TOTAL_STEPS}")
-    print(f"  chinchilla_tokens={CHINCHILLA_TOKENS / 1e9:.2f}B  batch={TOTAL_BATCH_SIZE}")
+    print(
+        f"  chinchilla_tokens={CHINCHILLA_TOKENS / 1e9:.2f}B  batch={TOTAL_BATCH_SIZE}"
+    )
     print("=" * w + "\n")
 
     # Step 1: Smoke test (validates mtp_k, patching, eval end-to-end)
@@ -1199,10 +1310,10 @@ def main() -> None:
 
     # Step 2: All 4 d16 training runs in parallel
     print("[1/3] Training baseline, MTP-2, MTP-4, MTP-2+YaRN in parallel...")
-    baseline_h    = stage_train_baseline.spawn()
-    mtp2_h        = stage_train_mtp2.spawn()
-    mtp4_h        = stage_train_mtp4.spawn()
-    mtp2_yarn_h   = stage_train_mtp2_yarn.spawn()
+    baseline_h = stage_train_baseline.spawn()
+    mtp2_h = stage_train_mtp2.spawn()
+    mtp4_h = stage_train_mtp4.spawn()
+    mtp2_yarn_h = stage_train_mtp2_yarn.spawn()
     baseline_h.get()
     mtp2_h.get()
     mtp4_h.get()

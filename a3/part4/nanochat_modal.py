@@ -54,14 +54,15 @@ from modal import Secret, Volume
 # =============================================================================
 
 # ── Shared ────────────────────────────────────────────────────────────────────
-TOTAL_BATCH_SIZE        = 524_288
-TARGET_PARAM_DATA_RATIO = 10.5        # Chinchilla ratio used throughout nanochat
-PHASE1_FRAC             = 0.40        # 40 % of budget at short context
-VOCAB_SIZE              = 32_768
+TOTAL_BATCH_SIZE = 524_288
+TARGET_PARAM_DATA_RATIO = 10.5  # Chinchilla ratio used throughout nanochat
+PHASE1_FRAC = 0.40  # 40 % of budget at short context
+VOCAB_SIZE = 32_768
 
 # MTP settings for the final nanochat
-MTP_K    = 2        # MTP-2
-MTP_ROPE = "rope"   # standard RoPE (not YaRN — see Part 2 discussion)
+MTP_K = 2  # MTP-2
+MTP_ROPE = "rope"  # standard RoPE (not YaRN — see Part 2 discussion)
+
 
 def _sp(d: int) -> int:
     """Scaling parameters for depth d (using nanochat aspect ratio 64)."""
@@ -80,75 +81,77 @@ def _ns(d: int, batch: int = TOTAL_BATCH_SIZE) -> int:
 
 
 # ── Scaling-law runs ──────────────────────────────────────────────────────────
-DEPTH_D8  = 8
+DEPTH_D8 = 8
 DEPTH_D12 = 12
 
-CHINCHILLA_D8   = _ct(8)     # ≈  440 M tokens  (~42M scaling params)
-CHINCHILLA_D12  = _ct(12)    # ≈ 1156 M tokens  (~110M scaling params)
-N_STEPS_D8      = _ns(8)     # ≈  840 steps
-N_STEPS_D12     = _ns(12)    # ≈ 2204 steps
+CHINCHILLA_D8 = _ct(8)  # ≈  440 M tokens  (~42M scaling params)
+CHINCHILLA_D12 = _ct(12)  # ≈ 1156 M tokens  (~110M scaling params)
+N_STEPS_D8 = _ns(8)  # ≈  840 steps
+N_STEPS_D12 = _ns(12)  # ≈ 2204 steps
 
 # ── Nanochat d20 + MTP-2 + curriculum ─────────────────────────────────────────
-DEPTH_NANO      = 20
-CHINCHILLA_D20  = 4_810_000_000              # 10.5 × ~458M  (same as original Part 3)
-N_TOTAL_NANO    = CHINCHILLA_D20 // TOTAL_BATCH_SIZE   # 9 174
-N_PHASE1_NANO   = int(N_TOTAL_NANO * PHASE1_FRAC)      # 3 669
-N_PHASE2_NANO   = N_TOTAL_NANO - N_PHASE1_NANO          # 5 505
+DEPTH_NANO = 20
+CHINCHILLA_D20 = 4_810_000_000  # 10.5 × ~458M  (same as original Part 3)
+N_TOTAL_NANO = CHINCHILLA_D20 // TOTAL_BATCH_SIZE  # 9 174
+N_PHASE1_NANO = int(N_TOTAL_NANO * PHASE1_FRAC)  # 3 669
+N_PHASE2_NANO = N_TOTAL_NANO - N_PHASE1_NANO  # 5 505
 
 # ── Checkpoint tags ───────────────────────────────────────────────────────────
-TAG_D8         = "part4/d8_scaling"
-TAG_D12        = "part4/d12_scaling"
-TAG_D20_P1     = "part4/d20_mtp2_ctx512"
-TAG_D20_P2     = "part4/d20_mtp2_ctx2048"
+TAG_D8 = "part4/d8_scaling"
+TAG_D12 = "part4/d12_scaling"
+TAG_D20_P1 = "part4/d20_mtp2_ctx512"
+TAG_D20_P2 = "part4/d20_mtp2_ctx2048"
 
 # Tags from earlier parts — no new training needed for these
-TAG_D16_BASELINE    = "a2mtp/d16_baseline"        # Part 2 — d16 no-curriculum baseline
-TAG_D16_P2          = "part3/d16_ctx2048"          # Part 3 — d16 curriculum Phase 2 (plain, no MTP)
-TAG_D20_CURRICULUM  = "part3/d20_ctx2048"          # old Part 3 d20 — d20 curriculum-only ablation
+TAG_D16_BASELINE = "a2mtp/d16_baseline"  # Part 2 — d16 no-curriculum baseline
+TAG_D16_P2 = "part3/d16_ctx2048"  # Part 3 — d16 curriculum Phase 2 (plain, no MTP)
+TAG_D20_CURRICULUM = (
+    "part3/d20_ctx2048"  # old Part 3 d20 — d20 curriculum-only ablation
+)
 
 # ── WandB ─────────────────────────────────────────────────────────────────────
-WANDB_PROJECT   = "nanochat-part4"
+WANDB_PROJECT = "nanochat-part4"
 
 # ── GPU / device batch ────────────────────────────────────────────────────────
-GPU_SMALL  = "H100:2"   # d8 (tiny model)
-GPU_MED    = "H100:2"   # d12
-GPU_LARGE  = "H100:8"   # d16, d20 main runs
-GPU_EVAL   = "H100:4"
+GPU_SMALL = "H100:2"  # d8 (tiny model)
+GPU_MED = "H100:2"  # d12
+GPU_LARGE = "H100:8"  # d16, d20 main runs
+GPU_EVAL = "H100:4"
 
-DEVICE_BATCH_D8   = 64   # d8 is tiny — double the batch per GPU is fine
-DEVICE_BATCH_D12  = 32
-DEVICE_BATCH_P1   = 32   # ctx=512  (d20 Phase 1)
-DEVICE_BATCH_P2   = 16   # ctx=2048 (d20 Phase 2) — halved vs Phase 1: MTP-2 retains
-                          # k extra hidden-state slices, ~1.5× memory at seq=2048 on d20
+DEVICE_BATCH_D8 = 64  # d8 is tiny — double the batch per GPU is fine
+DEVICE_BATCH_D12 = 32
+DEVICE_BATCH_P1 = 32  # ctx=512  (d20 Phase 1)
+DEVICE_BATCH_P2 = 16  # ctx=2048 (d20 Phase 2) — halved vs Phase 1: MTP-2 retains
+# k extra hidden-state slices, ~1.5× memory at seq=2048 on d20
 
 _N_TRAIN_GPUS = 8
-_N_EVAL_GPUS  = 4
+_N_EVAL_GPUS = 4
 
 # ── Timeouts ──────────────────────────────────────────────────────────────────
-TIMEOUT_D8       = 60 * 60 * 2    # 2 h  (840 steps, d8)
-TIMEOUT_D12      = 60 * 60 * 8    # 8 h  (2204 steps, d12, H100:2)
-TIMEOUT_P1_NANO  = 60 * 60 * 3    # 3 h  (3669 steps, d20 Phase 1)
-TIMEOUT_P2_NANO  = 60 * 60 * 5    # 5 h  (5505 steps, d20 Phase 2)
-TIMEOUT_EVAL     = 60 * 60 * 3    # 3 h  (eval checkpoints)
-TIMEOUT_SMOKE    = 60 * 60 * 1    # 1 h
+TIMEOUT_D8 = 60 * 60 * 2  # 2 h  (840 steps, d8)
+TIMEOUT_D12 = 60 * 60 * 8  # 8 h  (2204 steps, d12, H100:2)
+TIMEOUT_P1_NANO = 60 * 60 * 3  # 3 h  (3669 steps, d20 Phase 1)
+TIMEOUT_P2_NANO = 60 * 60 * 5  # 5 h  (5505 steps, d20 Phase 2)
+TIMEOUT_EVAL = 60 * 60 * 3  # 3 h  (eval checkpoints)
+TIMEOUT_SMOKE = 60 * 60 * 1  # 1 h
 
 # ── Volume / cache ────────────────────────────────────────────────────────────
-VOLUME_MOUNT    = "/vol"
-NANOCHAT_CACHE  = f"{VOLUME_MOUNT}/nanochat_cache"
-BASE_DIR        = "/data/.cache/nanochat"
+VOLUME_MOUNT = "/vol"
+NANOCHAT_CACHE = f"{VOLUME_MOUNT}/nanochat_cache"
+BASE_DIR = "/data/.cache/nanochat"
 
 # =============================================================================
 # MODAL PRIMITIVES
 # =============================================================================
 
-app    = modal.App("nanochat-part4")
+app = modal.App("nanochat-part4")
 volume = Volume.from_name("nanochat-vol", create_if_missing=True)
 secret = Secret.from_name("nanochat-secrets")
 
-_THIS_DIR     = os.path.dirname(os.path.abspath(__file__))
+_THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 _NANOCHAT_DIR = os.path.join(_THIS_DIR, "..", "nanochat")
 # Reuse Part 2's patches — already support --mtp-k, --rope-type, --yarn-scale
-_PATCHES_DIR  = os.path.join(_THIS_DIR, "..", "part2_mtp", "patches")
+_PATCHES_DIR = os.path.join(_THIS_DIR, "..", "part2_mtp", "patches")
 
 image = (
     ModalImage.from_registry("nvidia/cuda:12.8.1-devel-ubuntu24.04", add_python="3.11")
@@ -233,6 +236,7 @@ def _find_last_step(model_tag: str) -> int:
     Checkpoints are written as flat files model_{step:06d}.pt inside the tag directory.
     """
     import glob
+
     ckpt_dir = os.path.join(NANOCHAT_CACHE, "base_checkpoints", model_tag)
     volume.reload()
     files = glob.glob(os.path.join(ckpt_dir, "model_*.pt"))
@@ -468,9 +472,7 @@ def stage_d20_mtp2_p2(
         nproc=_N_TRAIN_GPUS,
     )
     volume.commit()
-    print(
-        f"FINAL NANOCHAT done.  Tag: {TAG_D20_P2}  steps {p1_step}→{total_iters}"
-    )
+    print(f"FINAL NANOCHAT done.  Tag: {TAG_D20_P2}  steps {p1_step}→{total_iters}")
 
 
 # =============================================================================
@@ -504,7 +506,7 @@ def stage_eval() -> None:
     eval_tags = [
         TAG_D8,
         TAG_D12,
-        TAG_D20_P2,   # d20 + MTP-2 + curriculum  — the final nanochat
+        TAG_D20_P2,  # d20 + MTP-2 + curriculum  — the final nanochat
     ]
 
     results: dict[str, str | None] = {}
@@ -641,8 +643,8 @@ def main() -> None:
     w = 64
     print("\n" + "=" * w)
     print("Part 4: Final Nanochat  (d20 + MTP-2 + Context Curriculum)")
-    print(f"  d8  scaling  : {N_STEPS_D8} steps  ({CHINCHILLA_D8/1e6:.0f}M tokens)")
-    print(f"  d12 scaling  : {N_STEPS_D12} steps  ({CHINCHILLA_D12/1e9:.3f}B tokens)")
+    print(f"  d8  scaling  : {N_STEPS_D8} steps  ({CHINCHILLA_D8 / 1e6:.0f}M tokens)")
+    print(f"  d12 scaling  : {N_STEPS_D12} steps  ({CHINCHILLA_D12 / 1e9:.3f}B tokens)")
     print(
         f"  d20 nanochat : P1={N_PHASE1_NANO} + P2={N_PHASE2_NANO} = {N_TOTAL_NANO} steps"
     )
@@ -650,8 +652,8 @@ def main() -> None:
 
     # Phase A — scaling law anchors + d20 Phase 1 in parallel
     print("[A] Scaling d8, d12 + d20 MTP-2 Phase 1 in parallel...")
-    h_d8    = stage_scaling_d8.spawn()
-    h_d12   = stage_scaling_d12.spawn()
+    h_d8 = stage_scaling_d8.spawn()
+    h_d12 = stage_scaling_d12.spawn()
     h_d20p1 = stage_d20_mtp2_p1.spawn()
     h_d8.get()
     h_d12.get()
