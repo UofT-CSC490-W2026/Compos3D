@@ -189,6 +189,12 @@ image = (
     )
 )
 
+# Lightweight CPU-only image for figure generation (no CUDA needed).
+figures_image = (
+    ModalImage.debian_slim(python_version="3.11")
+    .pip_install("wandb>=0.18", "matplotlib>=3.9", "numpy>=1.26")
+)
+
 
 def _run(cmd: str) -> None:
     """Shell out to bash, stream stdout/stderr, and raise on failure."""
@@ -1279,3 +1285,239 @@ def quick_test_d12_eval_report() -> None:
     print("FULL REPORT:")
     print("=" * 60)
     print(_d12_report_md)
+
+
+# =============================================================================
+# STAGE: SWEEP FIGURES  (CPU-only, no GPU)
+# =============================================================================
+
+@app.function(
+    image=figures_image,
+    secrets=[secret],
+    volumes={VOLUME_MOUNT: volume},
+    cpu=4,
+    timeout=60 * 30,
+)
+def stage_make_sweep_figures_p3() -> None:
+    """CPU-only job: pull all Part 3 sweep runs from W&B and produce:
+
+    Figure 1 — 2×2 panel training-loss curves.
+        Rows = seq len (256, 512).  Columns = phase (Phase 1, Phase 2).
+        3 lines per panel = phase1_frac (0.2, 0.4, 0.6).
+        Same colour per frac across all panels.
+
+    Figure 2 — grouped bar chart of final-step train loss.
+        4 groups (s256_p1 | s256_p2 | s512_p1 | s512_p2), 3 bars each.
+        Same colour per frac across groups.
+
+    Both PNGs saved to the shared Volume (nanochat_cache/report/) and
+    logged as images to the part3_sweep W&B project.
+    """
+    import re
+    import os
+    import wandb
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as mpatches
+    import numpy as np
+
+    report_dir = os.path.join(NANOCHAT_CACHE, "report")
+    os.makedirs(report_dir, exist_ok=True)
+
+    # ── fetch runs ────────────────────────────────────────────────────────────
+    api = wandb.Api(timeout=120)
+    entity = ""
+    for getter in [
+        lambda: api.viewer()["entity"],
+        lambda: api.default_entity,
+        lambda: os.environ.get("WANDB_ENTITY", ""),
+    ]:
+        try:
+            entity = getter() or ""
+            if entity:
+                break
+        except Exception:
+            pass
+
+    project_path = f"{entity}/{WANDB_PROJECT_SWEEP_P3}" if entity else WANDB_PROJECT_SWEEP_P3
+    print(f"Fetching runs from: {project_path}  (entity={entity!r})")
+    all_runs = api.runs(project_path)
+
+    # ── layout constants ──────────────────────────────────────────────────────
+    SEQS   = [256, 512]
+    FRACS  = [0.2, 0.4, 0.6]
+    PHASES = [1, 2]
+
+    FRAC_LABELS = {f: f"frac={f}" for f in FRACS}
+    # 3 colours — one per frac, consistent across every panel/group
+    FRAC_COLORS = {f: c for f, c in zip(FRACS, plt.cm.tab10([0, 1, 2]))}
+
+    # run name pattern: sweep_s{seq}_f{frac*100:02d}_phase{phase}
+    # e.g. sweep_s256_f20_phase1
+    _RE = re.compile(r"^sweep_s(\d+)_f(\d+)_phase(\d+)$")
+
+    # histories[(seq, frac, phase)] = {"steps": [...], "loss": [...]}
+    histories: dict = {}
+    final_loss: dict = {}
+
+    for run in all_runs:
+        m = _RE.match(run.name)
+        if not m:
+            continue
+        seq   = int(m.group(1))
+        frac  = int(m.group(2)) / 100.0
+        phase = int(m.group(3))
+        if seq not in SEQS or frac not in FRACS or phase not in PHASES:
+            continue
+
+        try:
+            rows = list(run.scan_history())
+        except Exception as e:
+            print(f"  WARNING — could not fetch {run.name}: {e}")
+            continue
+
+        # auto-detect loss key
+        _LOSS_KEYS = ["train/loss", "loss", "train_loss"]
+        loss_key: str | None = None
+        for row in rows[:10]:
+            for k in _LOSS_KEYS:
+                if row.get(k) is not None:
+                    loss_key = k
+                    break
+            if loss_key:
+                break
+
+        steps, losses = [], []
+        for row in rows:
+            if loss_key and row.get(loss_key) is not None:
+                steps.append(row.get("_step", len(steps)))
+                losses.append(float(row[loss_key]))
+
+        if not losses:
+            print(f"  WARNING — empty history for {run.name}, skipping")
+            continue
+
+        key = (seq, frac, phase)
+        histories[key] = {"steps": steps, "loss": losses}
+        final_loss[key] = losses[-1]
+        print(f"  loaded {run.name}: {len(steps)} steps, final={losses[-1]:.4f}")
+
+    print(f"Loaded {len(histories)} / 12 expected sweep runs")
+
+    # ── Figure 1: 2×2 loss curves ─────────────────────────────────────────────
+    fig1, axes = plt.subplots(2, 2, figsize=(18, 10), constrained_layout=True)
+    fig1.suptitle(
+        "Part 3 Curriculum Sweep — Training Loss Curves (d16, 300 steps per phase)",
+        fontsize=13, y=1.02,
+    )
+    panel_titles = {
+        (0, 0): "seq=256 — Phase 1",
+        (0, 1): "seq=256 — Phase 2",
+        (1, 0): "seq=512 — Phase 1",
+        (1, 1): "seq=512 — Phase 2",
+    }
+    panel_keys = {
+        (0, 0): (256, 1),
+        (0, 1): (256, 2),
+        (1, 0): (512, 1),
+        (1, 1): (512, 2),
+    }
+
+    for (row_i, col_i), (seq, phase) in panel_keys.items():
+        ax = axes[row_i][col_i]
+        for frac in FRACS:
+            key = (seq, frac, phase)
+            if key in histories:
+                d = histories[key]
+                ax.plot(d["steps"], d["loss"],
+                        color=FRAC_COLORS[frac],
+                        label=FRAC_LABELS[frac],
+                        linewidth=1.5, alpha=0.85)
+        ax.set_title(panel_titles[(row_i, col_i)], fontsize=10, pad=4)
+        ax.set_xlabel("Step", fontsize=8)
+        ax.set_ylabel("Train Loss", fontsize=8)
+        ax.tick_params(labelsize=7)
+        ax.grid(True, alpha=0.25)
+
+    handles = [mpatches.Patch(color=FRAC_COLORS[f], label=FRAC_LABELS[f]) for f in FRACS]
+    fig1.legend(handles=handles, loc="lower center", ncol=3,
+                bbox_to_anchor=(0.5, -0.06), fontsize=9,
+                title="Phase-1 fraction of total budget  (colour consistent across all panels)",
+                title_fontsize=8)
+
+    fig1_path = os.path.join(report_dir, "p3_sweep_loss_curves.png")
+    fig1.savefig(fig1_path, dpi=150, bbox_inches="tight")
+    plt.close(fig1)
+    print(f"Saved: {fig1_path}")
+
+    # ── Figure 2: grouped bar chart — final loss ──────────────────────────────
+    # 4 groups: s256_p1 | s256_p2 | s512_p1 | s512_p2
+    # 3 bars per group (one per frac), same colours as Figure 1
+    GROUPS = [(256, 1), (256, 2), (512, 1), (512, 2)]
+    GROUP_LABELS = {
+        (256, 1): "seq=256\nPhase 1",
+        (256, 2): "seq=256\nPhase 2",
+        (512, 1): "seq=512\nPhase 1",
+        (512, 2): "seq=512\nPhase 2",
+    }
+    BAR_W     = 0.22
+    N_FRACS   = len(FRACS)
+    GROUP_GAP = 0.6
+
+    fig2, ax2 = plt.subplots(figsize=(14, 6), constrained_layout=True)
+    fig2.suptitle(
+        "Part 3 Sweep — Final Training Loss at Step 300  (lower is better)",
+        fontsize=13,
+    )
+
+    group_centers = []
+    x = 0.0
+    offsets = np.linspace(-(N_FRACS - 1) / 2 * BAR_W,
+                          (N_FRACS - 1) / 2 * BAR_W, N_FRACS)
+    xtick_pos, xtick_lbl = [], []
+
+    for grp in GROUPS:
+        cx = x
+        for i, frac in enumerate(FRACS):
+            val = final_loss.get((*grp, frac))
+            bx  = cx + offsets[i]
+            if val is not None:
+                ax2.bar(bx, val, width=BAR_W, color=FRAC_COLORS[frac],
+                        edgecolor="white", linewidth=0.4, zorder=3)
+            else:
+                ax2.bar(bx, 0, width=BAR_W, color=FRAC_COLORS[frac],
+                        alpha=0.15, edgecolor="grey", linewidth=0.4, zorder=3)
+        xtick_pos.append(cx)
+        xtick_lbl.append(GROUP_LABELS[grp])
+        group_centers.append(cx)
+        x += 1.0 + GROUP_GAP
+
+    ax2.set_xticks(xtick_pos)
+    ax2.set_xticklabels(xtick_lbl, fontsize=9)
+    ax2.set_ylabel("Final Train Loss ↓", fontsize=10)
+    ax2.grid(axis="y", alpha=0.3, zorder=0)
+
+    handles2 = [mpatches.Patch(color=FRAC_COLORS[f], label=FRAC_LABELS[f]) for f in FRACS]
+    ax2.legend(handles=handles2, fontsize=9, title="Phase-1 fraction",
+               title_fontsize=8, loc="upper right")
+
+    fig2_path = os.path.join(report_dir, "p3_sweep_bar_chart.png")
+    fig2.savefig(fig2_path, dpi=150, bbox_inches="tight")
+    plt.close(fig2)
+    print(f"Saved: {fig2_path}")
+
+    # ── commit + log to W&B ───────────────────────────────────────────────────
+    volume.commit()
+
+    with wandb.init(
+        project=WANDB_PROJECT_SWEEP_P3,
+        entity=entity or None,
+        job_type="figures",
+        name="sweep_figures_p3",
+    ) as wrun:
+        wrun.log({
+            "sweep/loss_curves":  wandb.Image(fig1_path),
+            "sweep/final_loss_bar": wandb.Image(fig2_path),
+        })
+    print("Figures logged to W&B ✓")

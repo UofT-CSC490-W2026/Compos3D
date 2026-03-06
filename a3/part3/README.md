@@ -67,6 +67,16 @@ W&B run names follow the pattern `sweep_s{seq}_f{frac}_phase{1,2}`
 (e.g. `sweep_s512_f40_phase1`). Pick the `(seq, frac)` combo with the lowest
 Phase 2 BPB at step 300 to justify the Phase 1 fraction used in the main runs.
 
+Once the sweeps have finished, generate the figures (CPU-only job, no GPU needed):
+
+```sh
+modal run part3/nanochat_modal.py::stage_make_sweep_figures_p3 2>&1 | tee /tmp/p3_sweep_figures.log
+```
+
+This saves two PNGs to the volume under `nanochat_cache/report/` and logs them to the `part3_sweep` W&B project:
+- `p3_sweep_loss_curves.png` — 2×2 panel loss curves (rows = seq len, columns = phase, 3 coloured lines per frac).
+- `p3_sweep_bar_chart.png` — grouped bar chart of final-step loss across all 4 groups (s256_p1/p2, s512_p1/p2).
+
 ### 2. Smoke test
 
 Validates the full two-phase curriculum pipeline end-to-end at d12 scale
