@@ -30,6 +30,13 @@ modal secret create nanochat-secrets \
 
 Run the following commands one after another from your environment from inside the `a3` directory.
 
+I. Part 2
+1. Run the training on picochat depth=16 and using YaRN embedding:
+```
+modal run part2/nanochat_modal_yarn.py
+```
+
+II. Part 3
 1. Run the training on 512 and 20248 context sizes.
 
 ```sh
@@ -43,7 +50,7 @@ modal run part3/nanochat_modal.py::stage_pretrain_phase2 2>&1 | tee /tmp/d20_pha
 modal run part3/nanochat_modal.py::stage_pretrain_baseline 2>&1 | tee /tmp/d20_baseline.log
 ```
 
-2. Compute metrics and generate a report.
+3. Compute metrics and generate a report.
 
 ```sh
 modal run part3/nanochat_modal.py::stage_eval_and_report 2>&1 | tee /tmp/d20_eval_report.log
