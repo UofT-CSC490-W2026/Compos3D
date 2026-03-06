@@ -45,15 +45,9 @@ class GPTConfig:
     # Characters: L=long (full context), S=short (half context)
     # Examples: "L"=all full context, "SL"=alternating, "SSL"=two short then one long
     window_pattern: str = "SSSL"
-    # Multi-Token Prediction (Meta-style, weight-tied).
-    # mtp_k > 0: compute k additional CE losses predicting tokens at offsets +1..+k,
-    # all using the same shared lm_head weight. No extra parameters.
-    mtp_k: int = 0
-    # Positional encoding variant.
-    # "rope" : standard Rotary Position Embedding (default)
-    # "yarn" : YaRN NTK-by-Parts scaled RoPE (Peng et al. 2023)
-    rope_type: str = "rope"
-    yarn_scale: float = 8.0   # YaRN target context extension factor (only used when rope_type="yarn")
+    mtp_k: int = 0  # extra MTP heads (0=disabled); weight-tied to lm_head, no extra params
+    rope_type: str = "rope"  # "rope" = standard RoPE, "yarn" = YaRN NTK-by-Parts (Peng et al. 2023)
+    yarn_scale: float = 8.0  # YaRN extension factor (ignored when rope_type="rope")
 
 
 def norm(x):
@@ -475,21 +469,11 @@ class GPT(nn.Module):
             V = logits.size(-1)
             loss = F.cross_entropy(logits.view(-1, V), targets.view(-1), ignore_index=-1, reduction=loss_reduction)
 
-            # ── Multi-Token Prediction (Meta-style, weight-tied) ──────────────────
-            # Each extra head k predicts the token at position t+k+1.
-            # Concretely: use hidden states x[:, :T-k, :] (all positions except last k)
-            # and targets[:, k:] (target at offset k).
-            # targets is already shifted by 1 by the dataloader (targets[t] = input[t+1]),
-            # so targets[:, k:] gives input[t+k+1] — the token k steps ahead.
-            # All heads share the same lm_head weight (weight-tied), so no extra params.
-            #
-            # NOTE: MTP is only applied when loss_reduction == 'mean' (i.e. during
-            # training). For 'none' (per-token eval in evaluate_bpb) the auxiliary
-            # heads have shorter sequences (T-k vs T) so their losses cannot be added
-            # element-wise; we skip MTP in that case and return the main-head loss only.
+            # MTP auxiliary heads: head k predicts t+k+1 using the same lm_head (weight-tied).
+            # Skipped when loss_reduction != 'mean' (per-token eval uses 'none').
             if self.config.mtp_k > 0 and loss_reduction == 'mean':
                 for k in range(1, self.config.mtp_k + 1):
-                    extra_logits = self.lm_head(x[:, :T-k, :])  # (B, T-k, padded_vocab)
+                    extra_logits = self.lm_head(x[:, :T-k, :])
                     extra_logits = extra_logits[..., :self.config.vocab_size].float()
                     extra_logits = softcap * torch.tanh(extra_logits / softcap)
                     extra_loss = F.cross_entropy(
@@ -498,12 +482,10 @@ class GPT(nn.Module):
                         ignore_index=-1,
                         reduction='mean',
                     )
-                    # Average the MTP auxiliary losses and add to main loss
                     loss = loss + extra_loss / self.config.mtp_k
 
             return loss
         else:
-            # inference: just return the logits directly (MTP heads not used)
             return logits
 
     @torch.inference_mode()

@@ -43,22 +43,11 @@ from modal import App, Image as ModalImage, Volume, Secret
 # CONFIGURATION
 # =============================================================================
 
-DEPTH = 16  # picochat = d16 (~268M params)
+DEPTH = 16
 GPU_TRAIN = "H100:8"
 GPU_EVAL = "H100:4"
-
-# Device batch size: d16 at seq=2048 fits 32 per H100 comfortably
 DEVICE_BATCH = 32
-
-# Fixed total batch size (tokens per optimizer step)
 TOTAL_BATCH_SIZE = 524288
-
-# Chinchilla-optimal token budget for d16:
-#   model_dim = depth * aspect_ratio = 16 * 64 = 1024
-#   Each transformer layer: attn ≈ 4*1024² + mlp ≈ 8*1024² ≈ 12.6M params/layer
-#   16 layers ≈ 201M transformer_matrices + lm_head ≈ 33.5M → scaling_params ≈ 234M
-#   target_param_data_ratio default = 10.5 → target_tokens ≈ 2.46B
-#   At total_batch_size=524288 → total_steps ≈ 4693
 CHINCHILLA_TOKENS = 2_460_000_000  # ≈ 10.5 × 234M scaling params
 N_TOTAL_STEPS = CHINCHILLA_TOKENS // TOTAL_BATCH_SIZE  # ≈ 4693
 

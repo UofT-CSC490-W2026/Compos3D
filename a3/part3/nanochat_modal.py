@@ -58,16 +58,7 @@ DEVICE_BATCH_PHASE1 = 32   # seq=512
 DEVICE_BATCH_PHASE2 = 32   # seq=2048, d16 comfortably fits 32/H100
 DEVICE_BATCH_BASELINE = 32
 
-# Fixed total batch size (tokens per optimizer step) for all three runs so
-# gradient accumulation and LR scales are comparable.
 TOTAL_BATCH_SIZE = 524288
-
-# Chinchilla-optimal token budget for d16:
-#   model_dim = depth * aspect_ratio = 16 * 64 = 1024
-#   Each transformer layer: attn ≈ 4*1024² + mlp ≈ 8*1024² ≈ 12.6M params/layer
-#   16 layers ≈ 201M transformer_matrices + lm_head ≈ 33.5M → scaling_params ≈ 234M
-#   target_param_data_ratio default = 10.5 → target_tokens ≈ 2.46B
-#   At total_batch_size=524288 → total_steps ≈ 4693
 CHINCHILLA_TOKENS = 2_460_000_000  # ≈ 10.5 × 234M scaling params
 PHASE1_FRAC = 0.40  # 40% at seq=512  (chosen from sweep)
 PHASE2_FRAC = 0.60  # 60% at seq=2048 (warm-started)

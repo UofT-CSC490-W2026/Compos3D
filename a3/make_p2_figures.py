@@ -1,14 +1,5 @@
 """
-make_p2_figures.py  —  generate Part 2 eval figures locally.
-
-Data is taken directly from /tmp/a2mtp_eval_report.log (step 4692, d16).
-
-Outputs (saved to a3/latex/figures/):
-  p2_core_bar.png          — 4-bar chart: CORE aggregate per config
-  p2_core_per_task.png     — grouped bar chart: all 22 tasks × 4 configs
-
-Run from repo root:
-    python a3/make_p2_figures.py
+Data is taken from /tmp/a2mtp_eval_report.log (step 4692, d16).
 """
 
 import os
@@ -18,10 +9,10 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
 
-# ── hardcoded eval results (from /tmp/a2mtp_eval_report.log) ─────────────────
+
 
 CONFIGS = ["Baseline", "MTP-2", "MTP-4", "MTP-2+YaRN"]
-CONFIG_COLORS = plt.cm.tab10([0, 1, 2, 3])   # 4 distinct colours
+CONFIG_COLORS = plt.cm.tab10([0, 1, 2, 3])   
 
 CORE_AGGREGATE = {
     "Baseline":   0.185954,
@@ -37,7 +28,7 @@ BPB = {
     "MTP-2+YaRN": 0.971859,
 }
 
-# centred scores per task
+
 PER_TASK = {
     "agi_eval_lsat_ar":              {"Baseline":  0.0326, "MTP-2":  0.0489, "MTP-4":  0.0924, "MTP-2+YaRN":  0.1033},
     "arc_challenge":                 {"Baseline":  0.1387, "MTP-2":  0.1173, "MTP-4":  0.1067, "MTP-2+YaRN":  0.1120},
@@ -66,7 +57,7 @@ PER_TASK = {
 OUT_DIR = os.path.join(os.path.dirname(__file__), "latex", "figures")
 os.makedirs(OUT_DIR, exist_ok=True)
 
-# ── Figure 1: CORE aggregate bar chart ───────────────────────────────────────
+
 
 fig1, ax1 = plt.subplots(figsize=(7, 5))
 
@@ -75,7 +66,7 @@ bars = ax1.bar(x, [CORE_AGGREGATE[c] for c in CONFIGS],
                color=CONFIG_COLORS, edgecolor="white", linewidth=0.5,
                width=0.55, zorder=3)
 
-# value labels on top of each bar
+
 for bar, cfg in zip(bars, CONFIGS):
     v = CORE_AGGREGATE[cfg]
     ax1.text(bar.get_x() + bar.get_width() / 2, v + 0.004,
@@ -96,9 +87,9 @@ fig1.savefig(p1, dpi=180, bbox_inches="tight")
 plt.close(fig1)
 print(f"Saved: {p1}")
 
-# ── Figure 2: per-task grouped bar chart ─────────────────────────────────────
 
-tasks = list(PER_TASK.keys())           # 22 tasks, alphabetical
+
+tasks = list(PER_TASK.keys())           
 n_tasks  = len(tasks)
 n_cfgs   = len(CONFIGS)
 BAR_W    = 0.18
@@ -129,7 +120,7 @@ fig2.savefig(p2, dpi=160, bbox_inches="tight")
 plt.close(fig2)
 print(f"Saved: {p2}")
 
-# ── console table ─────────────────────────────────────────────────────────────
+
 
 COL_W = 13
 print()

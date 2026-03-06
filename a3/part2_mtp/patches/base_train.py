@@ -51,11 +51,9 @@ parser.add_argument("--aspect-ratio", type=int, default=64, help="model_dim = de
 parser.add_argument("--head-dim", type=int, default=128, help="target head dimension for attention")
 parser.add_argument("--max-seq-len", type=int, default=2048, help="max context length")
 parser.add_argument("--window-pattern", type=str, default="SSSL", help="sliding window pattern tiled across layers: L=full, S=half context (e.g. 'SSL')")
-parser.add_argument("--mtp-k", type=int, default=0, help="number of extra Multi-Token Prediction heads (0=disabled). Each head k predicts token at position t+k+1 using the same shared lm_head weights (weight-tied, no extra params).")
-parser.add_argument("--rope-type", type=str, default="rope", choices=["rope", "yarn"],
-    help="Positional encoding: 'rope' (standard RoPE, default) or 'yarn' (YaRN NTK-by-Parts scaled RoPE, Peng et al. 2023).")
-parser.add_argument("--yarn-scale", type=float, default=8.0,
-    help="YaRN context extension scale factor (only used when --rope-type=yarn). Default 8.0 = 8× extension target.")
+parser.add_argument("--mtp-k", type=int, default=0, help="extra MTP heads (0=disabled); weight-tied to lm_head, no extra params")
+parser.add_argument("--rope-type", type=str, default="rope", choices=["rope", "yarn"], help="positional encoding variant")
+parser.add_argument("--yarn-scale", type=float, default=8.0, help="YaRN extension factor (only used when --rope-type=yarn)")
 # Training horizon (only one used, in order of precedence)
 parser.add_argument("--num-iterations", type=int, default=-1, help="explicit number of optimization steps (-1 = disable)")
 parser.add_argument("--target-flops", type=float, default=-1.0, help="calculate num_iterations to reach target_flops (-1 = disable)")

@@ -63,22 +63,6 @@ VOCAB_SIZE              = 32_768
 MTP_K    = 2        # MTP-2
 MTP_ROPE = "rope"   # standard RoPE (not YaRN — see Part 2 discussion)
 
-# ── Scaling-law helper ────────────────────────────────────────────────────────
-#
-# scaling_params(d) = transformer_matrices + embedding
-#                   = n_layer × 12 × n_embd² + vocab × n_embd
-#                   = d × 12 × (64d)² + 32768 × (64d)
-#                   = 49152 × d³ + 2097152 × d
-#
-# Verified against known values:
-#   d16 → 49152×4096  + 2097152×16  = 201.3M + 33.6M = 234.9M  ✓  (plan: ~234M)
-#   d20 → 49152×8000  + 2097152×20  = 393.2M + 42.0M = 435.2M  ≈  (plan: ~458M, small
-#                                                                      delta from GQA /
-#                                                                      value-embed extras)
-#
-# For d8 and d12 the formula is used directly (small models, no GQA).
-
-
 def _sp(d: int) -> int:
     """Scaling parameters for depth d (using nanochat aspect ratio 64)."""
     n = d * 64
@@ -134,7 +118,8 @@ GPU_EVAL   = "H100:4"
 DEVICE_BATCH_D8   = 64   # d8 is tiny — double the batch per GPU is fine
 DEVICE_BATCH_D12  = 32
 DEVICE_BATCH_P1   = 32   # ctx=512  (d20 Phase 1)
-DEVICE_BATCH_P2   = 32   # ctx=2048 (d20 Phase 2)
+DEVICE_BATCH_P2   = 16   # ctx=2048 (d20 Phase 2) — halved vs Phase 1: MTP-2 retains
+                          # k extra hidden-state slices, ~1.5× memory at seq=2048 on d20
 
 _N_TRAIN_GPUS = 8
 _N_EVAL_GPUS  = 4
