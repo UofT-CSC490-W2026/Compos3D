@@ -66,6 +66,15 @@ wait
 modal run part2_mtp/nanochat_modal.py::stage_eval_and_report 2>&1 | tee /tmp/a2mtp_eval_report.log
 ```
 
+5. **Sweep figures** — CPU-only Modal job; fetches all 36 sweep runs from W&B and generates:
+   - `p2_sweep_loss_curves.png` — 4-panel training-loss curves, one panel per config, 9 coloured lines each.
+   - `p2_sweep_bar_chart.png` — 2-row bar chart of final loss across all 36 runs (row 0: baseline + mtp2; row 1: mtp4 + mtp2_yarn). Same colour = same LR/batch combo across quadrants.
+   Both PNGs are saved to the shared volume under `nanochat_cache/report/` and logged as images to the `part2_sweep` W&B project.
+
+```sh
+modal run part2_mtp/nanochat_modal.py::stage_make_sweep_figures 2>&1 | tee /tmp/a2mtp_sweep_figures.log
+```
+
 ## Credits
 
 Our code is built on top of [nanochat](https://github.com/karpathy/nanochat/) as well as the [CSC490 tutorial](https://github.com/UofT-CSC490-W2026/022326-tutorial-nanochat/tree/main).
