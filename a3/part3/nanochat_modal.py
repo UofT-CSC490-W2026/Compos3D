@@ -1,19 +1,24 @@
 """
-Part 3: Picochat Context Length Curriculum
-==========================================
+Part 3: Picochat Context Length Curriculum (d16)
+=================================================
 
 Three training experiments:
-  1. Phase 1  — picochat (d20) at seq=512,  40% of Chinchilla token budget
+  1. Phase 1  — picochat (d16) at seq=512,  40% of Chinchilla token budget
   2. Phase 2  — continue from Phase 1 at seq=2048, remaining 60% of budget
-  3. Baseline — picochat (d20) at seq=2048,  full Chinchilla budget from scratch
+  3. Baseline — picochat (d16) at seq=2048,  full Chinchilla budget from scratch
 
 Phase 2 and Baseline run in parallel after Phase 1.
+The d20 runs are preserved as Part 4 nanochat baselines.
 
 All checkpoints land in nanochat_cache/base_checkpoints/part3/ on the volume.
 
 Usage
 -----
-Full pipeline (d12 smoke-test, then d20):
+Sweep (justify curriculum choices):
+    modal run nanochat_modal.py::stage_sweep_p3_s256 &
+    modal run nanochat_modal.py::stage_sweep_p3_s512 &
+
+Full pipeline (d12 smoke-test, then d16):
     modal run nanochat_modal.py
 
 Individual stages:
@@ -27,10 +32,11 @@ Individual stages:
 Cost reference (8×H100 ~$31/hr)
 ---------------------------------
     d12 quick test    : ~15 min   (~$8)
-    d20 Phase 1       : ~45 min   (~$23)
-    d20 Phase 2       : ~60 min   (~$31) ]  run in parallel
-    d20 Baseline      : ~90 min   (~$46) ]
-    eval              : ~45 min   (~$12, 2×H100)
+    sweep (2×H100:4)  : ~30 min   (~$8)   ]  run in parallel
+    d16 Phase 1       : ~30 min   (~$16)
+    d16 Phase 2       : ~45 min   (~$23)  ]  run in parallel
+    d16 Baseline      : ~60 min   (~$31)  ]
+    eval              : ~30 min   (~$8,  H100:4)
 """
 
 import os
@@ -43,35 +49,33 @@ from modal import App, Image as ModalImage, Volume, Secret
 # CONFIGURATION
 # =============================================================================
 
-DEPTH = 20  # picochat = d20 (~560M params)
+DEPTH = 16  # picochat = d16 (~234M scaling params)
 GPU_TRAIN = "H100:8"
 GPU_EVAL = "H100:4"
 
 # Device batch sizes
-DEVICE_BATCH_PHASE1 = 32  # seq=512 use 4× shorter batch for faster training
-DEVICE_BATCH_PHASE2 = 16  # seq=2048
-DEVICE_BATCH_BASELINE = 16
+DEVICE_BATCH_PHASE1 = 32   # seq=512
+DEVICE_BATCH_PHASE2 = 32   # seq=2048, d16 comfortably fits 32/H100
+DEVICE_BATCH_BASELINE = 32
 
 # Fixed total batch size (tokens per optimizer step) for all three runs so
 # gradient accumulation and LR scales are comparable.
 TOTAL_BATCH_SIZE = 524288
 
-# Chinchilla-optimal token budget for d20:
-#   model_dim = depth * aspect_ratio = 20 * 64 = 1280
-#   Each transformer layer (attention + MLP matrices):
-#     attn: 4 * 1280^2 ≈ 6.55M  |  mlp: ~2 * 4 * 1280^2 ≈ 13.1M
-#   20 layers ≈ 393M transformer_matrices + lm_head ≈ 65M → scaling_params ≈ 458M
-#   target_param_data_ratio default = 10.5 → target_tokens ≈ 4.81B
-#   At total_batch_size=524288 → total_steps ≈ 9174
-# We use explicit --num-iterations for reproducibility across runs.
-CHINCHILLA_TOKENS = 4_810_000_000  # ≈ 10.5 × 458M scaling params
-PHASE1_FRAC = 0.40  # 40% at seq=512
+# Chinchilla-optimal token budget for d16:
+#   model_dim = depth * aspect_ratio = 16 * 64 = 1024
+#   Each transformer layer: attn ≈ 4*1024² + mlp ≈ 8*1024² ≈ 12.6M params/layer
+#   16 layers ≈ 201M transformer_matrices + lm_head ≈ 33.5M → scaling_params ≈ 234M
+#   target_param_data_ratio default = 10.5 → target_tokens ≈ 2.46B
+#   At total_batch_size=524288 → total_steps ≈ 4693
+CHINCHILLA_TOKENS = 2_460_000_000  # ≈ 10.5 × 234M scaling params
+PHASE1_FRAC = 0.40  # 40% at seq=512  (chosen from sweep)
 PHASE2_FRAC = 0.60  # 60% at seq=2048 (warm-started)
 
-N_TOTAL_STEPS = CHINCHILLA_TOKENS // TOTAL_BATCH_SIZE  # ≈ 9174
-N_PHASE1_STEPS = int(N_TOTAL_STEPS * PHASE1_FRAC)  # ≈ 3670
-N_PHASE2_STEPS = N_TOTAL_STEPS - N_PHASE1_STEPS  # ≈ 5504
-N_BASELINE_STEPS = N_TOTAL_STEPS  # full budget
+N_TOTAL_STEPS = CHINCHILLA_TOKENS // TOTAL_BATCH_SIZE   # ≈ 4693
+N_PHASE1_STEPS = int(N_TOTAL_STEPS * PHASE1_FRAC)       # ≈ 1877
+N_PHASE2_STEPS = N_TOTAL_STEPS - N_PHASE1_STEPS         # ≈ 2816
+N_BASELINE_STEPS = N_TOTAL_STEPS                        # full budget ≈ 4693
 
 # d12 quick-test step counts (just enough to exercise all code paths)
 N_D12_PHASE1_STEPS = 300
@@ -79,25 +83,43 @@ N_D12_PHASE2_STEPS = 300
 N_D12_BASELINE_STEPS = 300
 
 # Model tags (become subdirectories under base_checkpoints/)
-TAG_PHASE1 = "part3/d20_ctx512"
-TAG_PHASE2 = "part3/d20_ctx2048"
-TAG_BASELINE = "part3/d20_baseline"
+TAG_PHASE1   = "part3/d16_ctx512"
+TAG_PHASE2   = "part3/d16_ctx2048"
+TAG_BASELINE = "part3/d16_baseline"
 
-TAG_D12_PHASE1 = "part3/d12_ctx512"
-TAG_D12_PHASE2 = "part3/d12_ctx2048"
+TAG_D12_PHASE1   = "part3/d12_ctx512"
+TAG_D12_PHASE2   = "part3/d12_ctx2048"
 TAG_D12_BASELINE = "part3/d12_baseline"
 
-WANDB_PROJECT = "nanochat-part3"
-WANDB_RUN_PHASE1 = "p3_phase1"
-WANDB_RUN_PHASE2 = "p3_phase2"
-WANDB_RUN_BASELINE = "p3_baseline"
+WANDB_PROJECT      = "nanochat-part3"
+WANDB_RUN_PHASE1   = "p3_d16_phase1"
+WANDB_RUN_PHASE2   = "p3_d16_phase2"
+WANDB_RUN_BASELINE = "p3_d16_baseline"
 
-# Timeouts
-TIMEOUT_PHASE1 = 60 * 60 * 2  # 2 h
-TIMEOUT_PHASE2 = 60 * 60 * 3  # 3 h
-TIMEOUT_BASELINE = 60 * 60 * 3  # 3 h
-TIMEOUT_EVAL = 60 * 60 * 3  # 3 h (3× CORE eval on d20 + longctx)
-TIMEOUT_QUICKTEST = 60 * 60 * 1  # 1 h
+# Timeouts (d16 is roughly half the cost of d20)
+TIMEOUT_PHASE1   = 60 * 60 * 1    # 1 h
+TIMEOUT_PHASE2   = 60 * 60 * 2    # 2 h
+TIMEOUT_BASELINE = 60 * 60 * 2    # 2 h
+TIMEOUT_EVAL     = 60 * 60 * 2    # 2 h
+TIMEOUT_QUICKTEST = 60 * 60 * 1   # 1 h
+
+# =============================================================================
+# HYPERPARAMETER SWEEP — 6 curriculum configs, H100:4, 300 steps per phase
+# =============================================================================
+
+# Design choices to sweep:
+#   phase1_seq  : sequence length during Phase 1 (256 or 512)
+#   phase1_frac : fraction of total budget spent in Phase 1 (0.2 / 0.4 / 0.6)
+# Each combo runs 300 phase-1 steps then 300 phase-2 steps at seq=2048.
+# Baseline (seq=2048 from scratch) is reused from Part 2 — not re-swept here.
+
+SWEEP_P3_SEQS   = [256, 512]
+SWEEP_P3_FRACS  = [0.2, 0.4, 0.6]
+SWEEP_P3_STEPS  = 300            # steps per phase within each sweep run
+GPU_SWEEP_P3    = "H100:2"
+DEVICE_BATCH_SWEEP_P3 = 16      # conservative; works for both seq=256 and seq=2048
+TIMEOUT_SWEEP_P3 = 60 * 60 * 3  # 3 h for 3 combos × 2 phases sequentially
+WANDB_PROJECT_SWEEP_P3 = "part3_sweep"
 
 # Volume / cache paths (same volume as the parent nanochat_modal.py)
 VOLUME_MOUNT = "/vol"
@@ -507,8 +529,119 @@ def _find_last_step(model_tag: str) -> int:
     return max(int(os.path.basename(f).split("_")[1].split(".")[0]) for f in files)
 
 
-_N_TRAIN_GPUS = int(GPU_TRAIN.split(":")[1]) if ":" in GPU_TRAIN else 1
-_N_EVAL_GPUS = int(GPU_EVAL.split(":")[1]) if ":" in GPU_EVAL else 1
+_N_TRAIN_GPUS    = int(GPU_TRAIN.split(":")[1])    if ":" in GPU_TRAIN    else 1
+_N_EVAL_GPUS     = int(GPU_EVAL.split(":")[1])     if ":" in GPU_EVAL     else 1
+_N_SWEEP_P3_GPUS = int(GPU_SWEEP_P3.split(":")[1]) if ":" in GPU_SWEEP_P3 else 1
+
+
+# =============================================================================
+# STAGE: HYPERPARAMETER SWEEP — curriculum choices
+# =============================================================================
+
+
+def _run_sweep_combo_p3(phase1_seq: int, phase1_frac: float, depth: int) -> None:
+    """
+    Run one curriculum sweep combo:
+      1. Train SWEEP_P3_STEPS at phase1_seq  (Phase 1 mini-run)
+      2. Warm-start, train SWEEP_P3_STEPS at seq=2048 (Phase 2 mini-run)
+    Both phases log to WandB project part3_sweep as separate runs.
+    """
+    n_steps   = SWEEP_P3_STEPS
+    bs        = DEVICE_BATCH_SWEEP_P3
+    nproc     = _N_SWEEP_P3_GPUS
+    frac_str  = f"f{int(phase1_frac * 100):02d}"
+    combo     = f"s{phase1_seq}_{frac_str}"
+
+    # ── Phase 1 mini-run ──────────────────────────────────────────────────────
+    tag_p1   = f"part3/sweep/{combo}_p1"
+    run_p1   = f"sweep_{combo}_phase1"
+    print(f"\n{'=' * 64}\nSweep Phase 1: seq={phase1_seq}  frac={phase1_frac}  steps={n_steps}\n{'=' * 64}")
+    _torchrun(
+        "scripts.base_train",
+        [
+            f"--depth={depth}",
+            f"--max-seq-len={phase1_seq}",
+            f"--model-tag={tag_p1}",
+            f"--device-batch-size={bs}",
+            f"--total-batch-size={TOTAL_BATCH_SIZE}",
+            f"--num-iterations={n_steps}",
+            "--save-every=9999",
+            "--core-metric-every=9999",
+            "--sample-every=-1",
+            f"--wandb-project={WANDB_PROJECT_SWEEP_P3}",
+            f"--run={run_p1}",
+        ],
+        nproc=nproc,
+    )
+    volume.commit()
+
+    # ── Phase 2 mini-run (warm-start from Phase 1) ────────────────────────────
+    p1_last_step = _find_last_step(tag_p1)
+    p2_total_iters = p1_last_step + n_steps
+    tag_p2 = f"part3/sweep/{combo}_p2"
+    run_p2 = f"sweep_{combo}_phase2"
+    print(f"\n{'=' * 64}\nSweep Phase 2: seq=2048  warm-start step={p1_last_step}\n{'=' * 64}")
+    _torchrun(
+        "scripts.base_train",
+        [
+            f"--depth={depth}",
+            "--max-seq-len=2048",
+            f"--model-tag={tag_p2}",
+            f"--resume-model-tag={tag_p1}",
+            f"--resume-from-step={p1_last_step}",
+            "--load-model-only",
+            f"--device-batch-size={bs}",
+            f"--total-batch-size={TOTAL_BATCH_SIZE}",
+            f"--num-iterations={p2_total_iters}",
+            "--save-every=9999",
+            "--core-metric-every=9999",
+            "--sample-every=-1",
+            f"--wandb-project={WANDB_PROJECT_SWEEP_P3}",
+            f"--run={run_p2}",
+        ],
+        nproc=nproc,
+    )
+    volume.commit()
+    print(f"  Done combo: {combo}  (phase1 run={run_p1}, phase2 run={run_p2})")
+
+
+@app.function(image=image, secrets=[secret], volumes={VOLUME_MOUNT: volume},
+              gpu=GPU_SWEEP_P3, timeout=TIMEOUT_SWEEP_P3)
+def stage_sweep_p3_s256(depth: int = DEPTH) -> None:
+    """
+    Curriculum sweep — Phase 1 seq=256, three phase-fractions: 0.2 / 0.4 / 0.6.
+    Runs 3 combos sequentially (each combo = 300-step phase1 + 300-step phase2).
+    Run in parallel with stage_sweep_p3_s512.
+
+    WandB project: part3_sweep
+    Run names: sweep_s256_f{20,40,60}_phase{1,2}
+    """
+    _setup_cache()
+    total = len(SWEEP_P3_FRACS)
+    for i, frac in enumerate(SWEEP_P3_FRACS, 1):
+        print(f"\n{'#' * 64}\n[{i}/{total}] seq=256  frac={frac}\n{'#' * 64}")
+        _run_sweep_combo_p3(phase1_seq=256, phase1_frac=frac, depth=depth)
+    print(f"\n{'=' * 64}\nseq=256 sweep done — {total} combos in '{WANDB_PROJECT_SWEEP_P3}'.\n{'=' * 64}")
+
+
+@app.function(image=image, secrets=[secret], volumes={VOLUME_MOUNT: volume},
+              gpu=GPU_SWEEP_P3, timeout=TIMEOUT_SWEEP_P3)
+def stage_sweep_p3_s512(depth: int = DEPTH) -> None:
+    """
+    Curriculum sweep — Phase 1 seq=512, three phase-fractions: 0.2 / 0.4 / 0.6.
+    Runs 3 combos sequentially (each combo = 300-step phase1 + 300-step phase2).
+    Run in parallel with stage_sweep_p3_s256.
+
+    WandB project: part3_sweep
+    Run names: sweep_s512_f{20,40,60}_phase{1,2}
+    """
+    _setup_cache()
+    total = len(SWEEP_P3_FRACS)
+    for i, frac in enumerate(SWEEP_P3_FRACS, 1):
+        print(f"\n{'#' * 64}\n[{i}/{total}] seq=512  frac={frac}\n{'#' * 64}")
+        _run_sweep_combo_p3(phase1_seq=512, phase1_frac=frac, depth=depth)
+    print(f"\n{'=' * 64}\nseq=512 sweep done — {total} combos in '{WANDB_PROJECT_SWEEP_P3}'.\n{'=' * 64}")
+
 
 # =============================================================================
 # STAGE: PHASE 1 — seq=512, 40% of Chinchilla budget
@@ -527,7 +660,7 @@ def stage_pretrain_phase1(
     n_steps: int = N_PHASE1_STEPS,
 ) -> None:
     """
-    Phase 1: train picochat at seq=512 for ~40% of the Chinchilla-optimal token budget.
+    Phase 1: train picochat d16 at seq=512 for ~40% of the Chinchilla-optimal token budget.
 
     Justification for seq=512:
       1. Attention is O(n²): seq=512 is 16× cheaper per step than seq=2048, giving
@@ -637,7 +770,7 @@ def stage_pretrain_baseline(
     n_steps: int = N_BASELINE_STEPS,
 ) -> None:
     """
-    Baseline: train d20 at seq=2048 for the full Chinchilla-optimal budget from scratch.
+    Baseline: train d16 at seq=2048 for the full Chinchilla-optimal budget from scratch.
 
     This control run answers: 'is the 512→2048 curriculum better, worse, or the same
     as just training at 2048 the whole time?'  Runs in parallel with Phase 2.
@@ -987,13 +1120,13 @@ def main() -> None:
     """
     Full Part 3 pipeline:
       1. d12 smoke test (validates all code paths cheaply)
-      2. Phase 1: d20 at seq=512, 40% of Chinchilla budget
+      2. Phase 1: d16 at seq=512, 40% of Chinchilla budget
       3. Phase 2 + Baseline in parallel (separate Modal containers)
       4. Eval + Report: CORE, needle-in-haystack, BPB-by-position, then markdown
     """
     w = 64
     print("\n" + "=" * w)
-    print("Part 3: Picochat Context Length Curriculum")
+    print("Part 3: Picochat Context Length Curriculum (d16)")
     print(
         f"  depth={DEPTH}  phase1_steps={N_PHASE1_STEPS}  phase2_steps={N_PHASE2_STEPS}"
     )
@@ -1020,7 +1153,7 @@ def main() -> None:
     stage_eval_and_report.remote()
 
     print("\n" + "=" * w)
-    print("Part 3 complete!")
+    print("Part 3 (d16) complete!")
     print(f"  Report: nanochat_cache/report/part3_report.md (on nanochat-vol)")
     print(f"  WandB:  project '{WANDB_PROJECT}'")
     print("=" * w + "\n")
