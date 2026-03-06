@@ -1,0 +1,3 @@
+[submodule "a3/nanochat"]
+	path = a3/nanochat
+	url = https://github.com/karpathy/nanochat
