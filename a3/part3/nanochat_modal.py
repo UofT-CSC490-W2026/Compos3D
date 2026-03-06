@@ -76,7 +76,8 @@ N_D12_BASELINE_STEPS = 300
 # Model tags (become subdirectories under base_checkpoints/)
 TAG_PHASE1 = "part3/d16_ctx512"
 TAG_PHASE2 = "part3/d16_ctx2048"
-TAG_BASELINE = "part3/d16_baseline"
+# Reuse the d16 baseline from Part 2 (same model, no need to re-train)
+TAG_BASELINE = "a2mtp/d16_baseline"
 
 TAG_D12_PHASE1 = "part3/d12_ctx512"
 TAG_D12_PHASE2 = "part3/d12_ctx2048"
@@ -85,7 +86,7 @@ TAG_D12_BASELINE = "part3/d12_baseline"
 WANDB_PROJECT = "nanochat-part3"
 WANDB_RUN_PHASE1 = "p3_d16_phase1"
 WANDB_RUN_PHASE2 = "p3_d16_phase2"
-WANDB_RUN_BASELINE = "p3_d16_baseline"
+WANDB_RUN_BASELINE = "d16_baseline"  # Part 2 run name in part2_mtp project
 
 # Timeouts (d16 is roughly half the cost of d20)
 TIMEOUT_PHASE1 = 60 * 60 * 1  # 1 h
@@ -1367,6 +1368,12 @@ def stage_make_eval_figures_p3() -> None:
         TAG_PHASE2: WANDB_RUN_PHASE2,
         TAG_BASELINE: WANDB_RUN_BASELINE,
     }
+    # Baseline was trained in the Part 2 project, not nanochat-part3
+    run_projects = {
+        TAG_PHASE1: WANDB_PROJECT,
+        TAG_PHASE2: WANDB_PROJECT,
+        TAG_BASELINE: "part2_mtp",
+    }
 
     # ── resolve W&B entity ────────────────────────────────────────────────────
     api = wandb.Api(timeout=120)
@@ -1387,14 +1394,16 @@ def stage_make_eval_figures_p3() -> None:
     print(f"Fetching training curves from W&B: {project_path}")
 
     # ── helper: fetch run history ─────────────────────────────────────────────
-    def fetch_run_history(run_name: str):
+    def fetch_run_history(run_name: str, project_override: str = None):
         """Return (steps, values) for the best available loss metric."""
+        proj = project_override or WANDB_PROJECT
+        cur_project_path = f"{entity}/{proj}" if entity else proj
         try:
-            runs = api.runs(project_path, filters={"config.run": run_name})
+            runs = api.runs(cur_project_path, filters={"config.run": run_name})
             if not runs:
-                runs = api.runs(project_path, filters={"display_name": run_name})
+                runs = api.runs(cur_project_path, filters={"display_name": run_name})
             if not runs:
-                print(f"  WARNING: no W&B run found for name {run_name!r}")
+                print(f"  WARNING: no W&B run found for name {run_name!r} in {cur_project_path!r}")
                 return [], []
             run = runs[0]
             for key in ["val_bpb", "val/bpb", "train/loss", "loss", "train_loss"]:
@@ -1413,7 +1422,7 @@ def stage_make_eval_figures_p3() -> None:
     fig1, ax1 = plt.subplots(figsize=(10, 5), constrained_layout=True)
 
     for tag in tags:
-        steps, vals = fetch_run_history(run_names[tag])
+        steps, vals = fetch_run_history(run_names[tag], project_override=run_projects[tag])
         if steps:
             ls = "--" if tag == TAG_BASELINE else "-"
             ax1.plot(
