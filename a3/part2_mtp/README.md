@@ -28,15 +28,29 @@ modal secret create nanochat-secrets \
 
 ## Run experiments
 
-Run the following commands one after another from your environment from inside the `a3` directory.
+Run the following commands from inside the `a3` directory.
 
-1. Run the smoke test to validate the full pipeline end-to-end at d12 scale before spending money on d16.
+1. **Hyperparameter sweep** — 4 configs × 9 runs (3 LR × 3 batch-size) = 36 runs total,
+   300 steps each on 2×H100. Run all four groups in parallel. Results log to the
+   `part2_sweep` W&B project. For each config, pick the `(lr, batch)` with the lowest
+   step-300 training loss. Run names: `sweep_<config>_lr<LR>_bs<batch>k`
+   (e.g. `sweep_mtp2_lr0.02_bs524k`).
+
+```sh
+modal run part2_mtp/nanochat_modal.py::stage_sweep_baseline  2>&1 | tee /tmp/a2mtp_sweep_baseline.log &
+modal run part2_mtp/nanochat_modal.py::stage_sweep_mtp2      2>&1 | tee /tmp/a2mtp_sweep_mtp2.log &
+modal run part2_mtp/nanochat_modal.py::stage_sweep_mtp4      2>&1 | tee /tmp/a2mtp_sweep_mtp4.log &
+modal run part2_mtp/nanochat_modal.py::stage_sweep_mtp2_yarn 2>&1 | tee /tmp/a2mtp_sweep_mtp2_yarn.log &
+wait
+```
+
+2. **Smoke test** — validates the full pipeline end-to-end at d12 scale before spending money on d16.
 
 ```sh
 modal run part2_mtp/nanochat_modal.py::quick_test_d12 2>&1 | tee /tmp/a2mtp_quicktest.log
 ```
 
-2. Run all four d16 training experiments in parallel.
+3. **Main d16 training** — run all four ablations in parallel (each on 8×H100, ~60–70 min each).
 
 ```sh
 modal run part2_mtp/nanochat_modal.py::stage_train_baseline 2>&1 | tee /tmp/a2mtp_baseline.log &
@@ -46,7 +60,7 @@ modal run part2_mtp/nanochat_modal.py::stage_train_mtp2_yarn 2>&1 | tee /tmp/a2m
 wait
 ```
 
-3. Compute metrics and generate a report.
+4. **Eval + report** — CORE benchmark on all four checkpoints, writes results JSON and markdown report.
 
 ```sh
 modal run part2_mtp/nanochat_modal.py::stage_eval_and_report 2>&1 | tee /tmp/a2mtp_eval_report.log
