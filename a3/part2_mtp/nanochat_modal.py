@@ -66,18 +66,23 @@ N_TOTAL_STEPS = CHINCHILLA_TOKENS // TOTAL_BATCH_SIZE  # ≈ 4693
 N_D12_STEPS = 200
 
 # Model tags (subdirectories under base_checkpoints/)
-TAG_BASELINE = "a2mtp/d16_baseline"
-TAG_MTP2 = "a2mtp/d16_mtp2"
-TAG_MTP4 = "a2mtp/d16_mtp4"
+TAG_BASELINE   = "a2mtp/d16_baseline"
+TAG_MTP2       = "a2mtp/d16_mtp2"
+TAG_MTP4       = "a2mtp/d16_mtp4"
+TAG_MTP2_YARN  = "a2mtp/d16_mtp2_yarn"
 
-TAG_D12_BASELINE = "a2mtp/d12_baseline"
-TAG_D12_MTP2 = "a2mtp/d12_mtp2"
-TAG_D12_MTP4 = "a2mtp/d12_mtp4"
+TAG_D12_BASELINE  = "a2mtp/d12_baseline"
+TAG_D12_MTP2      = "a2mtp/d12_mtp2"
+TAG_D12_MTP4      = "a2mtp/d12_mtp4"
+TAG_D12_MTP2_YARN = "a2mtp/d12_mtp2_yarn"
 
-WANDB_PROJECT = "part2_mtp"
-WANDB_RUN_BASELINE = "d16_baseline"
-WANDB_RUN_MTP2 = "d16_mtp2"
-WANDB_RUN_MTP4 = "d16_mtp4"
+YARN_SCALE = 8.0  # YaRN context extension factor
+
+WANDB_PROJECT         = "part2_mtp"
+WANDB_RUN_BASELINE    = "d16_baseline"
+WANDB_RUN_MTP2        = "d16_mtp2"
+WANDB_RUN_MTP4        = "d16_mtp4"
+WANDB_RUN_MTP2_YARN   = "d16_mtp2_yarn"
 
 # Timeouts
 TIMEOUT_TRAIN = 60 * 60 * 2    # 2 h per training run
@@ -249,6 +254,7 @@ def _build_report_markdown(
     tag_baseline: str,
     tag_mtp2: str,
     tag_mtp4: str,
+    tag_mtp2_yarn: str,
     depth: int,
     n_steps: int,
     chinchilla_tokens: int,
@@ -258,11 +264,13 @@ def _build_report_markdown(
     wandb_run_baseline: str,
     wandb_run_mtp2: str,
     wandb_run_mtp4: str,
+    wandb_run_mtp2_yarn: str,
     title_suffix: str = "",
 ) -> str:
     """
     Build the a2_mtp markdown report as a string.
     Contains ONLY objective tables — no prose commentary.
+    Now covers 4 runs: Baseline, MTP-2, MTP-4, MTP-2+YaRN.
     """
     lines = []
 
@@ -301,10 +309,12 @@ def _build_report_markdown(
             ["window_pattern", "SSSL  (S=half-ctx sliding, L=full-ctx)"],
             ["dtype", "bfloat16"],
             ["approx params", f"~{approx_params_m}M"],
-            ["position encoding", "RoPE (Rotary Position Embedding)"],
+            ["position encoding (baseline/mtp2/mtp4)", "RoPE"],
+            ["position encoding (mtp2_yarn)", "YaRN NTK-by-Parts (scale=8.0)"],
             ["MTP heads (baseline)", "0  (standard single-token prediction)"],
             ["MTP heads (MTP-2)", "2  (predict tokens +1, +2; weight-tied)"],
             ["MTP heads (MTP-4)", "4  (predict tokens +1..+4; weight-tied)"],
+            ["MTP heads (MTP-2+YaRN)", "2  (predict tokens +1, +2; weight-tied)"],
             ["optimizer (matrix)", "Muon"],
             ["optimizer (embed/unembed)", "Adam"],
             ["matrix_lr", "0.02"],
@@ -323,25 +333,33 @@ def _build_report_markdown(
     # ── 2. Training Configuration ──────────────────────────────────────────────
     section("2. Training Configuration")
     table(
-        ["Parameter", "Baseline", "MTP-2", "MTP-4"],
+        ["Parameter", "Baseline", "MTP-2", "MTP-4", "MTP-2+YaRN"],
         [
-            ["mtp_k", "0", "2", "4"],
-            ["seq_len", "2048", "2048", "2048"],
-            ["warm-start from", "—", "—", "—"],
-            ["steps", str(n_steps), str(n_steps), str(n_steps)],
-            ["tokens", f"{chinchilla_tokens / 1e9:.3f}B"] * 3,
-            ["total_batch_size (tokens)", str(total_batch_size)] * 3,
-            ["device_batch_size", str(device_batch)] * 3,
-            ["grad_accum_steps", str(grad_accum)] * 3,
-            ["GPUs", f"{n_gpus}×H100"] * 3,
-            ["WandB run", wandb_run_baseline, wandb_run_mtp2, wandb_run_mtp4],
+            ["mtp_k",            "0",      "2",      "4",      "2"],
+            ["rope_type",        "rope",   "rope",   "rope",   "yarn"],
+            ["yarn_scale",       "—",      "—",      "—",      "8.0"],
+            ["seq_len",          "2048",   "2048",   "2048",   "2048"],
+            ["warm-start from",  "—",      "—",      "—",      "—"],
+            ["steps",            str(n_steps)] * 4,
+            ["tokens",           f"{chinchilla_tokens / 1e9:.3f}B"] * 4,
+            ["total_batch_size", str(total_batch_size)] * 4,
+            ["device_batch",     str(device_batch)] * 4,
+            ["grad_accum",       str(grad_accum)] * 4,
+            ["GPUs",             f"{n_gpus}×H100"] * 4,
+            ["WandB run",        wandb_run_baseline, wandb_run_mtp2, wandb_run_mtp4, wandb_run_mtp2_yarn],
         ],
     )
 
     # ── 3. Training Metrics ────────────────────────────────────────────────────
     section("3. Training Metrics")
+    all_tags_labels = [
+        ("Baseline",    tag_baseline),
+        ("MTP-2",       tag_mtp2),
+        ("MTP-4",       tag_mtp4),
+        ("MTP-2+YaRN",  tag_mtp2_yarn),
+    ]
     training_rows = []
-    for label, tag in [("Baseline", tag_baseline), ("MTP-2", tag_mtp2), ("MTP-4", tag_mtp4)]:
+    for label, tag in all_tags_labels:
         r = results.get("training", {}).get(tag, {})
         training_rows.append([
             label,
@@ -355,12 +373,13 @@ def _build_report_markdown(
     section("4. CORE Per-Task Breakdown")
     core_tasks = results.get("core_tasks", {})
     all_tasks = sorted({t for tag_results in core_tasks.values() for t in tag_results})
+    ordered_tags = [tag_baseline, tag_mtp2, tag_mtp4, tag_mtp2_yarn]
     if all_tasks:
-        core_headers = ["Task", "Baseline", "MTP-2", "MTP-4"]
+        core_headers = ["Task", "Baseline", "MTP-2", "MTP-4", "MTP-2+YaRN"]
         core_rows = []
         for task in all_tasks:
             row = [task]
-            for tag in [tag_baseline, tag_mtp2, tag_mtp4]:
+            for tag in ordered_tags:
                 val = core_tasks.get(tag, {}).get(task, "N/A")
                 row.append(f"{val:.4f}" if isinstance(val, float) else "N/A")
             core_rows.append(row)
@@ -371,7 +390,7 @@ def _build_report_markdown(
                 f"**{results['training'][tag]['core_metric']:.4f}**"
                 if isinstance(results.get("training", {}).get(tag, {}).get("core_metric"), float)
                 else "N/A"
-                for tag in [tag_baseline, tag_mtp2, tag_mtp4]
+                for tag in ordered_tags
             ]
         )
         table(core_headers, core_rows)
@@ -399,10 +418,12 @@ def _train_run(
     device_batch: int = DEVICE_BATCH,
     nproc: int = _N_TRAIN_GPUS,
     core_metric_every: int = 1000,
+    rope_type: str = "rope",
+    yarn_scale: float = YARN_SCALE,
 ) -> None:
-    """Shared training logic for all three MTP experiments."""
+    """Shared training logic for all MTP/YaRN experiments."""
     _setup_cache()
-    print(f"Training: depth={depth} seq=2048 mtp_k={mtp_k} steps={n_steps} tag={tag}")
+    print(f"Training: depth={depth} seq=2048 mtp_k={mtp_k} rope_type={rope_type} steps={n_steps} tag={tag}")
     _torchrun(
         "scripts.base_train",
         [
@@ -410,6 +431,8 @@ def _train_run(
             "--max-seq-len=2048",
             f"--model-tag={tag}",
             f"--mtp-k={mtp_k}",
+            f"--rope-type={rope_type}",
+            f"--yarn-scale={yarn_scale}",
             f"--device-batch-size={device_batch}",
             f"--total-batch-size={TOTAL_BATCH_SIZE}",
             f"--num-iterations={n_steps}",
@@ -469,6 +492,25 @@ def stage_train_mtp4(depth: int = DEPTH, n_steps: int = N_TOTAL_STEPS) -> None:
     )
 
 
+@app.function(
+    image=image,
+    secrets=[secret],
+    volumes={VOLUME_MOUNT: volume},
+    gpu=GPU_TRAIN,
+    timeout=TIMEOUT_TRAIN,
+)
+def stage_train_mtp2_yarn(depth: int = DEPTH, n_steps: int = N_TOTAL_STEPS) -> None:
+    """MTP-2 + YaRN: d16, seq=2048, mtp_k=2, rope_type=yarn.
+    Combined ablation: both Multi-Token Prediction (k=2, weight-tied) and
+    YaRN NTK-by-Parts RoPE (8× scale), everything else identical to baseline.
+    """
+    _train_run(
+        depth=depth, mtp_k=2, rope_type="yarn", yarn_scale=YARN_SCALE,
+        tag=TAG_MTP2_YARN,
+        wandb_run=WANDB_RUN_MTP2_YARN, n_steps=n_steps,
+    )
+
+
 # =============================================================================
 # STAGE: EVAL + REPORT — CORE benchmark on all 3 checkpoints
 # =============================================================================
@@ -483,10 +525,10 @@ def stage_train_mtp4(depth: int = DEPTH, n_steps: int = N_TOTAL_STEPS) -> None:
 )
 def stage_eval_and_report() -> None:
     """
-    CORE evaluation on all 3 checkpoints → results JSON → markdown report.
+    CORE evaluation on all 4 checkpoints → results JSON → markdown report.
 
       A. Download eval bundle (if not cached)
-      B. CORE eval (scripts.base_eval --eval=core) on baseline, mtp2, mtp4
+      B. CORE eval (scripts.base_eval --eval=core) on baseline, mtp2, mtp4, mtp2_yarn
       C. Merge CORE CSV results → JSON
       D. Build and write markdown report
 
@@ -508,10 +550,10 @@ def stage_eval_and_report() -> None:
         _run(f"unzip -q {zip_path} -d {NANOCHAT_CACHE} && rm {zip_path}")
         volume.commit()
 
-    tags = [TAG_BASELINE, TAG_MTP2, TAG_MTP4]
+    tags = [TAG_BASELINE, TAG_MTP2, TAG_MTP4, TAG_MTP2_YARN]
     core_data: dict = {}
 
-    # ── A. CORE eval on all three checkpoints ─────────────────────────────────
+    # ── A. CORE eval on all four checkpoints ──────────────────────────────────
     for tag in tags:
         print(f"\n{'=' * 60}\nCORE eval: {tag}\n{'=' * 60}")
         _torchrun(
@@ -549,6 +591,7 @@ def stage_eval_and_report() -> None:
         tag_baseline=TAG_BASELINE,
         tag_mtp2=TAG_MTP2,
         tag_mtp4=TAG_MTP4,
+        tag_mtp2_yarn=TAG_MTP2_YARN,
         depth=DEPTH,
         n_steps=N_TOTAL_STEPS,
         chinchilla_tokens=CHINCHILLA_TOKENS,
@@ -558,6 +601,7 @@ def stage_eval_and_report() -> None:
         wandb_run_baseline=WANDB_RUN_BASELINE,
         wandb_run_mtp2=WANDB_RUN_MTP2,
         wandb_run_mtp4=WANDB_RUN_MTP4,
+        wandb_run_mtp2_yarn=WANDB_RUN_MTP2_YARN,
     )
 
     report_dir = os.path.join(NANOCHAT_CACHE, "report")
@@ -671,6 +715,30 @@ def quick_test_d12() -> None:
     )
     volume.commit()
 
+    # --- MTP-2 + YaRN (d12, mtp_k=2, yarn) ---
+    print("=== Quick test: MTP-2+YaRN (d12, mtp_k=2, rope_type=yarn, 200 steps) ===")
+    _torchrun(
+        "scripts.base_train",
+        [
+            "--depth=12",
+            "--max-seq-len=2048",
+            f"--model-tag={TAG_D12_MTP2_YARN}",
+            "--mtp-k=2",
+            "--rope-type=yarn",
+            f"--yarn-scale={YARN_SCALE}",
+            f"--device-batch-size={bs}",
+            f"--total-batch-size={total_bs}",
+            f"--num-iterations={n_steps}",
+            "--save-every=100",
+            "--core-metric-every=999999",
+            "--sample-every=-1",
+            f"--wandb-project={WANDB_PROJECT}",
+            "--run=d12_mtp2_yarn",
+        ],
+        nproc=nproc,
+    )
+    volume.commit()
+
     # --- Download eval bundle ---
     eval_bundle_dir = os.path.join(NANOCHAT_CACHE, "eval_bundle")
     if not os.path.isdir(eval_bundle_dir):
@@ -680,8 +748,8 @@ def quick_test_d12() -> None:
         _run(f"unzip -q {zip_path} -d {NANOCHAT_CACHE} && rm {zip_path}")
         volume.commit()
 
-    # --- CORE eval on all 3 d12 checkpoints ---
-    d12_tags = [TAG_D12_BASELINE, TAG_D12_MTP2, TAG_D12_MTP4]
+    # --- CORE eval on all 4 d12 checkpoints ---
+    d12_tags = [TAG_D12_BASELINE, TAG_D12_MTP2, TAG_D12_MTP4, TAG_D12_MTP2_YARN]
     core_data: dict = {}
     for tag in d12_tags:
         print(f"\n=== Quick test CORE eval: {tag} ===")
@@ -714,6 +782,7 @@ def quick_test_d12() -> None:
         tag_baseline=TAG_D12_BASELINE,
         tag_mtp2=TAG_D12_MTP2,
         tag_mtp4=TAG_D12_MTP4,
+        tag_mtp2_yarn=TAG_D12_MTP2_YARN,
         depth=12,
         n_steps=n_steps,
         chinchilla_tokens=CHINCHILLA_TOKENS,
@@ -723,6 +792,7 @@ def quick_test_d12() -> None:
         wandb_run_baseline="d12_baseline",
         wandb_run_mtp2="d12_mtp2",
         wandb_run_mtp4="d12_mtp4",
+        wandb_run_mtp2_yarn="d12_mtp2_yarn",
         title_suffix="d12 smoke test",
     )
 
@@ -764,14 +834,16 @@ def main() -> None:
     print("[0/3] d12 smoke test (baseline + mtp2 + mtp4)...")
     quick_test_d12.remote()
 
-    # Step 2: All 3 d16 training runs in parallel
-    print("[1/3] Training baseline, MTP-2, MTP-4 in parallel...")
-    baseline_h = stage_train_baseline.spawn()
-    mtp2_h = stage_train_mtp2.spawn()
-    mtp4_h = stage_train_mtp4.spawn()
+    # Step 2: All 4 d16 training runs in parallel
+    print("[1/3] Training baseline, MTP-2, MTP-4, MTP-2+YaRN in parallel...")
+    baseline_h    = stage_train_baseline.spawn()
+    mtp2_h        = stage_train_mtp2.spawn()
+    mtp4_h        = stage_train_mtp4.spawn()
+    mtp2_yarn_h   = stage_train_mtp2_yarn.spawn()
     baseline_h.get()
     mtp2_h.get()
     mtp4_h.get()
+    mtp2_yarn_h.get()
 
     # Step 3: CORE eval + report
     print("[2/3] CORE eval + markdown report...")
