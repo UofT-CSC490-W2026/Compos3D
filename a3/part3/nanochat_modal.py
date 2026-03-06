@@ -1288,6 +1288,218 @@ def quick_test_d12_eval_report() -> None:
 
 
 # =============================================================================
+# STAGE: EVAL FIGURES  (CPU-only, no GPU)
+# =============================================================================
+
+
+@app.function(
+    image=figures_image,
+    secrets=[secret],
+    volumes={VOLUME_MOUNT: volume},
+    cpu=4,
+    timeout=60 * 30,
+)
+def stage_make_eval_figures_p3() -> None:
+    """CPU-only job: load part3_eval_results.json from the volume and fetch
+    training-loss history from W&B to generate three publication figures:
+
+    Figure 1 — p3_training_curves.png
+        Phase 1 and Phase 2 loss/BPB curves on the same axes, with a vertical
+        dashed line at the Phase 1 / Phase 2 boundary.
+        Baseline shown as a separate dashed curve.
+
+    Figure 2 — p3_bpb_by_position.png
+        Grouped bar chart of BPB on each of four non-overlapping 512-token
+        segments (seg0–seg3) of a 2048-token sequence.
+        Three bar groups: Phase 1, Phase 2, Baseline.
+
+    Figure 3 — p3_needle_accuracy.png
+        Line plot of 10-way retrieval accuracy vs needle distance (tokens
+        from end of context) for Phase 1, Phase 2, and Baseline.
+        Random-chance baseline (10 %) shown as a dotted line.
+
+    All PNGs are saved to nanochat_cache/report/ on the shared volume and
+    logged as images to the nanochat-part3 W&B project.
+    Requires stage_eval_and_report to have been run first.
+    """
+    import os
+    import json
+
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as mpatches
+    import numpy as np
+    import wandb
+
+    report_dir = os.path.join(NANOCHAT_CACHE, "report")
+    os.makedirs(report_dir, exist_ok=True)
+
+    # ── load eval JSON ────────────────────────────────────────────────────────
+    results_path = os.path.join(NANOCHAT_CACHE, "part3_eval_results.json")
+    volume.reload()
+    with open(results_path) as f:
+        results = json.load(f)
+
+    tags    = [TAG_PHASE1, TAG_PHASE2, TAG_BASELINE]
+    labels  = {
+        TAG_PHASE1:   "Phase 1 (ctx=512)",
+        TAG_PHASE2:   "Phase 2 (ctx=2048, warm-start)",
+        TAG_BASELINE: "Baseline (ctx=2048, full)",
+    }
+    colors  = {
+        TAG_PHASE1:   "#4C72B0",   # blue
+        TAG_PHASE2:   "#DD8452",   # orange
+        TAG_BASELINE: "#55A868",   # green
+    }
+    run_names = {
+        TAG_PHASE1:   WANDB_RUN_PHASE1,
+        TAG_PHASE2:   WANDB_RUN_PHASE2,
+        TAG_BASELINE: WANDB_RUN_BASELINE,
+    }
+
+    # ── resolve W&B entity ────────────────────────────────────────────────────
+    api = wandb.Api(timeout=120)
+    entity = ""
+    for getter in [
+        lambda: api.viewer()["entity"],
+        lambda: api.default_entity,
+        lambda: os.environ.get("WANDB_ENTITY", ""),
+    ]:
+        try:
+            entity = getter() or ""
+            if entity:
+                break
+        except Exception:
+            pass
+
+    project_path = f"{entity}/{WANDB_PROJECT}" if entity else WANDB_PROJECT
+    print(f"Fetching training curves from W&B: {project_path}")
+
+    # ── helper: fetch run history ─────────────────────────────────────────────
+    def fetch_run_history(run_name: str):
+        """Return (steps, values) for the best available loss metric."""
+        try:
+            runs = api.runs(project_path, filters={"config.run": run_name})
+            if not runs:
+                runs = api.runs(project_path, filters={"display_name": run_name})
+            if not runs:
+                print(f"  WARNING: no W&B run found for name {run_name!r}")
+                return [], []
+            run = runs[0]
+            for key in ["val_bpb", "val/bpb", "train/loss", "loss", "train_loss"]:
+                rows = list(run.scan_history(keys=["_step", key]))
+                rows = [r for r in rows if r.get(key) is not None]
+                if rows:
+                    print(f"  {run_name}: {len(rows)} points for '{key}'")
+                    return [r["_step"] for r in rows], [r[key] for r in rows]
+            print(f"  WARNING: no loss metric found for {run_name!r}")
+            return [], []
+        except Exception as e:
+            print(f"  WARNING: failed to fetch {run_name!r}: {e}")
+            return [], []
+
+    # ── Figure 1: Training curves ─────────────────────────────────────────────
+    fig1, ax1 = plt.subplots(figsize=(10, 5), constrained_layout=True)
+
+    for tag in tags:
+        steps, vals = fetch_run_history(run_names[tag])
+        if steps:
+            ls = "--" if tag == TAG_BASELINE else "-"
+            ax1.plot(steps, vals, label=labels[tag], color=colors[tag],
+                     linewidth=1.6, linestyle=ls, alpha=0.92)
+
+    ax1.axvline(x=N_PHASE1_STEPS, color="grey", linestyle=":", linewidth=1.4,
+                label=f"Phase 1→2 boundary (step {N_PHASE1_STEPS})")
+    ax1.set_xlabel("Training Step", fontsize=11)
+    ax1.set_ylabel("Loss / BPB ↓", fontsize=11)
+    ax1.set_title("Part 3 d16: Training Curves  (Phase 1, Phase 2, Baseline)", fontsize=12)
+    ax1.legend(fontsize=9, loc="upper right")
+    ax1.grid(alpha=0.3)
+
+    fig1_path = os.path.join(report_dir, "p3_training_curves.png")
+    fig1.savefig(fig1_path, dpi=150, bbox_inches="tight")
+    plt.close(fig1)
+    print(f"Saved: {fig1_path}")
+
+    # ── Figure 2: BPB by context position ─────────────────────────────────────
+    seg_keys   = ["seg0", "seg1", "seg2", "seg3"]
+    seg_labels = [
+        "seg0\n(0–511)", "seg1\n(512–1023)",
+        "seg2\n(1024–1535)", "seg3\n(1536–2047)",
+    ]
+    bpb_data = results.get("bpb_by_position", {})
+
+    x       = np.arange(len(seg_keys))
+    n_mdl   = len(tags)
+    bar_w   = 0.22
+    offsets = np.linspace(-(n_mdl - 1) / 2 * bar_w, (n_mdl - 1) / 2 * bar_w, n_mdl)
+
+    fig2, ax2 = plt.subplots(figsize=(9, 5), constrained_layout=True)
+    for i, tag in enumerate(tags):
+        vals = [bpb_data.get(tag, {}).get(sk, float("nan")) for sk in seg_keys]
+        ax2.bar(x + offsets[i], vals, width=bar_w, label=labels[tag],
+                color=colors[tag], edgecolor="white", linewidth=0.5)
+
+    ax2.set_xticks(x)
+    ax2.set_xticklabels(seg_labels, fontsize=9)
+    ax2.set_ylabel("BPB ↓", fontsize=11)
+    ax2.set_title("Part 3 d16: BPB by Context Position (512-token segments)", fontsize=12)
+    ax2.legend(fontsize=9)
+    ax2.grid(axis="y", alpha=0.3)
+
+    fig2_path = os.path.join(report_dir, "p3_bpb_by_position.png")
+    fig2.savefig(fig2_path, dpi=150, bbox_inches="tight")
+    plt.close(fig2)
+    print(f"Saved: {fig2_path}")
+
+    # ── Figure 3: Needle-in-Haystack ──────────────────────────────────────────
+    needle_data = results.get("needle", {})
+    distances   = needle_data.get("distances", [64, 256, 512, 768, 1024, 1536])
+
+    fig3, ax3 = plt.subplots(figsize=(9, 5), constrained_layout=True)
+    ax3.axhline(y=0.10, color="black", linestyle=":", linewidth=1.2,
+                label="Random chance (10%)", zorder=2)
+
+    for tag in tags:
+        accs = [needle_data.get(tag, {}).get(str(d), float("nan")) for d in distances]
+        ax3.plot(distances, accs, marker="o", markersize=5,
+                 label=labels[tag], color=colors[tag], linewidth=1.8, zorder=3)
+        if tag == TAG_PHASE1:
+            ax3.axvspan(512.5, max(distances) + 50, alpha=0.06, color=colors[tag],
+                        label="Beyond Phase 1 context (>512)", zorder=1)
+
+    ax3.set_xlabel("Needle Distance from End of Context (tokens)", fontsize=11)
+    ax3.set_ylabel("10-way Retrieval Accuracy ↑", fontsize=11)
+    ax3.set_title("Part 3 d16: Needle-in-Haystack  (200 trials per distance)", fontsize=12)
+    ax3.set_xticks(distances)
+    ax3.set_ylim(0, None)
+    ax3.legend(fontsize=9, loc="upper right")
+    ax3.grid(alpha=0.3)
+
+    fig3_path = os.path.join(report_dir, "p3_needle_accuracy.png")
+    fig3.savefig(fig3_path, dpi=150, bbox_inches="tight")
+    plt.close(fig3)
+    print(f"Saved: {fig3_path}")
+
+    # ── commit + log to W&B ───────────────────────────────────────────────────
+    volume.commit()
+
+    with wandb.init(
+        project=WANDB_PROJECT,
+        entity=entity or None,
+        job_type="figures",
+        name="p3_eval_figures",
+    ) as wrun:
+        wrun.log({
+            "eval/training_curves":  wandb.Image(fig1_path),
+            "eval/bpb_by_position":  wandb.Image(fig2_path),
+            "eval/needle_accuracy":  wandb.Image(fig3_path),
+        })
+    print("Eval figures logged to W&B ✓")
+
+
+# =============================================================================
 # STAGE: SWEEP FIGURES  (CPU-only, no GPU)
 # =============================================================================
 
