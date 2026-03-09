@@ -1,3 +1,6 @@
 [submodule "a3/nanochat"]
 	path = a3/nanochat
 	url = https://github.com/karpathy/nanochat
+[submodule "a4/nanochat"]
+	path = a4/nanochat
+	url = https://github.com/karpathy/nanochat

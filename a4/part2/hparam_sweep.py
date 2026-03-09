@@ -33,7 +33,7 @@ volume = Volume.from_name("nanochat-vol", create_if_missing=True)
 secret = Secret.from_name("nanochat-secrets")
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-_NANOCHAT_DIR = os.path.join(_THIS_DIR, "..", "..", "a3", "nanochat")
+_NANOCHAT_DIR = os.path.join(_THIS_DIR, "..", "nanochat")
 _MTP_PATCHES = os.path.join(_THIS_DIR, "..", "..", "a3", "part2_mtp", "patches")
 _OWN_PATCHES = os.path.join(_THIS_DIR, "patches")
 _OWN_TASKS = os.path.join(_THIS_DIR, "tasks")
