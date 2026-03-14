@@ -93,7 +93,7 @@ wandb_run = (
     DummyWandb()
     if use_dummy_wandb
     else wandb.init(
-        project="nanochat-a4-part3",
+        project="nanochat-a4-part4",
         name=args.run,
         config=user_config,
     )
@@ -141,7 +141,10 @@ def run_gsm8k_eval(
             generated_tokens = sample_tokens[prefix_length:]
             generated_text = tokenizer.decode(generated_tokens)
             is_correct = task.evaluate(conversation, generated_text)
-            outcomes.append({"is_correct": is_correct})
+            outcomes.append({
+                "generated_text": generated_text,
+                "is_correct": is_correct,
+            })
         record = {"idx": idx, "outcomes": outcomes}
         yield record
 
@@ -190,6 +193,6 @@ log_passk = {
 wandb_run.log(log_passk)
 
 if master_process and args.run != "dummy":
-    print(f"Results logged to W&B project nanochat-a4-part3 run {args.run}")
+    print(f"Results logged to W&B project nanochat-a4-part4 run {args.run}")
 
 compute_cleanup()
