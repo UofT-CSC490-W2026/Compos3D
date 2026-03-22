@@ -1,0 +1,33 @@
+{
+  "dataset_id": "dummy_fast",
+  "examples": [
+    {
+      "example_id": "dr_001",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a wooden dining table, four chairs, and a floor lamp",
+      "required_assets": ["dining_table", "chair", "lamp"],
+      "style": "modern"
+    },
+    {
+      "example_id": "dr_002",
+      "room_type": "dining_room",
+      "prompt": "A cozy dining room with a round table, chairs, and a rug",
+      "required_assets": ["dining_table", "chair", "rug"],
+      "style": "cozy"
+    },
+    {
+      "example_id": "lr_001",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, and a floor lamp",
+      "required_assets": ["sofa", "table_top", "lamp"],
+      "style": "modern"
+    },
+    {
+      "example_id": "lr_002",
+      "room_type": "living_room",
+      "prompt": "A cozy living room with a sofa, a rug, and a lamp",
+      "required_assets": ["sofa", "rug", "lamp"],
+      "style": "cozy"
+    }
+  ]
+}

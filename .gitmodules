@@ -4,3 +4,6 @@
 [submodule "a4/nanochat"]
 	path = a4/nanochat
 	url = https://github.com/karpathy/nanochat
+[submodule "infinigen"]
+	path = infinigen
+	url = https://github.com/princeton-vl/infinigen

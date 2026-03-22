@@ -82,8 +82,30 @@ module "iam" {
   secrets_policy_arn = module.secrets.secrets_policy_arn
 }
 
-# Batch compute (commented out for initial deployment)
-# Uncomment when you need distributed compute
+# EC2 compute — IAM instance profile and security group for compos3d training jobs.
+# Uncomment to provision.  After applying, set ec2_iam_instance_profile and
+# ec2_security_group_id in config/env.<env>.yaml with the Terraform output values.
+#
+# module "ec2_compute" {
+#   source = "./modules/ec2_compute"
+#
+#   project_name  = var.project_name
+#   environment   = var.environment
+#   bronze_bucket = local.bronze_bucket
+#   silver_bucket = local.silver_bucket
+#   gold_bucket   = local.gold_bucket
+# }
+#
+# output "ec2_instance_profile_name" {
+#   value = module.ec2_compute.instance_profile_name
+# }
+#
+# output "ec2_security_group_id" {
+#   value = module.ec2_compute.security_group_id
+# }
+
+# AWS Batch compute (alternative to EC2) — commented out for initial deployment.
+# Uncomment when you need distributed compute via AWS Batch.
 # data "aws_vpc" "default" {
 #   default = true
 # }
@@ -106,7 +128,6 @@ module "iam" {
 #   }
 # }
 # 
-# # ECR Repository
 # module "ecr" {
 #   source = "./modules/ecr"
 #   
@@ -114,12 +135,11 @@ module "iam" {
 #   environment  = var.environment
 # }
 # 
-# # AWS Batch
 # module "batch" {
 #   source = "./modules/batch"
 #   
-#   project_name     = var.project_name
-#   environment      = var.environment
+#   project_name           = var.project_name
+#   environment            = var.environment
 #   batch_job_role_arn     = module.iam.batch_job_role_arn
 #   batch_service_role_arn = module.iam.batch_service_role_arn
 #   

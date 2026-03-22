@@ -1,213 +1,202 @@
-"""
-End-to-end test of Bronze → Silver → Gold data pipeline
+"""End-to-end Bronze → Silver → Gold data pipeline test (ported from compos3d_dp).
 
-This tests the ACTUAL data processing pipeline for the assignment:
-1. Bronze: Data ingestion (raw JSON)
-2. Silver: Data cleaning/transformation (Parquet with schemas)
-3. Gold: Data aggregation (training datasets)
+Verifies the full data lake flow:
+1. Bronze: Raw scene programs are ingested during training.
+2. Silver: Validated hypothesis banks and metrics are written.
+3. Gold:  Final hypothesis bank (latest.json) is published.
+
+All LLM calls use the mock provider; storage uses a LocalStore backed by a
+pytest tmp_path directory, so no AWS credentials are required.
 """
 
-import os
-from compos3d_dp.storage.multibucket_s3 import MultiLayerS3Store
-from compos3d_dp.config import load_config
-from compos3d_dp.storage.paths import utc_date_parts
-from compos3d_dp.datasets.blenderbench import BlenderBenchDataset
-import uuid
+from __future__ import annotations
+
 import json
+from pathlib import Path
 
+import pytest
 
-# Set AWS profile
-os.environ["AWS_PROFILE"] = "myisb_IsbUsersPS-136268833180"
-
-# Load config
-cfg = load_config("dev")
-store = MultiLayerS3Store(
-    bucket_bronze=cfg.s3_bucket_bronze,
-    bucket_silver=cfg.s3_bucket_silver,
-    bucket_gold=cfg.s3_bucket_gold,
-    prefix=cfg.s3_prefix,
-    region=cfg.aws_region,
+from compos3d.storage.local import LocalStore
+from compos3d.storage.paths import (
+    training_bronze_prefix,
+    training_gold_prefix,
+    training_silver_prefix,
+    utc_date_parts,
 )
+from compos3d.hypothesis.engine import train_vertical_slice
 
-# Get date partition
-y, m, d = utc_date_parts()
-date_part = f"{y}/{m}/{d}"
 
-print(f"\n📅 Date partition: {date_part}")
-print("📦 Storage buckets:")
-print(f"   Bronze: {cfg.s3_bucket_bronze}")
-print(f"   Silver: {cfg.s3_bucket_silver}")
-print(f"   Gold: {cfg.s3_bucket_gold}")
+# ---------------------------------------------------------------------------
+# Fixtures
+# ---------------------------------------------------------------------------
 
-# ============================================================================
-# STEP 1: BRONZE INGESTION - Load BlenderBench dataset
-# ============================================================================
-print("\n" + "=" * 80)
-print("STEP 1: BRONZE LAYER - Data Ingestion")
+@pytest.fixture
+def lake(tmp_path) -> LocalStore:
+    return LocalStore(root=tmp_path / "_lake")
 
-dataset = BlenderBenchDataset(cache_dir="data/blenderbench")
-dataset.download()
 
-# Ingest 3 scenes from different levels
-test_scenes = [
-    dataset.get_instance("level1/camera1"),
-    dataset.get_instance("level2/attribute1"),
-    dataset.get_instance("level3/attribute7"),
-]
+@pytest.fixture
+def pipeline_result(dummy_dataset_path, tmp_path, lake):
+    """Run one training pass with lake mirroring and return (result, lake)."""
+    result = train_vertical_slice(
+        dataset_path=dummy_dataset_path,
+        output_dir=tmp_path / "artifacts",
+        experiment_name="e2e_test",
+        llm_provider="mock",
+        num_init_examples_per_room=1,
+        init_hypotheses_per_room=2,
+        num_epochs=1,
+        store=lake,
+    )
+    return result, lake
 
-bronze_scene_ids = []
 
-for instance in test_scenes:
-    scene_id = f"scene_{uuid.uuid4().hex[:8]}"
-    bronze_scene_ids.append(scene_id)
+# ---------------------------------------------------------------------------
+# Tests
+# ---------------------------------------------------------------------------
 
-    # Create Bronze record (raw data)
-    bronze_record = {
-        "scene_id": scene_id,
-        "source": "blenderbench",
-        "instance_id": instance.instance_id,
-        "level": instance.level,
-        "task_description": instance.task_description,
-        "blend_file_path": str(dataset.download_blend_file(instance)),
-        "start_code": instance.start_code,
-        "goal_code": instance.goal_code,
-        "ingestion_timestamp": f"{y}-{m}-{d}T00:00:00Z",
-    }
+@pytest.mark.integration
+def test_e2e_date_partition() -> None:
+    """utc_date_parts returns correctly formatted year/month/day strings."""
+    y, m, d = utc_date_parts()
+    assert len(y) == 4 and y.isdigit()
+    assert len(m) == 2 and m.isdigit()
+    assert len(d) == 2 and d.isdigit()
 
-    # Write to Bronze
-    bronze_path = f"bronze/scenes/{date_part}/{scene_id}/scene.json"
-    uri = store.put_json(bronze_path, bronze_record)
-    print(f"Ingested {instance.instance_id} → {uri}")
 
-print(f"\nBronze ingestion complete: {len(bronze_scene_ids)} scenes")
-
-# Verify Bronze data
-bronze_files = store.list_prefix(f"bronze/scenes/{date_part}/")
-print(f"Bronze contains {len(bronze_files)} files")
-
-# ============================================================================
-# STEP 2: SILVER TRANSFORMATION - Clean and validate data
-# ============================================================================
-print("\n" + "=" * 80)
-print("STEP 2: SILVER LAYER - Data Cleaning & Transformation")
-
-# Read Bronze, transform to Silver
-for scene_id in bronze_scene_ids:
-    bronze_path = f"bronze/scenes/{date_part}/{scene_id}/scene.json"
-    bronze_data = store.read_json(bronze_path)
-
-    # Transform to Silver (cleaned, validated, structured)
-    silver_record = {
-        "scene_id": bronze_data["scene_id"],
-        "source": bronze_data["source"],
-        "level": bronze_data["level"],
-        "task": bronze_data["task_description"],
-        "blend_file": bronze_data["blend_file_path"],
-        # Add derived fields
-        "code_length_start": len(bronze_data["start_code"]),
-        "code_length_goal": len(bronze_data["goal_code"]),
-        "complexity_level": int(bronze_data["level"].replace("level", "")),
-        "has_camera_task": "camera" in bronze_data["task_description"].lower(),
-        "has_attribute_task": "attribute" in bronze_data.get("instance_id", "").lower(),
-    }
-
-    # Write to Silver (in practice, this would be Parquet)
-    silver_path = f"silver/scenes/{date_part}/{scene_id}/scene.json"
-    uri = store.put_json(silver_path, silver_record)
-    print(f"Transformed {scene_id} → Silver")
-
-print(f"\nSilver transformation complete: {len(bronze_scene_ids)} scenes")
-
-# Verify Silver data
-silver_files = store.list_prefix(f"silver/scenes/{date_part}/")
-print(f"Silver contains {len(silver_files)} files")
-
-# ============================================================================
-# STEP 3: GOLD AGGREGATION - Create training datasets
-# ============================================================================
-print("\n" + "=" * 80)
-print("STEP 3: GOLD LAYER - Data Aggregation & Training Datasets")
-
-# Aggregate Silver data into Gold
-gold_training_dataset = {
-    "dataset_id": f"training_{uuid.uuid4().hex[:8]}",
-    "created_at": f"{y}-{m}-{d}T00:00:00Z",
-    "num_scenes": len(bronze_scene_ids),
-    "scenes": [],
-    "statistics": {
-        "total_scenes": len(bronze_scene_ids),
-        "by_level": {},
-        "avg_code_length": 0,
-        "camera_tasks": 0,
-        "attribute_tasks": 0,
-    },
-}
-
-total_code_length = 0
-
-for scene_id in bronze_scene_ids:
-    silver_path = f"silver/scenes/{date_part}/{scene_id}/scene.json"
-    silver_data = store.read_json(silver_path)
-
-    # Add to training dataset
-    gold_training_dataset["scenes"].append(
-        {
-            "scene_id": silver_data["scene_id"],
-            "level": silver_data["level"],
-            "task": silver_data["task"],
-            "complexity": silver_data["complexity_level"],
-        }
+@pytest.mark.integration
+def test_e2e_storage_buckets(dummy_dataset_path: Path, tmp_path: Path) -> None:
+    """All three lake layers receive files after a training run."""
+    lake = LocalStore(root=tmp_path / "_lake_buckets")
+    train_vertical_slice(
+        dataset_path=dummy_dataset_path,
+        output_dir=tmp_path / "artifacts",
+        experiment_name="bucket_test",
+        llm_provider="mock",
+        num_init_examples_per_room=1,
+        init_hypotheses_per_room=2,
+        num_epochs=1,
+        store=lake,
     )
 
-    # Update statistics
-    level = silver_data["level"]
-    gold_training_dataset["statistics"]["by_level"][level] = (
-        gold_training_dataset["statistics"]["by_level"].get(level, 0) + 1
+    bronze_files = lake.list_prefix("bronze/training")
+    silver_files = lake.list_prefix("silver/training")
+    gold_files = lake.list_prefix("gold/hypothesis_banks")
+
+    assert len(bronze_files) > 0, "Bronze layer should have files"
+    assert len(silver_files) > 0, "Silver layer should have files"
+    assert len(gold_files) > 0,   "Gold layer should have files"
+
+
+@pytest.mark.integration
+def test_e2e_bronze_ingestion(dummy_dataset_path: Path, tmp_path: Path) -> None:
+    """Bronze layer contains raw scene programs after training."""
+    lake = LocalStore(root=tmp_path / "_lake_bronze")
+    result = train_vertical_slice(
+        dataset_path=dummy_dataset_path,
+        output_dir=tmp_path / "artifacts",
+        experiment_name="bronze_e2e",
+        llm_provider="mock",
+        num_init_examples_per_room=1,
+        init_hypotheses_per_room=2,
+        num_epochs=1,
+        store=lake,
+    )
+    run_id = result["lake_run_id"]
+    pfx = training_bronze_prefix(run_id)
+
+    bronze_files = lake.list_prefix(pfx)
+    assert len(bronze_files) > 0
+
+    # Verify run manifest is present.
+    assert any("run_manifest.json" in f for f in bronze_files), (
+        "run_manifest.json must be in bronze"
     )
 
-    total_code_length += (
-        silver_data["code_length_start"] + silver_data["code_length_goal"]
+
+@pytest.mark.integration
+def test_e2e_silver_transformation(dummy_dataset_path: Path, tmp_path: Path) -> None:
+    """Silver layer contains validated hypothesis bank and metrics after training."""
+    lake = LocalStore(root=tmp_path / "_lake_silver")
+    result = train_vertical_slice(
+        dataset_path=dummy_dataset_path,
+        output_dir=tmp_path / "artifacts",
+        experiment_name="silver_e2e",
+        llm_provider="mock",
+        num_init_examples_per_room=1,
+        init_hypotheses_per_room=2,
+        num_epochs=1,
+        store=lake,
+    )
+    run_id = result["lake_run_id"]
+    pfx = training_silver_prefix(run_id)
+
+    silver_files = lake.list_prefix(pfx)
+    assert any("hypothesis_bank.json" in f for f in silver_files)
+    assert any("metrics.json" in f for f in silver_files)
+
+    # Confirm bank is a non-empty list of valid records.
+    bank_data = lake.read_json(f"{pfx}/hypothesis_bank.json")
+    assert isinstance(bank_data, list)
+    assert len(bank_data) > 0
+    assert "hypothesis_id" in bank_data[0]
+
+
+@pytest.mark.integration
+def test_e2e_gold_aggregation(dummy_dataset_path: Path, tmp_path: Path) -> None:
+    """Gold layer contains latest.json and training_summary.json after training."""
+    lake = LocalStore(root=tmp_path / "_lake_gold")
+    result = train_vertical_slice(
+        dataset_path=dummy_dataset_path,
+        output_dir=tmp_path / "artifacts",
+        experiment_name="gold_e2e",
+        llm_provider="mock",
+        num_init_examples_per_room=1,
+        init_hypotheses_per_room=2,
+        num_epochs=1,
+        store=lake,
+    )
+    gold_pfx = training_gold_prefix("gold_e2e")
+    gold_files = lake.list_prefix(gold_pfx)
+
+    assert any("latest.json" in f for f in gold_files)
+    assert any("training_summary.json" in f for f in gold_files)
+
+    # latest.json must be a valid bank.
+    latest = lake.read_json(f"{gold_pfx}/latest.json")
+    assert isinstance(latest, list)
+    assert len(latest) > 0
+
+    # training_summary must reference the run.
+    summary = lake.read_json(f"{gold_pfx}/training_summary.json")
+    assert summary["experiment_name"] == "gold_e2e"
+    assert "metrics" in summary
+
+
+@pytest.mark.integration
+def test_e2e_data_lake_status(dummy_dataset_path: Path, tmp_path: Path) -> None:
+    """After a full training run the lake has files in all three layers."""
+    lake = LocalStore(root=tmp_path / "_lake_status")
+    train_vertical_slice(
+        dataset_path=dummy_dataset_path,
+        output_dir=tmp_path / "artifacts",
+        experiment_name="status_check",
+        llm_provider="mock",
+        num_init_examples_per_room=1,
+        init_hypotheses_per_room=2,
+        num_epochs=1,
+        store=lake,
     )
 
-    if silver_data["has_camera_task"]:
-        gold_training_dataset["statistics"]["camera_tasks"] += 1
-    if silver_data["has_attribute_task"]:
-        gold_training_dataset["statistics"]["attribute_tasks"] += 1
+    bronze_count = len(lake.list_prefix("bronze"))
+    silver_count = len(lake.list_prefix("silver"))
+    gold_count = len(lake.list_prefix("gold"))
 
-gold_training_dataset["statistics"]["avg_code_length"] = total_code_length / (
-    len(bronze_scene_ids) * 2
-)
+    print(f"\nData Lake Status:")
+    print(f"  Bronze: {bronze_count} files")
+    print(f"  Silver: {silver_count} files")
+    print(f"  Gold:   {gold_count} files")
 
-# Write to Gold
-gold_path = f"gold/training_datasets/{date_part}/dataset.json"
-uri = store.put_json(gold_path, gold_training_dataset)
-print(f"Created training dataset → {uri}")
-
-# Print statistics
-print("\nTraining Dataset Statistics:")
-print(f"   Total scenes: {gold_training_dataset['statistics']['total_scenes']}")
-print(
-    f"   By level: {json.dumps(gold_training_dataset['statistics']['by_level'], indent=6)}"
-)
-print(
-    f"   Avg code length: {gold_training_dataset['statistics']['avg_code_length']:.0f} chars"
-)
-print(f"   Camera tasks: {gold_training_dataset['statistics']['camera_tasks']}")
-print(f"   Attribute tasks: {gold_training_dataset['statistics']['attribute_tasks']}")
-
-# ============================================================================
-# VERIFICATION
-# ============================================================================
-print("\n" + "=" * 80)
-
-# Count files in each layer
-bronze_count = len(store.list_prefix("bronze/scenes/"))
-silver_count = len(store.list_prefix("silver/scenes/"))
-gold_count = len(store.list_prefix("gold/training_datasets/"))
-
-print("Data Lake Status:")
-print(f"   Bronze layer: {bronze_count} files")
-print(f"   Silver layer: {silver_count} files")
-print(f"   Gold layer: {gold_count} files")
-
-print("\n" + "=" * 80)
+    assert bronze_count > 0
+    assert silver_count > 0
+    assert gold_count > 0

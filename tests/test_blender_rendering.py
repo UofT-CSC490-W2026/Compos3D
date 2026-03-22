@@ -1,162 +1,143 @@
-"""Test actual Blender rendering with real .png outputs"""
+"""Blender rendering tests (ported from compos3d_dp).
 
-from compos3d_dp.generation.blender_executor import BlenderExecutor
-from compos3d_dp.datasets.blenderbench import BlenderBenchDataset
-from pathlib import Path
-import shutil
-
-
-# Load BlenderBench
-dataset = BlenderBenchDataset(cache_dir="data/blenderbench")
-dataset.download()
-
-# Get a scene
-instance = dataset.get_instance("level1/camera1")
-blend_file = dataset.download_blend_file(instance)
-
-print(f"\n📦 Test Scene: {instance.instance_id}")
-print(f"   Task: {instance.task_description}")
-print(f"   Blend file: {blend_file}")
-print(f"   Exists: {blend_file.exists()}")
-
-# Initialize Blender executor
-output_dir = Path("output/blender_test_renders")
-output_dir.mkdir(parents=True, exist_ok=True)
-
-executor = BlenderExecutor(
-    blender_command="blender",
-    output_dir=str(output_dir),
-)
-
-print("\nBlender executor initialized")
-
-# Test 1: Execute start code and render
-print("\n" + "=" * 80)
-print("TEST 1: Render with START code")
-
-result = executor.execute(
-    code=instance.start_code,
-    blend_file=blend_file,
-    render=True,
-    resolution=(512, 512),
-)
-
-if result.success:
-    print("Execution successful")
-    print(f"   Rendered images: {len(result.rendered_images)}")
-    for img in result.rendered_images:
-        print(f"   📸 {img}")
-        print(f"      Size: {img.stat().st_size / 1024:.1f} KB")
-        print(f"      Exists: {img.exists()}")
-else:
-    print(f"Execution failed: {result.error_message}")
-    print(f"   stderr: {result.stderr[-500:]}")
-
-# Test 2: Execute goal code and render
-print("\n" + "=" * 80)
-print("TEST 2: Render with GOAL code")
-
-result2 = executor.execute(
-    code=instance.goal_code,
-    blend_file=blend_file,
-    render=True,
-    resolution=(512, 512),
-)
-
-if result2.success:
-    print("Execution successful")
-    print(f"   Rendered images: {len(result2.rendered_images)}")
-    for img in result2.rendered_images:
-        print(f"   📸 {img}")
-        print(f"      Size: {img.stat().st_size / 1024:.1f} KB")
-else:
-    print(f"❌ Execution failed: {result2.error_message}")
-
-# Test 3: Simple custom scene
-print("\n" + "=" * 80)
-print("TEST 3: Custom scene from scratch")
-
-custom_code = """
-import bpy
-
-# Clear existing objects
-bpy.ops.object.select_all(action='SELECT')
-bpy.ops.object.delete()
-
-# Add cube
-bpy.ops.mesh.primitive_cube_add(location=(0, 0, 1))
-cube = bpy.context.active_object
-cube.scale = (1, 1, 1)
-
-# Add ground plane
-bpy.ops.mesh.primitive_plane_add(size=10, location=(0, 0, 0))
-
-# Add camera
-bpy.ops.object.camera_add(location=(7, -7, 5))
-cam = bpy.context.active_object
-cam.rotation_euler = (1.1, 0, 0.8)
-bpy.context.scene.camera = cam
-
-# Add sun light
-bpy.ops.object.light_add(type='SUN', location=(5, 5, 10))
-light = bpy.context.active_object
-light.data.energy = 3.0
-
-# Set up rendering
-scene = bpy.context.scene
-scene.render.engine = 'CYCLES'
-scene.cycles.samples = 32  # Low for speed
-scene.render.resolution_x = 512
-scene.render.resolution_y = 512
+Tests the scene building and rendering pipeline using ``build_scene``.
+Blender (bpy) must be installed in the environment.  These tests are marked
+``blender`` and are skipped automatically if bpy is not importable.
 """
 
-result3 = executor.execute(
-    code=custom_code,
-    blend_file=None,  # Create from scratch
-    render=True,
-    resolution=(512, 512),
-)
+from __future__ import annotations
 
-if result3.success:
-    print("Execution successful")
-    print(f"   Rendered images: {len(result3.rendered_images)}")
-    for img in result3.rendered_images:
-        print(f"   📸 {img}")
-        print(f"      Size: {img.stat().st_size / 1024:.1f} KB")
+import json
+from pathlib import Path
 
-        # Copy to easy-to-find location for viewing
-        dest = Path("output/test_render_cube.png")
-        if img.exists():
-            shutil.copy(img, dest)
-            print(f"   📋 Copied to: {dest}")
-else:
-    print(f"❌ Execution failed: {result3.error_message}")
-    print(f"   stderr: {result3.stderr[-1000:]}")
+import pytest
 
-# Summary
-print("\n" + "=" * 80)
+# Skip entire module if bpy is not available.
+bpy = pytest.importorskip("bpy", reason="bpy not installed — Blender tests skipped")
 
-total_renders = 0
-if result.success:
-    total_renders += len(result.rendered_images)
-if result2.success:
-    total_renders += len(result2.rendered_images)
-if result3.success:
-    total_renders += len(result3.rendered_images)
 
-print(f"Total renders produced: {total_renders}")
-print(f"Output directory: {output_dir}")
+from compos3d.procedural.service import BuildSceneRequest, build_scene
 
-# List all generated PNGs
-all_pngs = list(output_dir.rglob("*.png"))
-print(f"\n📸 All rendered images ({len(all_pngs)} total):")
-for png in all_pngs[:10]:  # Show first 10
-    print(f"   {png.relative_to(output_dir)}")
-if len(all_pngs) > 10:
-    print(f"   ... and {len(all_pngs) - 10} more")
 
-print("\n" + "=" * 80)
-if total_renders > 0:
-    print(f"✅ All {total_renders} renders completed successfully")
-else:
-    print("❌ No renders completed")
+# ---------------------------------------------------------------------------
+# Minimal SceneProgram fixtures
+# ---------------------------------------------------------------------------
+
+SIMPLE_DINING_ROOM = {
+    "room_type": "dining_room",
+    "style": "modern",
+    "hypotheses": [],
+    "assets": [
+        {"asset_type": "dining_table", "count": 1, "placement": "center"},
+        {"asset_type": "chair", "count": 2, "placement": "around table"},
+    ],
+    "constraints": [],
+}
+
+SIMPLE_LIVING_ROOM = {
+    "room_type": "living_room",
+    "style": "cozy",
+    "hypotheses": [],
+    "assets": [
+        {"asset_type": "sofa", "count": 1, "placement": "against wall"},
+        {"asset_type": "lamp", "count": 1, "placement": "corner"},
+    ],
+    "constraints": [],
+}
+
+
+@pytest.fixture
+def dining_room_sp(tmp_path) -> Path:
+    p = tmp_path / "scene_program.json"
+    p.write_text(json.dumps(SIMPLE_DINING_ROOM, indent=2))
+    return p
+
+
+@pytest.fixture
+def living_room_sp(tmp_path) -> Path:
+    p = tmp_path / "scene_program.json"
+    p.write_text(json.dumps(SIMPLE_LIVING_ROOM, indent=2))
+    return p
+
+
+# ---------------------------------------------------------------------------
+# Tests
+# ---------------------------------------------------------------------------
+
+@pytest.mark.blender
+def test_build_scene_renders_dining_room(dining_room_sp: Path, tmp_path: Path) -> None:
+    """build_scene produces 4 rendered PNG views for a dining room."""
+    req = BuildSceneRequest(
+        scene_program_path=dining_room_sp,
+        output_dir=tmp_path / "renders",
+        seed=0,
+        resolution="256x256",
+        view_samples=4,
+        no_video=True,
+        save_blend=False,
+    )
+    result = build_scene(req)
+
+    assert "rendered_views" in result
+    rendered = result["rendered_views"]
+    assert len(rendered) > 0, "At least one view must be rendered"
+
+    for img_path in rendered:
+        p = Path(img_path)
+        assert p.exists(), f"Rendered file missing: {p}"
+        assert p.stat().st_size > 0, f"Rendered file is empty: {p}"
+
+
+@pytest.mark.blender
+def test_build_scene_renders_living_room(living_room_sp: Path, tmp_path: Path) -> None:
+    """build_scene works for a living room SceneProgram."""
+    req = BuildSceneRequest(
+        scene_program_path=living_room_sp,
+        output_dir=tmp_path / "renders",
+        seed=1,
+        resolution="256x256",
+        view_samples=4,
+        no_video=True,
+        save_blend=False,
+    )
+    result = build_scene(req)
+    assert "rendered_views" in result
+    assert len(result["rendered_views"]) > 0
+
+
+@pytest.mark.blender
+def test_build_scene_manifest(dining_room_sp: Path, tmp_path: Path) -> None:
+    """build_scene returns a manifest dict with expected keys."""
+    req = BuildSceneRequest(
+        scene_program_path=dining_room_sp,
+        output_dir=tmp_path / "renders",
+        seed=0,
+        resolution="128x128",
+        view_samples=2,
+        no_video=True,
+        save_blend=False,
+    )
+    result = build_scene(req)
+
+    for key in ("rendered_views", "elapsed_seconds"):
+        assert key in result, f"Missing key in manifest: {key}"
+
+    assert isinstance(result["elapsed_seconds"], (int, float))
+    assert result["elapsed_seconds"] > 0
+
+
+@pytest.mark.blender
+def test_build_scene_different_seeds_produce_variation(dining_room_sp: Path, tmp_path: Path) -> None:
+    """Running build_scene twice with different seeds completes without error."""
+    for seed in (0, 42):
+        req = BuildSceneRequest(
+            scene_program_path=dining_room_sp,
+            output_dir=tmp_path / f"renders_seed{seed}",
+            seed=seed,
+            resolution="128x128",
+            view_samples=2,
+            no_video=True,
+            save_blend=False,
+        )
+        result = build_scene(req)
+        assert len(result["rendered_views"]) > 0

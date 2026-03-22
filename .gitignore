@@ -4,11 +4,13 @@ _lake/
 .terraform.lock.hcl
 __pycache__/
 *.pyc
+api_key
 
 # Data directories
 data/
 output/
 checkpoints/
+artifacts/
 
 # Cache
 *.cache
