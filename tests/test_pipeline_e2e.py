@@ -30,6 +30,7 @@ from compos3d.hypothesis.engine import train_vertical_slice
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def lake(tmp_path) -> LocalStore:
     return LocalStore(root=tmp_path / "_lake")
@@ -54,6 +55,7 @@ def pipeline_result(dummy_dataset_path, tmp_path, lake):
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.integration
 def test_e2e_date_partition() -> None:
@@ -85,7 +87,7 @@ def test_e2e_storage_buckets(dummy_dataset_path: Path, tmp_path: Path) -> None:
 
     assert len(bronze_files) > 0, "Bronze layer should have files"
     assert len(silver_files) > 0, "Silver layer should have files"
-    assert len(gold_files) > 0,   "Gold layer should have files"
+    assert len(gold_files) > 0, "Gold layer should have files"
 
 
 @pytest.mark.integration

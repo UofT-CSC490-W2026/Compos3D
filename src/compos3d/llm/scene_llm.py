@@ -4,7 +4,13 @@ import json
 import re
 from collections import Counter
 
-from compos3d.catalog import DEFAULT_ASSETS_BY_ROOM, assets_mentioned_in_prompt, infer_room_type, normalize_assets, supported_assets_for_room
+from compos3d.catalog import (
+    DEFAULT_ASSETS_BY_ROOM,
+    assets_mentioned_in_prompt,
+    infer_room_type,
+    normalize_assets,
+    supported_assets_for_room,
+)
 from compos3d.config import GeneratorConfig
 from compos3d.llm.bedrock import BedrockChatClient, resolve_bedrock_config
 from compos3d.models import AssetSpec, ConstraintSpec, SceneProgram, TrainingExample
@@ -27,7 +33,9 @@ def _extract_json_payload(text: str) -> dict:
     start = cleaned.find("{")
     end = cleaned.rfind("}")
     if start < 0 or end < 0 or end <= start:
-        raise ValueError(f"Could not locate JSON object in model response: {cleaned[:200]}")
+        raise ValueError(
+            f"Could not locate JSON object in model response: {cleaned[:200]}"
+        )
     return json.loads(cleaned[start : end + 1])
 
 
@@ -53,18 +61,24 @@ def _extract_requested_count(prompt: str, asset_type: str) -> int:
 
 def _normalize_hypotheses(raw_hypotheses: object) -> list[str]:
     if not isinstance(raw_hypotheses, list):
-        raise StructuredOutputError("SceneProgram response must include a hypotheses list.")
+        raise StructuredOutputError(
+            "SceneProgram response must include a hypotheses list."
+        )
 
     normalized = [str(item).strip() for item in raw_hypotheses if str(item).strip()]
     normalized = _dedupe_keep_order(normalized)
     if not normalized:
-        raise StructuredOutputError("SceneProgram response must include at least one non-empty hypothesis.")
+        raise StructuredOutputError(
+            "SceneProgram response must include at least one non-empty hypothesis."
+        )
     return normalized
 
 
 def _normalize_constraints(raw_constraints: object) -> list[dict[str, str]]:
     if not isinstance(raw_constraints, list):
-        raise StructuredOutputError("SceneProgram response must include a constraints list.")
+        raise StructuredOutputError(
+            "SceneProgram response must include a constraints list."
+        )
 
     normalized: list[dict[str, str]] = []
     for item in raw_constraints:
@@ -72,20 +86,28 @@ def _normalize_constraints(raw_constraints: object) -> list[dict[str, str]]:
             normalized.append({"text": item.strip()})
             continue
         if not isinstance(item, dict):
-            raise StructuredOutputError("Each SceneProgram constraint must be a string or an object with a text field.")
+            raise StructuredOutputError(
+                "Each SceneProgram constraint must be a string or an object with a text field."
+            )
         text = str(item.get("text", "")).strip()
         if not text:
-            raise StructuredOutputError("Each SceneProgram constraint must contain a non-empty text field.")
+            raise StructuredOutputError(
+                "Each SceneProgram constraint must contain a non-empty text field."
+            )
         normalized.append({"text": text})
 
     if not normalized:
-        raise StructuredOutputError("SceneProgram response must include at least one valid constraint.")
+        raise StructuredOutputError(
+            "SceneProgram response must include at least one valid constraint."
+        )
     return normalized
 
 
 def _normalize_assets(raw_assets: object, room_type: str) -> list[dict[str, object]]:
     if not isinstance(raw_assets, list):
-        raise StructuredOutputError("SceneProgram response must include an assets list.")
+        raise StructuredOutputError(
+            "SceneProgram response must include an assets list."
+        )
 
     supported = set(supported_assets_for_room(room_type))
     normalized_assets: list[dict[str, object]] = []
@@ -102,16 +124,24 @@ def _normalize_assets(raw_assets: object, room_type: str) -> list[dict[str, obje
         try:
             count = int(item.get("count", 1) or 1)
         except (TypeError, ValueError) as exc:
-            raise StructuredOutputError(f"Invalid asset count for '{asset_type}'.") from exc
+            raise StructuredOutputError(
+                f"Invalid asset count for '{asset_type}'."
+            ) from exc
         if count <= 0:
-            raise StructuredOutputError(f"Asset '{asset_type}' must have a positive count.")
+            raise StructuredOutputError(
+                f"Asset '{asset_type}' must have a positive count."
+            )
 
         placement = str(item.get("placement", "")).strip()
         rationale = str(item.get("rationale", "")).strip()
         if not placement:
-            raise StructuredOutputError(f"Asset '{asset_type}' is missing a placement string.")
+            raise StructuredOutputError(
+                f"Asset '{asset_type}' is missing a placement string."
+            )
         if not rationale:
-            raise StructuredOutputError(f"Asset '{asset_type}' is missing a rationale string.")
+            raise StructuredOutputError(
+                f"Asset '{asset_type}' is missing a rationale string."
+            )
 
         normalized_assets.append(
             {
@@ -123,11 +153,15 @@ def _normalize_assets(raw_assets: object, room_type: str) -> list[dict[str, obje
         )
 
     if not normalized_assets:
-        raise StructuredOutputError("SceneProgram response must include at least one valid asset.")
+        raise StructuredOutputError(
+            "SceneProgram response must include at least one valid asset."
+        )
     return normalized_assets
 
 
-def _normalize_scene_program_payload(payload: dict, *, prompt: str, room_type: str) -> dict:
+def _normalize_scene_program_payload(
+    payload: dict, *, prompt: str, room_type: str
+) -> dict:
     if not isinstance(payload, dict):
         raise StructuredOutputError("SceneProgram response must be a JSON object.")
 
@@ -140,7 +174,9 @@ def _normalize_scene_program_payload(payload: dict, *, prompt: str, room_type: s
 
     render_spec = normalized_payload.get("render_spec")
     if render_spec is not None and not isinstance(render_spec, dict):
-        raise StructuredOutputError("SceneProgram render_spec must be an object if provided.")
+        raise StructuredOutputError(
+            "SceneProgram render_spec must be an object if provided."
+        )
 
     return {
         "prompt": prompt,
@@ -168,13 +204,19 @@ def _dedupe_keep_order(items: list[str]) -> list[str]:
     return deduped
 
 
-def _mock_hypotheses(room_type: str, examples: list[TrainingExample], *, num_hypotheses: int, focus: str) -> list[str]:
+def _mock_hypotheses(
+    room_type: str, examples: list[TrainingExample], *, num_hypotheses: int, focus: str
+) -> list[str]:
     asset_counter: Counter[str] = Counter()
     for example in examples:
         asset_counter.update(example.required_assets)
 
     common_assets = [asset for asset, _ in asset_counter.most_common(3)]
-    anchor_assets = ", ".join(common_assets) if common_assets else ", ".join(DEFAULT_ASSETS_BY_ROOM.get(room_type, ()))
+    anchor_assets = (
+        ", ".join(common_assets)
+        if common_assets
+        else ", ".join(DEFAULT_ASSETS_BY_ROOM.get(room_type, ()))
+    )
     if focus == "repair":
         hypotheses = [
             f"In a {room_type}, include the prompt-critical assets such as {anchor_assets} before adding decorative objects.",
@@ -201,29 +243,44 @@ class MockSceneLLM:
         num_hypotheses: int = 3,
         focus: str = "general",
     ) -> list[str]:
-        return _mock_hypotheses(room_type, examples, num_hypotheses=num_hypotheses, focus=focus)
+        return _mock_hypotheses(
+            room_type, examples, num_hypotheses=num_hypotheses, focus=focus
+        )
 
-    def generate_scene_program(self, *, prompt: str, room_type: str | None, selected_hypotheses: list[str]) -> SceneProgram:
+    def generate_scene_program(
+        self, *, prompt: str, room_type: str | None, selected_hypotheses: list[str]
+    ) -> SceneProgram:
         resolved_room_type = room_type or infer_room_type(prompt)
         prompt_assets = assets_mentioned_in_prompt(prompt, resolved_room_type)
         hypothesis_assets: list[str] = []
         for hypothesis in selected_hypotheses:
             lower_hypothesis = hypothesis.lower()
             for asset in supported_assets_for_room(resolved_room_type):
-                if asset.replace("_", " ") in lower_hypothesis or asset in lower_hypothesis:
+                if (
+                    asset.replace("_", " ") in lower_hypothesis
+                    or asset in lower_hypothesis
+                ):
                     hypothesis_assets.append(asset)
 
-        asset_types = normalize_assets(prompt_assets + hypothesis_assets, resolved_room_type)
+        asset_types = normalize_assets(
+            prompt_assets + hypothesis_assets, resolved_room_type
+        )
         assets = [
             AssetSpec(
                 asset_type=asset_type,
                 count=_extract_requested_count(prompt, asset_type),
-                placement=("center of room" if asset_type in {"dining_table", "sofa"} else "near wall or support surface"),
+                placement=(
+                    "center of room"
+                    if asset_type in {"dining_table", "sofa"}
+                    else "near wall or support surface"
+                ),
                 rationale=f"Selected from prompt and hypotheses for {resolved_room_type}.",
             )
             for asset_type in asset_types
         ]
-        constraints = [ConstraintSpec(text=hypothesis) for hypothesis in selected_hypotheses]
+        constraints = [
+            ConstraintSpec(text=hypothesis) for hypothesis in selected_hypotheses
+        ]
         return SceneProgram(
             prompt=prompt,
             room_type=resolved_room_type,
@@ -257,7 +314,11 @@ class BedrockSceneLLM:
             )
         except Exception as exc:  # noqa: BLE001
             message = str(exc).lower()
-            if "aws login" in message or "refresh token" in message or "session has expired" in message:
+            if (
+                "aws login" in message
+                or "refresh token" in message
+                or "session has expired" in message
+            ):
                 raise LLMUnavailableError(
                     "Bedrock credentials are unavailable or expired. Reauthenticate with aws login."
                 ) from exc
@@ -267,7 +328,9 @@ class BedrockSceneLLM:
             content = response["output"]["message"]["content"][0]["text"]
             return _extract_json_payload(content)
         except (KeyError, IndexError, TypeError, ValueError) as exc:
-            raise StructuredOutputError("Bedrock returned invalid JSON output.") from exc
+            raise StructuredOutputError(
+                "Bedrock returned invalid JSON output."
+            ) from exc
 
     def generate_hypotheses(
         self,
@@ -277,11 +340,14 @@ class BedrockSceneLLM:
         num_hypotheses: int = 3,
         focus: str = "general",
     ) -> list[str]:
-        example_lines = [f"- {example.prompt} | required_assets={example.required_assets}" for example in examples]
+        example_lines = [
+            f"- {example.prompt} | required_assets={example.required_assets}"
+            for example in examples
+        ]
         if focus == "repair":
             prompt = (
                 "You are generating repair hypotheses for controllable procedural 3D indoor scenes. "
-                "Return strictly valid JSON with the shape {\"hypotheses\": [string, ...]}. "
+                'Return strictly valid JSON with the shape {"hypotheses": [string, ...]}. '
                 f"Generate {num_hypotheses} short repair hypotheses for room_type={room_type}. "
                 f"Supported assets: {list(supported_assets_for_room(room_type))}. "
                 "These examples exposed failures. Write reusable patch rules that would prevent the same mistakes in future scenes. "
@@ -293,7 +359,7 @@ class BedrockSceneLLM:
         else:
             prompt = (
                 "You are generating abstract design hypotheses for controllable procedural 3D indoor scenes. "
-                "Return strictly valid JSON with the shape {\"hypotheses\": [string, ...]}. "
+                'Return strictly valid JSON with the shape {"hypotheses": [string, ...]}. '
                 f"Generate {num_hypotheses} short hypotheses for room_type={room_type}. "
                 f"Supported assets: {list(supported_assets_for_room(room_type))}. "
                 "Each hypothesis must be a reusable rule, not a scene description. "
@@ -307,14 +373,18 @@ class BedrockSceneLLM:
         payload = self._run_json_prompt(prompt)
         raw_hypotheses = payload.get("hypotheses")
         if not isinstance(raw_hypotheses, list):
-            raise StructuredOutputError("Bedrock hypothesis response must include a hypotheses list.")
+            raise StructuredOutputError(
+                "Bedrock hypothesis response must include a hypotheses list."
+            )
         hypotheses = [str(item).strip() for item in raw_hypotheses if str(item).strip()]
         hypotheses = _dedupe_keep_order(hypotheses)
         if not hypotheses:
             raise StructuredOutputError("Bedrock returned no valid hypotheses.")
         return hypotheses[:num_hypotheses]
 
-    def generate_scene_program(self, *, prompt: str, room_type: str | None, selected_hypotheses: list[str]) -> SceneProgram:
+    def generate_scene_program(
+        self, *, prompt: str, room_type: str | None, selected_hypotheses: list[str]
+    ) -> SceneProgram:
         resolved_room_type = room_type or infer_room_type(prompt)
         request = (
             "You are generating a structured SceneProgram for a controllable procedural indoor scene. "

@@ -4,10 +4,20 @@ import json
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 
-from compos3d.catalog import assets_mentioned_in_prompt, infer_room_type, supported_assets_for_room
+from compos3d.catalog import (
+    assets_mentioned_in_prompt,
+    infer_room_type,
+    supported_assets_for_room,
+)
 from compos3d.config import CriticConfig
 from compos3d.llm.bedrock import BedrockChatClient, resolve_bedrock_config
-from compos3d.models import CriticScore, EvaluationSummary, PredictionRecord, SceneProgram, TrainingExample
+from compos3d.models import (
+    CriticScore,
+    EvaluationSummary,
+    PredictionRecord,
+    SceneProgram,
+    TrainingExample,
+)
 
 
 class CriticUnavailableError(RuntimeError):
@@ -37,7 +47,9 @@ def _extract_json_payload(text: str) -> dict:
     start = cleaned.find("{")
     end = cleaned.rfind("}")
     if start < 0 or end < 0 or end <= start:
-        raise ValueError(f"Could not locate JSON object in critic response: {cleaned[:200]}")
+        raise ValueError(
+            f"Could not locate JSON object in critic response: {cleaned[:200]}"
+        )
     return json.loads(cleaned[start : end + 1])
 
 
@@ -58,14 +70,18 @@ def _clamp_unit(value: object) -> float:
     return numeric
 
 
-def _build_heuristic_score(scene_program: SceneProgram, reference_example: TrainingExample | None = None) -> CriticScore:
+def _build_heuristic_score(
+    scene_program: SceneProgram, reference_example: TrainingExample | None = None
+) -> CriticScore:
     notes: list[str] = []
     supported_assets = set(supported_assets_for_room(scene_program.room_type))
     predicted_assets = _predicted_asset_set(scene_program)
 
     unsupported_assets = sorted(predicted_assets - supported_assets)
     if unsupported_assets:
-        notes.append(f"Unsupported assets for room type: {', '.join(unsupported_assets)}")
+        notes.append(
+            f"Unsupported assets for room type: {', '.join(unsupported_assets)}"
+        )
 
     validity = 1.0
     if scene_program.room_type not in ("dining_room", "living_room", "bedroom"):
@@ -82,9 +98,13 @@ def _build_heuristic_score(scene_program: SceneProgram, reference_example: Train
         overlap = predicted_assets & required_assets
         asset_precision = _safe_ratio(len(overlap), len(predicted_assets))
         asset_recall = _safe_ratio(len(overlap), len(required_assets))
-        room_match = 1.0 if scene_program.room_type == reference_example.room_type else 0.0
+        room_match = (
+            1.0 if scene_program.room_type == reference_example.room_type else 0.0
+        )
     else:
-        mentioned_assets = set(assets_mentioned_in_prompt(scene_program.prompt, scene_program.room_type))
+        mentioned_assets = set(
+            assets_mentioned_in_prompt(scene_program.prompt, scene_program.room_type)
+        )
         overlap = predicted_assets & mentioned_assets
         asset_precision = _safe_ratio(len(overlap), len(predicted_assets))
         asset_recall = _safe_ratio(len(overlap), len(mentioned_assets))
@@ -92,7 +112,12 @@ def _build_heuristic_score(scene_program: SceneProgram, reference_example: Train
         room_match = 1.0 if scene_program.room_type == inferred_room_type else 0.0
 
     prompt_adherence = (asset_precision + asset_recall + room_match) / 3
-    overall = (0.25 * validity) + (0.35 * prompt_adherence) + (0.2 * asset_precision) + (0.2 * asset_recall)
+    overall = (
+        (0.25 * validity)
+        + (0.35 * prompt_adherence)
+        + (0.2 * asset_precision)
+        + (0.2 * asset_recall)
+    )
 
     return CriticScore(
         validity=round(validity, 4),
@@ -129,7 +154,9 @@ class BedrockVLMCritic:
             )
         )
 
-    def _run_json_prompt(self, *, prompt_text: str, image_paths: Sequence[Path]) -> dict:
+    def _run_json_prompt(
+        self, *, prompt_text: str, image_paths: Sequence[Path]
+    ) -> dict:
         content: list[dict] = []
         for path in image_paths:
             content.append(
@@ -152,13 +179,23 @@ class BedrockVLMCritic:
             )
         except Exception as exc:  # noqa: BLE001
             message = str(exc).lower()
-            if "aws login" in message or "refresh token" in message or "session has expired" in message:
+            if (
+                "aws login" in message
+                or "refresh token" in message
+                or "session has expired" in message
+            ):
                 raise CriticUnavailableError(
                     "Bedrock critic credentials are unavailable or expired. Reauthenticate with aws login."
                 ) from exc
-            raise CriticUnavailableError(f"Bedrock critic request failed: {exc}") from exc
+            raise CriticUnavailableError(
+                f"Bedrock critic request failed: {exc}"
+            ) from exc
 
-        text_blocks = [item.get("text", "") for item in response["output"]["message"]["content"] if "text" in item]
+        text_blocks = [
+            item.get("text", "")
+            for item in response["output"]["message"]["content"]
+            if "text" in item
+        ]
         return _extract_json_payload("\n".join(text_blocks))
 
     def evaluate(
@@ -168,20 +205,30 @@ class BedrockVLMCritic:
         reference_example: TrainingExample | None = None,
         image_paths: Sequence[Path] | None = None,
     ) -> CriticScore:
-        normalized_image_paths = [Path(path) for path in image_paths or [] if Path(path).exists()]
+        normalized_image_paths = [
+            Path(path) for path in image_paths or [] if Path(path).exists()
+        ]
         if not normalized_image_paths:
-            raise CriticUnavailableError("VLM critic requires render images, but none were provided.")
+            raise CriticUnavailableError(
+                "VLM critic requires render images, but none were provided."
+            )
 
         prompt_text = self._build_prompt(
             scene_program=scene_program,
             reference_example=reference_example,
         )
-        payload = self._run_json_prompt(prompt_text=prompt_text, image_paths=normalized_image_paths)
+        payload = self._run_json_prompt(
+            prompt_text=prompt_text, image_paths=normalized_image_paths
+        )
         score = _CriticPayload.model_validate(
             {
                 "validity": round(_clamp_unit(payload.get("validity", 0.0)), 4),
-                "prompt_adherence": round(_clamp_unit(payload.get("prompt_adherence", 0.0)), 4),
-                "asset_precision": round(_clamp_unit(payload.get("asset_precision", 0.0)), 4),
+                "prompt_adherence": round(
+                    _clamp_unit(payload.get("prompt_adherence", 0.0)), 4
+                ),
+                "asset_precision": round(
+                    _clamp_unit(payload.get("asset_precision", 0.0)), 4
+                ),
                 "asset_recall": round(_clamp_unit(payload.get("asset_recall", 0.0)), 4),
                 "room_match": round(_clamp_unit(payload.get("room_match", 0.0)), 4),
                 "overall": round(_clamp_unit(payload.get("overall", 0.0)), 4),
@@ -214,7 +261,9 @@ class BedrockVLMCritic:
         return "png"
 
     @staticmethod
-    def _build_prompt(*, scene_program: SceneProgram, reference_example: TrainingExample | None) -> str:
+    def _build_prompt(
+        *, scene_program: SceneProgram, reference_example: TrainingExample | None
+    ) -> str:
         reference_block = ""
         if reference_example is not None:
             reference_block = (
@@ -245,7 +294,9 @@ def build_scene_critic(config: CriticConfig | None = None):
     if mode != "vlm":
         raise ValueError(f"Unsupported critic mode: {resolved.mode}")
     if provider == "mock":
-        raise ValueError("Mock VLM critic has been removed. Use heuristic mode or provider='bedrock'.")
+        raise ValueError(
+            "Mock VLM critic has been removed. Use heuristic mode or provider='bedrock'."
+        )
     if provider == "bedrock":
         return BedrockVLMCritic(resolved)
     raise ValueError(f"Unsupported critic provider: {resolved.provider}")
@@ -266,7 +317,9 @@ def evaluate_scene_program(
     )
 
 
-def aggregate_prediction_scores(predictions: Iterable[PredictionRecord]) -> EvaluationSummary:
+def aggregate_prediction_scores(
+    predictions: Iterable[PredictionRecord],
+) -> EvaluationSummary:
     prediction_list = list(predictions)
     if not prediction_list:
         return EvaluationSummary(
@@ -282,10 +335,24 @@ def aggregate_prediction_scores(predictions: Iterable[PredictionRecord]) -> Eval
     total = len(prediction_list)
     return EvaluationSummary(
         num_predictions=total,
-        average_validity=round(sum(item.critic_score.validity for item in prediction_list) / total, 4),
-        average_prompt_adherence=round(sum(item.critic_score.prompt_adherence for item in prediction_list) / total, 4),
-        average_asset_precision=round(sum(item.critic_score.asset_precision for item in prediction_list) / total, 4),
-        average_asset_recall=round(sum(item.critic_score.asset_recall for item in prediction_list) / total, 4),
-        average_room_match=round(sum(item.critic_score.room_match for item in prediction_list) / total, 4),
-        average_overall=round(sum(item.critic_score.overall for item in prediction_list) / total, 4),
+        average_validity=round(
+            sum(item.critic_score.validity for item in prediction_list) / total, 4
+        ),
+        average_prompt_adherence=round(
+            sum(item.critic_score.prompt_adherence for item in prediction_list) / total,
+            4,
+        ),
+        average_asset_precision=round(
+            sum(item.critic_score.asset_precision for item in prediction_list) / total,
+            4,
+        ),
+        average_asset_recall=round(
+            sum(item.critic_score.asset_recall for item in prediction_list) / total, 4
+        ),
+        average_room_match=round(
+            sum(item.critic_score.room_match for item in prediction_list) / total, 4
+        ),
+        average_overall=round(
+            sum(item.critic_score.overall for item in prediction_list) / total, 4
+        ),
     )

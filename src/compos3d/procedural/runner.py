@@ -15,6 +15,7 @@ directory that contains `infinigen_examples/configs_indoor/` and
 `infinigen_examples/configs_nature/`.  We locate the best available root at
 import time, preferring the project's `infinigen/` submodule.
 """
+
 from __future__ import annotations
 
 import os
@@ -50,17 +51,23 @@ def _find_gin_config_root() -> Path:
         PROJECT_ROOT / "infinigen",
     ]
     for sibling in PROJECT_ROOT.parent.iterdir():
-        if sibling.is_dir() and (sibling / "infinigen_examples" / "configs_indoor" / "singleroom.gin").exists():
+        if (
+            sibling.is_dir()
+            and (
+                sibling / "infinigen_examples" / "configs_indoor" / "singleroom.gin"
+            ).exists()
+        ):
             candidates.append(sibling)
 
     for candidate in candidates:
-        if (candidate / "infinigen_examples" / "configs_indoor" / "singleroom.gin").exists():
+        if (
+            candidate / "infinigen_examples" / "configs_indoor" / "singleroom.gin"
+        ).exists():
             return candidate
 
     raise FileNotFoundError(
         "Could not find infinigen_examples/configs_indoor/singleroom.gin in any "
-        "candidate directory.  Expected it at: "
-        + ", ".join(str(c) for c in candidates)
+        "candidate directory.  Expected it at: " + ", ".join(str(c) for c in candidates)
     )
 
 

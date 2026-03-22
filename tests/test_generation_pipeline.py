@@ -23,6 +23,7 @@ from compos3d.models import HypothesisRecord, SceneProgram, AssetSpec
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def mock_llm():
     return build_scene_llm(GeneratorConfig(provider="mock"))
@@ -77,6 +78,7 @@ def frozen_bank(tmp_path) -> Path:
 # Tests
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.generation
 @pytest.mark.unit
 def test_generator_initialization(mock_llm) -> None:
@@ -108,8 +110,14 @@ def test_generator_scene_evaluation(mock_llm, heuristic_critic) -> None:
         selected_hypotheses=[],
     )
     score = evaluate_scene_program(sp, critic=heuristic_critic)
-    for field in ("validity", "prompt_adherence", "asset_precision", "asset_recall",
-                  "room_match", "overall"):
+    for field in (
+        "validity",
+        "prompt_adherence",
+        "asset_precision",
+        "asset_recall",
+        "room_match",
+        "overall",
+    ):
         v = getattr(score, field)
         assert 0.0 <= v <= 1.0, f"{field} out of range: {v}"
 

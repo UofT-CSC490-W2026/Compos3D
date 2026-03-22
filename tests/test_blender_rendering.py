@@ -64,6 +64,7 @@ def living_room_sp(tmp_path) -> Path:
 # Tests
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.blender
 def test_build_scene_renders_dining_room(dining_room_sp: Path, tmp_path: Path) -> None:
     """build_scene produces 4 rendered PNG views for a dining room."""
@@ -127,7 +128,9 @@ def test_build_scene_manifest(dining_room_sp: Path, tmp_path: Path) -> None:
 
 
 @pytest.mark.blender
-def test_build_scene_different_seeds_produce_variation(dining_room_sp: Path, tmp_path: Path) -> None:
+def test_build_scene_different_seeds_produce_variation(
+    dining_room_sp: Path, tmp_path: Path
+) -> None:
     """Running build_scene twice with different seeds completes without error."""
     for seed in (0, 42):
         req = BuildSceneRequest(

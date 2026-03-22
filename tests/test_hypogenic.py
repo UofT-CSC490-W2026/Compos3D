@@ -20,8 +20,12 @@ from compos3d.models import HypothesisRecord
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _make_record(room_type: str = "dining_room", text: str = "anchor around dining_table") -> HypothesisRecord:
+
+def _make_record(
+    room_type: str = "dining_room", text: str = "anchor around dining_table"
+) -> HypothesisRecord:
     import uuid
+
     return HypothesisRecord(
         hypothesis_id=uuid.uuid4().hex[:8],
         text=text,
@@ -39,7 +43,9 @@ def _make_record(room_type: str = "dining_room", text: str = "anchor around dini
     )
 
 
-def _ucb_score(record: HypothesisRecord, total_visits: int, alpha: float = 1.0) -> float:
+def _ucb_score(
+    record: HypothesisRecord, total_visits: int, alpha: float = 1.0
+) -> float:
     """Mirror of the UCB formula used in the loop."""
     if record.num_visits == 0:
         return float("inf")
@@ -51,6 +57,7 @@ def _ucb_score(record: HypothesisRecord, total_visits: int, alpha: float = 1.0) 
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 def test_hypothesis_record_creation() -> None:
@@ -77,7 +84,9 @@ def test_ucb_score_decreases_with_visits() -> None:
 
     scores = []
     for v in [1, 5, 20, 50]:
-        rec = rec.model_copy(update={"num_visits": v, "num_successes": v // 2, "accuracy": 0.5})
+        rec = rec.model_copy(
+            update={"num_visits": v, "num_successes": v // 2, "accuracy": 0.5}
+        )
         scores.append(_ucb_score(rec, total_visits=total))
 
     # More visits → lower exploration bonus → lower UCB score (accuracy constant)
@@ -106,12 +115,14 @@ def test_hypothesis_update_fields() -> None:
     assert rec.num_visits == 0
 
     # Simulate a successful evaluation.
-    rec = rec.model_copy(update={
-        "num_visits": rec.num_visits + 1,
-        "num_successes": rec.num_successes + 1,
-        "reward": 0.85,
-        "accuracy": 1.0,
-    })
+    rec = rec.model_copy(
+        update={
+            "num_visits": rec.num_visits + 1,
+            "num_successes": rec.num_successes + 1,
+            "reward": 0.85,
+            "accuracy": 1.0,
+        }
+    )
 
     assert rec.num_visits == 1
     assert rec.num_successes == 1
@@ -127,7 +138,10 @@ def test_hypothesis_bank_save_and_load() -> None:
         path = Path(tmp) / "hypothesis_bank.json"
         path.write_text(json.dumps([r.model_dump() for r in bank], indent=2))
 
-        loaded = [HypothesisRecord.model_validate(item) for item in json.loads(path.read_text())]
+        loaded = [
+            HypothesisRecord.model_validate(item)
+            for item in json.loads(path.read_text())
+        ]
 
     assert len(loaded) == 5
     assert {r.text for r in loaded} == {r.text for r in bank}
@@ -141,8 +155,12 @@ def test_hypothesis_bank_statistics() -> None:
         _make_record("dining_room"),
         _make_record("living_room"),
     ]
-    records[0] = records[0].model_copy(update={"num_visits": 3, "num_successes": 2, "accuracy": 0.67})
-    records[1] = records[1].model_copy(update={"num_visits": 5, "num_successes": 4, "accuracy": 0.80})
+    records[0] = records[0].model_copy(
+        update={"num_visits": 3, "num_successes": 2, "accuracy": 0.67}
+    )
+    records[1] = records[1].model_copy(
+        update={"num_visits": 5, "num_successes": 4, "accuracy": 0.80}
+    )
 
     total_visits = sum(r.num_visits for r in records)
     by_room = {}
@@ -163,11 +181,11 @@ def test_top_k_selection_by_ucb() -> None:
     # Give different visit/accuracy profiles.
     profiles = [
         {"num_visits": 10, "accuracy": 0.9},
-        {"num_visits": 1,  "accuracy": 0.1},
-        {"num_visits": 5,  "accuracy": 0.7},
-        {"num_visits": 0,  "accuracy": 0.0},   # unvisited → inf
-        {"num_visits": 3,  "accuracy": 0.5},
-        {"num_visits": 0,  "accuracy": 0.0},   # unvisited → inf
+        {"num_visits": 1, "accuracy": 0.1},
+        {"num_visits": 5, "accuracy": 0.7},
+        {"num_visits": 0, "accuracy": 0.0},  # unvisited → inf
+        {"num_visits": 3, "accuracy": 0.5},
+        {"num_visits": 0, "accuracy": 0.0},  # unvisited → inf
     ]
     records = [r.model_copy(update=p) for r, p in zip(records, profiles)]
     total = sum(r.num_visits for r in records)

@@ -11,13 +11,19 @@ from pathlib import Path
 
 import pytest
 
-from compos3d.hypothesis.service import TrainingRequest, InferenceRequest, train_hypotheses, run_frozen_inference
+from compos3d.hypothesis.service import (
+    TrainingRequest,
+    InferenceRequest,
+    train_hypotheses,
+    run_frozen_inference,
+)
 from compos3d.evaluation.service import EvaluateRequest, evaluate_run
 
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def training_request(dummy_dataset_path, tmp_path) -> TrainingRequest:
@@ -35,6 +41,7 @@ def training_request(dummy_dataset_path, tmp_path) -> TrainingRequest:
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.orchestrator
 @pytest.mark.unit
@@ -76,7 +83,9 @@ def test_orchestrator_training_pipeline(training_request: TrainingRequest) -> No
 
 @pytest.mark.orchestrator
 @pytest.mark.unit
-def test_orchestrator_generation_pipeline(training_request: TrainingRequest, tmp_path: Path) -> None:
+def test_orchestrator_generation_pipeline(
+    training_request: TrainingRequest, tmp_path: Path
+) -> None:
     """Inference after training produces a valid SceneProgram."""
     train_result = train_hypotheses(training_request)
     bank_path = Path(train_result["run_dir"]) / "hypothesis_bank.json"
@@ -130,26 +139,32 @@ def test_pipeline_types_enum() -> None:
 
 @pytest.mark.orchestrator
 @pytest.mark.integration
-def test_orchestrator_full_system(training_request: TrainingRequest, tmp_path: Path) -> None:
+def test_orchestrator_full_system(
+    training_request: TrainingRequest, tmp_path: Path
+) -> None:
     """Full system: train → infer → evaluate → summary."""
     # 1. Train
     train_result = train_hypotheses(training_request)
     bank_path = Path(train_result["run_dir"]) / "hypothesis_bank.json"
 
     # 2. Infer
-    inf_result = run_frozen_inference(InferenceRequest(
-        bank_path=bank_path,
-        prompt="a dining room with a table",
-        output_dir=tmp_path / "inference",
-        llm_provider="mock",
-        render_scene=False,
-    ))
+    inf_result = run_frozen_inference(
+        InferenceRequest(
+            bank_path=bank_path,
+            prompt="a dining room with a table",
+            output_dir=tmp_path / "inference",
+            llm_provider="mock",
+            render_scene=False,
+        )
+    )
 
     # 3. Evaluate
-    eval_result = evaluate_run(EvaluateRequest(
-        predictions_dir=tmp_path / "inference",
-        output_dir=tmp_path / "evaluation",
-    ))
+    eval_result = evaluate_run(
+        EvaluateRequest(
+            predictions_dir=tmp_path / "inference",
+            output_dir=tmp_path / "evaluation",
+        )
+    )
 
     assert "average_overall" in eval_result
     assert 0.0 <= eval_result["average_overall"] <= 1.0

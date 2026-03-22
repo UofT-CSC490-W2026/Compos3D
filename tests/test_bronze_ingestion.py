@@ -50,7 +50,9 @@ def test_bronze_list_prefix(tmp_store: LocalStore) -> None:
 
     ids = [uuid.uuid4().hex[:8] for _ in range(3)]
     for sid in ids:
-        tmp_store.put_json(f"bronze/scenes/{date_part}/{sid}/scene.json", {"scene_id": sid})
+        tmp_store.put_json(
+            f"bronze/scenes/{date_part}/{sid}/scene.json", {"scene_id": sid}
+        )
 
     # Also write to silver to confirm prefix isolation.
     tmp_store.put_json(f"silver/scenes/{date_part}/other.json", {"layer": "silver"})

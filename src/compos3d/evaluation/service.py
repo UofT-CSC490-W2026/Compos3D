@@ -13,4 +13,6 @@ class EvaluateRequest:
 
 
 def evaluate_run(request: EvaluateRequest) -> dict:
-    return evaluate_prediction_dir(predictions_dir=request.predictions_dir, output_dir=request.output_dir)
+    return evaluate_prediction_dir(
+        predictions_dir=request.predictions_dir, output_dir=request.output_dir
+    )

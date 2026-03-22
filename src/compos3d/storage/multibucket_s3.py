@@ -49,10 +49,14 @@ class MultiLayerS3Store:
         bucket = self._resolve_bucket(rel_path)
         key = self._key(rel_path)
         body = json.dumps(obj, indent=2, sort_keys=True).encode()
-        self.s3.put_object(Bucket=bucket, Key=key, Body=body, ContentType="application/json")
+        self.s3.put_object(
+            Bucket=bucket, Key=key, Body=body, ContentType="application/json"
+        )
         return f"s3://{bucket}/{key}"
 
-    def put_bytes(self, rel_path: str, b: bytes, content_type: str = "application/octet-stream") -> str:
+    def put_bytes(
+        self, rel_path: str, b: bytes, content_type: str = "application/octet-stream"
+    ) -> str:
         bucket = self._resolve_bucket(rel_path)
         key = self._key(rel_path)
         self.s3.put_object(Bucket=bucket, Key=key, Body=b, ContentType=content_type)

@@ -6,6 +6,7 @@ reference-generate: run the infinigen indoor pipeline for one room type, write a
 build-scene:        build a 3D scene from a SceneProgram JSON, render 4 views + video.
 feature-extract:    Stage 4 stub (not yet implemented).
 """
+
 from __future__ import annotations
 
 import json
@@ -66,13 +67,20 @@ def run_backend_smoke(request: BackendSmokeRequest) -> dict:
 
     script = SCRIPTS_DIR / "asset_smoke.py"
     cli_args: list[str] = [
-        "--factory_name", request.asset_name,
-        "--seed", str(request.seed),
-        "--out_dir", str(out_dir),
-        "--out_name", out_name,
-        "--param_mode", request.param_mode,
-        "--resolution", request.resolution,
-        "--samples", str(request.samples),
+        "--factory_name",
+        request.asset_name,
+        "--seed",
+        str(request.seed),
+        "--out_dir",
+        str(out_dir),
+        "--out_name",
+        out_name,
+        "--param_mode",
+        request.param_mode,
+        "--resolution",
+        request.resolution,
+        "--samples",
+        str(request.samples),
     ]
     if request.save_blend:
         cli_args.append("--save_blend")
@@ -117,17 +125,23 @@ def generate_reference_scene(request: ReferenceGenerationRequest) -> dict:
 
     valid_rooms = ("dining_room", "living_room", "bedroom")
     if request.room_type not in valid_rooms:
-        raise ValueError(f"room_type must be one of {valid_rooms}, got '{request.room_type}'")
+        raise ValueError(
+            f"room_type must be one of {valid_rooms}, got '{request.room_type}'"
+        )
 
     scene_dir = request.output_dir / f"{request.room_type}_seed{request.seed}"
     scene_dir.mkdir(parents=True, exist_ok=True)
 
     script = SCRIPTS_DIR / "generate_room.py"
     cli_args: list[str] = [
-        "--room", request.room_type,
-        "--output_folder", str(scene_dir),
-        "--seed", str(request.seed),
-        "--task", *list(request.tasks),
+        "--room",
+        request.room_type,
+        "--output_folder",
+        str(scene_dir),
+        "--seed",
+        str(request.seed),
+        "--task",
+        *list(request.tasks),
     ]
     if request.minimal:
         cli_args.append("--minimal")
@@ -136,6 +150,7 @@ def generate_reference_scene(request: ReferenceGenerationRequest) -> dict:
     # contains infinigen_examples/configs_indoor/.  GIN_CONFIG_ROOT is
     # resolved at import time to the best available candidate.
     from compos3d.procedural.runner import GIN_CONFIG_ROOT
+
     run_result = run_script(script, cli_args, cwd=GIN_CONFIG_ROOT)
 
     manifest = {
@@ -146,7 +161,9 @@ def generate_reference_scene(request: ReferenceGenerationRequest) -> dict:
         "scene_dir": str(scene_dir),
         **run_result,
     }
-    (request.output_dir / "ref_manifest.json").write_text(json.dumps(manifest, indent=2))
+    (request.output_dir / "ref_manifest.json").write_text(
+        json.dumps(manifest, indent=2)
+    )
     return manifest
 
 
@@ -171,14 +188,22 @@ def build_scene(request: BuildSceneRequest) -> dict:
     output_dir_abs = request.output_dir.resolve()
 
     cli_args: list[str] = [
-        "--scene_program", str(scene_program_abs),
-        "--output_dir",    str(output_dir_abs),
-        "--seed",          str(request.seed),
-        "--resolution",    request.resolution,
-        "--view_samples",  str(request.view_samples),
-        "--video_samples", str(request.video_samples),
-        "--video_frames",  str(request.video_frames),
-        "--fps",           str(request.fps),
+        "--scene_program",
+        str(scene_program_abs),
+        "--output_dir",
+        str(output_dir_abs),
+        "--seed",
+        str(request.seed),
+        "--resolution",
+        request.resolution,
+        "--view_samples",
+        str(request.view_samples),
+        "--video_samples",
+        str(request.video_samples),
+        "--video_frames",
+        str(request.video_frames),
+        "--fps",
+        str(request.fps),
     ]
     if request.no_video:
         cli_args.append("--no_video")
@@ -219,6 +244,7 @@ def make_training_renderer(render_config):
 
     def _renderer(scene_program, render_dir: Path) -> list[Path]:
         import json as _json
+
         render_dir.mkdir(parents=True, exist_ok=True)
         sp_path = render_dir / "scene_program.json"
         sp_path.write_text(_json.dumps(scene_program.model_dump(), indent=2))

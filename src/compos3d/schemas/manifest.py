@@ -51,6 +51,7 @@ class RunManifest(BaseModel):
 
 def _get_git_info() -> Optional[GitInfo]:
     try:
+
         def _run(cmd: list[str]) -> str:
             return subprocess.run(
                 ["git"] + cmd, capture_output=True, text=True, check=True, timeout=5
@@ -64,13 +65,19 @@ def _get_git_info() -> Optional[GitInfo]:
         except subprocess.CalledProcessError:
             remote_url = None
 
-        return GitInfo(commit_sha=commit_sha, branch=branch, is_dirty=is_dirty, remote_url=remote_url)
+        return GitInfo(
+            commit_sha=commit_sha,
+            branch=branch,
+            is_dirty=is_dirty,
+            remote_url=remote_url,
+        )
     except Exception:
         return None
 
 
 def _key_package_versions() -> Dict[str, str]:
     import importlib.metadata
+
     packages = ["pydantic", "boto3", "pillow", "imageio"]
     out: Dict[str, str] = {}
     for pkg in packages:

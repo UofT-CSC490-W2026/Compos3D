@@ -30,8 +30,14 @@ def test_gold_write_latest_bank(tmp_store: LocalStore) -> None:
     pfx = training_gold_prefix(exp_name)
 
     bank = [
-        {"hypothesis_id": "h1", "text": "anchor the room around the dining table",
-         "room_type": "dining_room", "reward": 0.88, "accuracy": 0.92, "num_visits": 10},
+        {
+            "hypothesis_id": "h1",
+            "text": "anchor the room around the dining table",
+            "room_type": "dining_room",
+            "reward": 0.88,
+            "accuracy": 0.92,
+            "num_visits": 10,
+        },
     ]
     tmp_store.put_json(f"{pfx}/latest.json", bank)
 
@@ -71,10 +77,24 @@ def test_gold_aggregation_creates_statistics() -> None:
     from compos3d.models import PredictionRecord, CriticScore
 
     scores = [
-        CriticScore(validity=1.0, prompt_adherence=0.8, asset_precision=0.7,
-                    asset_recall=0.75, room_match=1.0, overall=0.85, notes=[]),
-        CriticScore(validity=1.0, prompt_adherence=0.9, asset_precision=0.8,
-                    asset_recall=0.80, room_match=1.0, overall=0.90, notes=[]),
+        CriticScore(
+            validity=1.0,
+            prompt_adherence=0.8,
+            asset_precision=0.7,
+            asset_recall=0.75,
+            room_match=1.0,
+            overall=0.85,
+            notes=[],
+        ),
+        CriticScore(
+            validity=1.0,
+            prompt_adherence=0.9,
+            asset_precision=0.8,
+            asset_recall=0.80,
+            room_match=1.0,
+            overall=0.90,
+            notes=[],
+        ),
     ]
     records = [
         PredictionRecord(
@@ -126,4 +146,6 @@ def test_gold_populated_after_training_with_store(dummy_dataset_path, tmp_path) 
 
     assert len(gold_files) > 0, "Gold layer must have at least one file after training"
     assert any("latest.json" in f for f in gold_files), "Gold must contain latest.json"
-    assert any("training_summary" in f for f in gold_files), "Gold must contain training_summary.json"
+    assert any("training_summary" in f for f in gold_files), (
+        "Gold must contain training_summary.json"
+    )

@@ -8,8 +8,21 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Literal
 
-from compos3d.evaluation.critic import CriticUnavailableError, aggregate_prediction_scores, evaluate_scene_program
-from compos3d.models import CriticScore, FailureRecord, HypothesisRecord, PredictionRecord, SceneProgram, TrainingDataset, TrainingExample, TrainingTraceRecord
+from compos3d.evaluation.critic import (
+    CriticUnavailableError,
+    aggregate_prediction_scores,
+    evaluate_scene_program,
+)
+from compos3d.models import (
+    CriticScore,
+    FailureRecord,
+    HypothesisRecord,
+    PredictionRecord,
+    SceneProgram,
+    TrainingDataset,
+    TrainingExample,
+    TrainingTraceRecord,
+)
 
 
 @dataclass(frozen=True)
@@ -76,7 +89,9 @@ class SceneHypothesisLoop:
         self.predictions: list[PredictionRecord] = []
         self.training_trace: list[TrainingTraceRecord] = []
         self.failed_scene_bank: list[FailureRecord] = []
-        self.pending_failure_examples: dict[str, list[TrainingExample]] = {room_type: [] for room_type in self.by_room}
+        self.pending_failure_examples: dict[str, list[TrainingExample]] = {
+            room_type: [] for room_type in self.by_room
+        }
         self.seed_example_ids_by_room: dict[str, set[str]] = {}
 
         self._next_hypothesis_index = 0
@@ -96,7 +111,11 @@ class SceneHypothesisLoop:
         for epoch in range(self.config.num_epochs):
             self._current_epoch = epoch
             for position_in_epoch, example in enumerate(self.dataset.examples, start=1):
-                if epoch == 0 and example.example_id in self.seed_example_ids_by_room.get(example.room_type, set()):
+                if (
+                    epoch == 0
+                    and example.example_id
+                    in self.seed_example_ids_by_room.get(example.room_type, set())
+                ):
                     continue
 
                 self.processed_examples += 1
@@ -110,7 +129,9 @@ class SceneHypothesisLoop:
                 for record in selected:
                     critic_score = self._evaluate_hypothesis(record.text, example)
                     individual_scores[record.hypothesis_id] = critic_score.overall
-                    was_successful = critic_score.overall >= self.config.success_threshold
+                    was_successful = (
+                        critic_score.overall >= self.config.success_threshold
+                    )
                     if not was_successful:
                         num_wrong_hypotheses += 1
                     self._update_record(record, example, critic_score, current_sample)
@@ -118,7 +139,9 @@ class SceneHypothesisLoop:
                 combined_prediction = self._build_prediction(example, selected_texts)
                 self.predictions.append(combined_prediction)
                 _write_json(
-                    self.run_dir / "programs" / f"{example.example_id}_epoch_{epoch}.json",
+                    self.run_dir
+                    / "programs"
+                    / f"{example.example_id}_epoch_{epoch}.json",
                     combined_prediction.model_dump(),
                 )
 
@@ -136,7 +159,9 @@ class SceneHypothesisLoop:
                         combined_score=combined_prediction.critic_score.overall,
                         critic_notes=combined_prediction.critic_score.notes,
                     )
-                    triggered_regeneration = self._maybe_regenerate(example.room_type, current_sample, epoch)
+                    triggered_regeneration = self._maybe_regenerate(
+                        example.room_type, current_sample, epoch
+                    )
 
                 self.training_trace.append(
                     TrainingTraceRecord(
@@ -149,7 +174,9 @@ class SceneHypothesisLoop:
                         individual_scores=individual_scores,
                         combined_score=combined_prediction.critic_score.overall,
                         triggered_regeneration=triggered_regeneration,
-                        failure_buffer_size=len(self.pending_failure_examples.get(example.room_type, [])),
+                        failure_buffer_size=len(
+                            self.pending_failure_examples.get(example.room_type, [])
+                        ),
                     )
                 )
 
@@ -161,9 +188,18 @@ class SceneHypothesisLoop:
         summary = aggregate_prediction_scores(self.predictions)
         _write_json(self.run_dir / "metrics.json", summary.model_dump())
         _write_json(self.run_dir / "hypothesis_bank.json", self._bank_payload())
-        _write_jsonl(self.run_dir / "predictions.jsonl", [prediction.model_dump() for prediction in self.predictions])
-        _write_jsonl(self.run_dir / "training_trace.jsonl", [trace.model_dump() for trace in self.training_trace])
-        _write_jsonl(self.run_dir / "failed_scene_bank.jsonl", [failure.model_dump() for failure in self.failed_scene_bank])
+        _write_jsonl(
+            self.run_dir / "predictions.jsonl",
+            [prediction.model_dump() for prediction in self.predictions],
+        )
+        _write_jsonl(
+            self.run_dir / "training_trace.jsonl",
+            [trace.model_dump() for trace in self.training_trace],
+        )
+        _write_jsonl(
+            self.run_dir / "failed_scene_bank.jsonl",
+            [failure.model_dump() for failure in self.failed_scene_bank],
+        )
         _write_json(
             self.run_dir / "manifest.json",
             {
@@ -193,8 +229,12 @@ class SceneHypothesisLoop:
 
     def _initialize_bank(self) -> None:
         for room_type, examples in self.by_room.items():
-            seed_examples = examples[: max(1, min(self.config.num_init_examples_per_room, len(examples)))]
-            self.seed_example_ids_by_room[room_type] = {example.example_id for example in seed_examples}
+            seed_examples = examples[
+                : max(1, min(self.config.num_init_examples_per_room, len(examples)))
+            ]
+            self.seed_example_ids_by_room[room_type] = {
+                example.example_id for example in seed_examples
+            }
             generated = self.llm.generate_hypotheses(
                 room_type,
                 seed_examples,
@@ -221,7 +261,9 @@ class SceneHypothesisLoop:
         current_sample: int,
     ) -> list[HypothesisRecord]:
         records: list[HypothesisRecord] = []
-        existing_texts = {self._normalize_text(record.text) for record in self._room_bank(room_type)}
+        existing_texts = {
+            self._normalize_text(record.text) for record in self._room_bank(room_type)
+        }
         seen_new: set[str] = set()
 
         for hypothesis in hypotheses:
@@ -245,8 +287,14 @@ class SceneHypothesisLoop:
 
             num_visits = len(evaluation_examples)
             accuracy = num_successes / num_visits if num_visits else 0.0
-            mean_score = sum(score.overall for score in scores) / num_visits if num_visits else 0.0
-            reward = self._compute_reward(accuracy=accuracy, num_visits=num_visits, current_sample=current_sample)
+            mean_score = (
+                sum(score.overall for score in scores) / num_visits
+                if num_visits
+                else 0.0
+            )
+            reward = self._compute_reward(
+                accuracy=accuracy, num_visits=num_visits, current_sample=current_sample
+            )
 
             records.append(
                 HypothesisRecord(
@@ -260,7 +308,9 @@ class SceneHypothesisLoop:
                     num_visits=num_visits,
                     num_successes=num_successes,
                     generation_round=generation_round,
-                    source_example_ids=[example.example_id for example in evaluation_examples],
+                    source_example_ids=[
+                        example.example_id for example in evaluation_examples
+                    ],
                     support_example_ids=support_example_ids,
                     failure_tags=failure_tags,
                 )
@@ -307,8 +357,12 @@ class SceneHypothesisLoop:
                 critic_mode="unavailable",
             )
 
-    def _evaluate_hypothesis(self, hypothesis: str, example: TrainingExample) -> CriticScore:
-        hypotheses = [] if self.config.baseline_mode == "no_hypotheses" else [hypothesis]
+    def _evaluate_hypothesis(
+        self, hypothesis: str, example: TrainingExample
+    ) -> CriticScore:
+        hypotheses = (
+            [] if self.config.baseline_mode == "no_hypotheses" else [hypothesis]
+        )
         scene_program = self.llm.generate_scene_program(
             prompt=example.prompt,
             room_type=example.room_type,
@@ -318,8 +372,12 @@ class SceneHypothesisLoop:
         image_paths = self._render(scene_program, tag)
         return self._score(scene_program, example, image_paths)
 
-    def _build_prediction(self, example: TrainingExample, selected_hypotheses: list[str]) -> PredictionRecord:
-        active_hypotheses = [] if self.config.baseline_mode == "no_hypotheses" else selected_hypotheses
+    def _build_prediction(
+        self, example: TrainingExample, selected_hypotheses: list[str]
+    ) -> PredictionRecord:
+        active_hypotheses = (
+            [] if self.config.baseline_mode == "no_hypotheses" else selected_hypotheses
+        )
         scene_program = self.llm.generate_scene_program(
             prompt=example.prompt,
             room_type=example.room_type,
@@ -337,10 +395,20 @@ class SceneHypothesisLoop:
             critic_score=critic_score,
         )
 
-    def _update_record(self, record: HypothesisRecord, example: TrainingExample, critic_score: CriticScore, current_sample: int) -> None:
+    def _update_record(
+        self,
+        record: HypothesisRecord,
+        example: TrainingExample,
+        critic_score: CriticScore,
+        current_sample: int,
+    ) -> None:
         old_visits = record.num_visits
         record.num_visits += 1
-        record.mean_score = round(((record.mean_score * old_visits) + critic_score.overall) / record.num_visits, 4)
+        record.mean_score = round(
+            ((record.mean_score * old_visits) + critic_score.overall)
+            / record.num_visits,
+            4,
+        )
 
         if critic_score.overall >= self.config.success_threshold:
             record.num_successes += 1
@@ -389,11 +457,18 @@ class SceneHypothesisLoop:
         self.failed_scene_bank.append(failure_record)
         self.pending_failure_examples.setdefault(example.room_type, []).append(example)
 
-    def _maybe_regenerate(self, room_type: str, current_sample: int, epoch: int) -> bool:
-        if not self.config.use_repair or self.config.baseline_mode == "fixed_hypotheses":
+    def _maybe_regenerate(
+        self, room_type: str, current_sample: int, epoch: int
+    ) -> bool:
+        if (
+            not self.config.use_repair
+            or self.config.baseline_mode == "fixed_hypotheses"
+        ):
             return False
         pending_examples = self.pending_failure_examples.get(room_type, [])
-        target_size = self.config.update_batch_size * self.config.num_hypotheses_to_update
+        target_size = (
+            self.config.update_batch_size * self.config.num_hypotheses_to_update
+        )
         if target_size <= 0 or len(pending_examples) < target_size:
             return False
 
@@ -421,10 +496,14 @@ class SceneHypothesisLoop:
         self._replace_room_bank(room_type, new_records)
         self.pending_failure_examples[room_type] = []
         self.regeneration_events += 1
-        self._save_bank_snapshot(f"regen_{self.regeneration_events}_epoch_{epoch}_sample_{current_sample}")
+        self._save_bank_snapshot(
+            f"regen_{self.regeneration_events}_epoch_{epoch}_sample_{current_sample}"
+        )
         return True
 
-    def _replace_room_bank(self, room_type: str, new_records: list[HypothesisRecord]) -> None:
+    def _replace_room_bank(
+        self, room_type: str, new_records: list[HypothesisRecord]
+    ) -> None:
         other_rooms = [record for record in self.bank if record.room_type != room_type]
         room_records = self._room_bank(room_type)
         existing_texts = {self._normalize_text(record.text) for record in room_records}
@@ -437,7 +516,9 @@ class SceneHypothesisLoop:
             seen_new.add(normalized)
             deduped_new.append(record)
 
-        merged = self._sort_records(room_records + deduped_new)[: self.config.max_num_hypotheses_per_room]
+        merged = self._sort_records(room_records + deduped_new)[
+            : self.config.max_num_hypotheses_per_room
+        ]
         self.bank = other_rooms + merged
 
     def _select_for_training(self, room_type: str) -> list[HypothesisRecord]:
@@ -449,7 +530,11 @@ class SceneHypothesisLoop:
             k = min(self.config.k, len(room_records))
             return random.sample(room_records, k)
         if strategy == "greedy":
-            ranked = sorted(room_records, key=lambda r: (r.accuracy, r.mean_score, r.num_visits), reverse=True)
+            ranked = sorted(
+                room_records,
+                key=lambda r: (r.accuracy, r.mean_score, r.num_visits),
+                reverse=True,
+            )
             return ranked[: self.config.k]
         # default: "ucb"
         return self._sort_records(room_records)[: self.config.k]
@@ -460,7 +545,12 @@ class SceneHypothesisLoop:
     def _sort_records(self, records: list[HypothesisRecord]) -> list[HypothesisRecord]:
         return sorted(
             records,
-            key=lambda record: (record.reward, record.accuracy, record.mean_score, record.num_visits),
+            key=lambda record: (
+                record.reward,
+                record.accuracy,
+                record.mean_score,
+                record.num_visits,
+            ),
             reverse=True,
         )
 
@@ -469,17 +559,26 @@ class SceneHypothesisLoop:
             return 0.0
         if self.config.num_wrong_scale <= 0:
             return float(num_selected)
-        return (num_selected * current_sample / max(len(self.dataset.examples), 1)) * self.config.num_wrong_scale
+        return (
+            num_selected * current_sample / max(len(self.dataset.examples), 1)
+        ) * self.config.num_wrong_scale
 
-    def _compute_reward(self, *, accuracy: float, num_visits: int, current_sample: int) -> float:
+    def _compute_reward(
+        self, *, accuracy: float, num_visits: int, current_sample: int
+    ) -> float:
         if num_visits <= 0:
             return 0.0
         if current_sample <= 1:
             return accuracy
-        return accuracy + self.config.alpha * math.sqrt(math.log(current_sample) / num_visits)
+        return accuracy + self.config.alpha * math.sqrt(
+            math.log(current_sample) / num_visits
+        )
 
     def _save_bank_snapshot(self, suffix: str) -> None:
-        _write_json(self.run_dir / "bank_snapshots" / f"hypothesis_bank_{suffix}.json", self._bank_payload())
+        _write_json(
+            self.run_dir / "bank_snapshots" / f"hypothesis_bank_{suffix}.json",
+            self._bank_payload(),
+        )
 
     def _bank_payload(self) -> list[dict]:
         return [record.model_dump() for record in self._sort_records(self.bank)]

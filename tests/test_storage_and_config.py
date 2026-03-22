@@ -113,7 +113,10 @@ class TestLakePaths:
         run_id = "my_experiment_20250101"
         assert training_bronze_prefix(run_id) == f"bronze/training/{run_id}"
         assert training_silver_prefix(run_id) == f"silver/training/{run_id}"
-        assert training_gold_prefix("my_experiment") == "gold/hypothesis_banks/my_experiment"
+        assert (
+            training_gold_prefix("my_experiment")
+            == "gold/hypothesis_banks/my_experiment"
+        )
 
     def test_inference_paths(self) -> None:
         run_id = "inference_20250101"

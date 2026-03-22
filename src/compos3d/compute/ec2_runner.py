@@ -157,7 +157,9 @@ class EC2JobRunner:
         log_stream = f"{instance_id}/{spec.command}"
         print(f"[ec2_runner] Launched {instance_id} ({self.cfg.ec2_instance_type})")
         print(f"[ec2_runner] CloudWatch log stream: {spec.log_group}/{log_stream}")
-        print(f"[ec2_runner] Monitor: aws logs tail {spec.log_group} --log-stream-names {log_stream} --follow")
+        print(
+            f"[ec2_runner] Monitor: aws logs tail {spec.log_group} --log-stream-names {log_stream} --follow"
+        )
 
         return instance_id, {
             "instance_id": instance_id,
@@ -212,12 +214,19 @@ class EC2JobRunner:
         resp = self.ec2.describe_images(
             Owners=["amazon"],
             Filters=[
-                {"Name": "name", "Values": ["Deep Learning OSS Nvidia Driver AMI GPU PyTorch * (Ubuntu 22.04) *"]},
+                {
+                    "Name": "name",
+                    "Values": [
+                        "Deep Learning OSS Nvidia Driver AMI GPU PyTorch * (Ubuntu 22.04) *"
+                    ],
+                },
                 {"Name": "state", "Values": ["available"]},
                 {"Name": "architecture", "Values": ["x86_64"]},
             ],
         )
-        images = sorted(resp["Images"], key=lambda img: img["CreationDate"], reverse=True)
+        images = sorted(
+            resp["Images"], key=lambda img: img["CreationDate"], reverse=True
+        )
         if not images:
             raise RuntimeError(
                 "Could not find a suitable Deep Learning AMI.  "

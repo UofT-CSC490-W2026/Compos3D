@@ -30,10 +30,22 @@ def test_silver_write_hypothesis_bank(tmp_store: LocalStore) -> None:
     pfx = training_silver_prefix(run_id)
 
     bank = [
-        {"hypothesis_id": "h1", "text": "anchor around dining_table", "room_type": "dining_room",
-         "reward": 0.8, "accuracy": 0.9, "num_visits": 5},
-        {"hypothesis_id": "h2", "text": "place rug under furniture", "room_type": "living_room",
-         "reward": 0.6, "accuracy": 0.7, "num_visits": 3},
+        {
+            "hypothesis_id": "h1",
+            "text": "anchor around dining_table",
+            "room_type": "dining_room",
+            "reward": 0.8,
+            "accuracy": 0.9,
+            "num_visits": 5,
+        },
+        {
+            "hypothesis_id": "h2",
+            "text": "place rug under furniture",
+            "room_type": "living_room",
+            "reward": 0.6,
+            "accuracy": 0.7,
+            "num_visits": 3,
+        },
     ]
     uri = tmp_store.put_json(f"{pfx}/hypothesis_bank.json", bank)
     assert uri
@@ -101,7 +113,9 @@ def test_silver_transformation_data_quality() -> None:
 
 @pytest.mark.silver
 @pytest.mark.integration
-def test_silver_populated_after_training_with_store(dummy_dataset_path, tmp_path) -> None:
+def test_silver_populated_after_training_with_store(
+    dummy_dataset_path, tmp_path
+) -> None:
     """Running train_vertical_slice with a LocalStore populates silver."""
     from compos3d.storage.local import LocalStore
     from compos3d.hypothesis.engine import train_vertical_slice
@@ -123,5 +137,9 @@ def test_silver_populated_after_training_with_store(dummy_dataset_path, tmp_path
     silver_pfx = training_silver_prefix(run_id)
 
     silver_files = store.list_prefix(silver_pfx)
-    assert len(silver_files) > 0, "Silver layer must have at least one file after training"
-    assert any("hypothesis_bank" in f for f in silver_files), "Silver must contain hypothesis_bank.json"
+    assert len(silver_files) > 0, (
+        "Silver layer must have at least one file after training"
+    )
+    assert any("hypothesis_bank" in f for f in silver_files), (
+        "Silver must contain hypothesis_bank.json"
+    )

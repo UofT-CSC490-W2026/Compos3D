@@ -61,6 +61,7 @@ def test_bronze_ingestion_multiple_scenes(tmp_store: LocalStore) -> None:
 def test_bronze_ingestion_validates_env(local_app_config) -> None:
     """get_store returns a valid store for local environment."""
     from compos3d.storage import get_store
+
     store = get_store(local_app_config)
     assert store is not None
 
@@ -73,6 +74,7 @@ def test_bronze_ingestion_validates_env(local_app_config) -> None:
 def test_bronze_ingestion_run_manifest(tmp_store: LocalStore) -> None:
     """A run manifest can be stored in bronze for provenance."""
     from compos3d.schemas.manifest import create_manifest, finalize_manifest
+
     run_id = f"run_{uuid.uuid4().hex[:8]}"
 
     manifest = create_manifest(
@@ -81,7 +83,9 @@ def test_bronze_ingestion_run_manifest(tmp_store: LocalStore) -> None:
         config_snapshot={"mock": True},
         input_paths=["examples/dummy_fast.json"],
     )
-    manifest = finalize_manifest(manifest, status="success", output_uris=["bronze/test/x.json"])
+    manifest = finalize_manifest(
+        manifest, status="success", output_uris=["bronze/test/x.json"]
+    )
 
     uri = tmp_store.put_json(
         f"bronze/training/{run_id}/run_manifest.json",

@@ -6,13 +6,26 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from compos3d.catalog import assets_mentioned_in_prompt, infer_room_type
-from compos3d.config import DEFAULT_EXPERIMENT_CONFIG, ExperimentConfig, TrainingConfig, load_experiment_config
+from compos3d.config import (
+    DEFAULT_EXPERIMENT_CONFIG,
+    ExperimentConfig,
+    TrainingConfig,
+    load_experiment_config,
+)
 from compos3d.data.dataset import load_training_dataset
-from compos3d.evaluation.critic import aggregate_prediction_scores, build_scene_critic, evaluate_scene_program
+from compos3d.evaluation.critic import (
+    aggregate_prediction_scores,
+    build_scene_critic,
+    evaluate_scene_program,
+)
 from compos3d.hypothesis.loop import HypothesisLoopConfig, SceneHypothesisLoop
 from compos3d.llm.scene_llm import build_scene_llm
 from compos3d.models import HypothesisRecord, PredictionRecord
-from compos3d.procedural.service import BuildSceneRequest, build_scene, make_training_renderer
+from compos3d.procedural.service import (
+    BuildSceneRequest,
+    build_scene,
+    make_training_renderer,
+)
 from compos3d.schemas.manifest import create_manifest, finalize_manifest
 from compos3d.storage.paths import (
     inference_bronze_prefix,
@@ -70,7 +83,11 @@ def _mirror_training_to_lake(
             written.append(uri)
 
     # Bronze: training trace + failed scenes for full provenance.
-    for fname in ("predictions.jsonl", "training_trace.jsonl", "failed_scene_bank.jsonl"):
+    for fname in (
+        "predictions.jsonl",
+        "training_trace.jsonl",
+        "failed_scene_bank.jsonl",
+    ):
         p = run_dir / fname
         if p.exists():
             uri = store.put_bytes(
@@ -87,12 +104,16 @@ def _mirror_training_to_lake(
     # Silver: validated metrics + final bank.
     metrics_file = run_dir / "metrics.json"
     if metrics_file.exists():
-        uri = store.put_json(f"{silver_pfx}/metrics.json", json.loads(metrics_file.read_text()))
+        uri = store.put_json(
+            f"{silver_pfx}/metrics.json", json.loads(metrics_file.read_text())
+        )
         written.append(uri)
 
     bank_file = run_dir / "hypothesis_bank.json"
     if bank_file.exists():
-        uri = store.put_json(f"{silver_pfx}/hypothesis_bank.json", json.loads(bank_file.read_text()))
+        uri = store.put_json(
+            f"{silver_pfx}/hypothesis_bank.json", json.loads(bank_file.read_text())
+        )
         written.append(uri)
 
     # Silver: full training manifest.
@@ -101,15 +122,22 @@ def _mirror_training_to_lake(
 
     # Gold: publish the final bank as the latest artifact for this experiment.
     if bank_file.exists():
-        uri = store.put_json(f"{gold_pfx}/latest.json", json.loads(bank_file.read_text()))
+        uri = store.put_json(
+            f"{gold_pfx}/latest.json", json.loads(bank_file.read_text())
+        )
         written.append(uri)
 
-    uri = store.put_json(f"{gold_pfx}/training_summary.json", {
-        "run_id": run_id,
-        "experiment_name": experiment_name,
-        "silver_bank_path": f"{silver_pfx}/hypothesis_bank.json",
-        "metrics": json.loads(metrics_file.read_text()) if metrics_file.exists() else {},
-    })
+    uri = store.put_json(
+        f"{gold_pfx}/training_summary.json",
+        {
+            "run_id": run_id,
+            "experiment_name": experiment_name,
+            "silver_bank_path": f"{silver_pfx}/hypothesis_bank.json",
+            "metrics": json.loads(metrics_file.read_text())
+            if metrics_file.exists()
+            else {},
+        },
+    )
     written.append(uri)
 
     print(f"[engine] Mirrored {len(written)} artifacts to lake (run_id={run_id})")
@@ -132,7 +160,9 @@ def _mirror_inference_to_lake(
     # Bronze: raw scene program.
     sp_file = output_dir / "scene_program.json"
     if sp_file.exists():
-        uri = store.put_json(f"{bronze_pfx}/scene_program.json", json.loads(sp_file.read_text()))
+        uri = store.put_json(
+            f"{bronze_pfx}/scene_program.json", json.loads(sp_file.read_text())
+        )
         written.append(uri)
 
     # Bronze: full inference manifest.
@@ -167,10 +197,14 @@ def _mirror_inference_to_lake(
     # Gold: scene features for downstream analysis.
     sf_file = output_dir / "scene_features.json"
     if sf_file.exists():
-        uri = store.put_json(f"{gold_pfx}/scene_features.json", json.loads(sf_file.read_text()))
+        uri = store.put_json(
+            f"{gold_pfx}/scene_features.json", json.loads(sf_file.read_text())
+        )
         written.append(uri)
 
-    print(f"[engine] Mirrored {len(written)} inference artifacts to lake (run_id={run_id})")
+    print(
+        f"[engine] Mirrored {len(written)} inference artifacts to lake (run_id={run_id})"
+    )
     return written
 
 
@@ -182,7 +216,11 @@ def _load_bank(bank_path: Path) -> list[HypothesisRecord]:
 def _text_overlap_score(record: HypothesisRecord, prompt: str, room_type: str) -> int:
     prompt_assets = assets_mentioned_in_prompt(prompt, room_type)
     lower_text = record.text.lower()
-    return sum(1 for asset in prompt_assets if asset in lower_text or asset.replace("_", " ") in lower_text)
+    return sum(
+        1
+        for asset in prompt_assets
+        if asset in lower_text or asset.replace("_", " ") in lower_text
+    )
 
 
 def _select_hypotheses_for_inference(
@@ -296,7 +334,9 @@ def _experiment_config_from_args(
     return config
 
 
-def _loop_config_from_experiment(experiment_config: ExperimentConfig) -> HypothesisLoopConfig:
+def _loop_config_from_experiment(
+    experiment_config: ExperimentConfig,
+) -> HypothesisLoopConfig:
     t = experiment_config.training
     return HypothesisLoopConfig(
         num_init_examples_per_room=t.num_init_examples_per_room,
@@ -374,7 +414,9 @@ def train_vertical_slice(
     if experiment_config.room_types:
         allowed = set(experiment_config.room_types)
         dataset = dataset.model_copy(
-            update={"examples": [ex for ex in dataset.examples if ex.room_type in allowed]}
+            update={
+                "examples": [ex for ex in dataset.examples if ex.room_type in allowed]
+            }
         )
 
     llm = build_scene_llm(experiment_config.generator)
@@ -384,8 +426,10 @@ def train_vertical_slice(
     run_dir.mkdir(parents=True, exist_ok=True)
 
     if renderer is not None:
-        print(f"[engine] Render enabled: resolution={experiment_config.render.resolution}, "
-              f"view_samples={experiment_config.render.view_samples}")
+        print(
+            f"[engine] Render enabled: resolution={experiment_config.render.resolution}, "
+            f"view_samples={experiment_config.render.view_samples}"
+        )
 
     config = _loop_config_from_experiment(experiment_config)
     loop = SceneHypothesisLoop(
@@ -424,7 +468,9 @@ def train_vertical_slice(
             )
             manifest = finalize_manifest(manifest, status="success", output_uris=uris)
         except Exception as exc:
-            manifest = finalize_manifest(manifest, status="failed", error_message=str(exc))
+            manifest = finalize_manifest(
+                manifest, status="failed", error_message=str(exc)
+            )
             raise
         finally:
             store.put_json(
@@ -456,16 +502,24 @@ def run_vertical_inference(
     instance_type: str | None = None,
 ) -> dict:
     bank = _load_bank(bank_path)
-    experiment_config = load_experiment_config(config_path) if config_path is not None else DEFAULT_EXPERIMENT_CONFIG.model_copy(deep=True)
+    experiment_config = (
+        load_experiment_config(config_path)
+        if config_path is not None
+        else DEFAULT_EXPERIMENT_CONFIG.model_copy(deep=True)
+    )
     if config_path is None:
         experiment_config.generator.provider = llm_provider
         experiment_config.training.top_k = top_k
     llm = build_scene_llm(experiment_config.generator)
     critic = build_scene_critic(experiment_config.critic)
     room_type = infer_room_type(prompt)
-    selected = _select_hypotheses_for_inference(bank, room_type, prompt=prompt, top_k=experiment_config.training.top_k)
+    selected = _select_hypotheses_for_inference(
+        bank, room_type, prompt=prompt, top_k=experiment_config.training.top_k
+    )
     selected_text = [item.text for item in selected]
-    scene_program = llm.generate_scene_program(prompt=prompt, room_type=room_type, selected_hypotheses=selected_text)
+    scene_program = llm.generate_scene_program(
+        prompt=prompt, room_type=room_type, selected_hypotheses=selected_text
+    )
 
     output_dir.mkdir(parents=True, exist_ok=True)
     sp_path = output_dir / "scene_program.json"
@@ -475,7 +529,9 @@ def run_vertical_inference(
     render_manifest: dict = {}
     image_paths: list[Path] = []
     if render_scene:
-        print(f"[engine] Building 3D scene for inference output → {output_dir / 'scene'}")
+        print(
+            f"[engine] Building 3D scene for inference output → {output_dir / 'scene'}"
+        )
         render_out = output_dir / "scene"
         req = BuildSceneRequest(
             scene_program_path=sp_path,
@@ -488,9 +544,15 @@ def run_vertical_inference(
             save_blend=False,
         )
         render_manifest = build_scene(req)
-        image_paths = [Path(p) for p in render_manifest.get("rendered_views", []) if p and Path(p).exists()]
+        image_paths = [
+            Path(p)
+            for p in render_manifest.get("rendered_views", [])
+            if p and Path(p).exists()
+        ]
 
-    critic_score = evaluate_scene_program(scene_program, critic=critic, image_paths=image_paths or None)
+    critic_score = evaluate_scene_program(
+        scene_program, critic=critic, image_paths=image_paths or None
+    )
     _write_json(output_dir / "critic_score.json", critic_score.model_dump())
     _write_json(output_dir / "experiment_config.json", experiment_config.model_dump())
 
@@ -498,8 +560,7 @@ def run_vertical_inference(
     scene_features = {
         "room_type": room_type,
         "asset_counts": {
-            asset.asset_type: asset.count
-            for asset in scene_program.assets
+            asset.asset_type: asset.count for asset in scene_program.assets
         },
         "total_assets": sum(asset.count for asset in scene_program.assets),
         "rendered_views": render_manifest.get("rendered_views"),
@@ -544,9 +605,13 @@ def run_vertical_inference(
                 output_dir=output_dir,
                 inference_result=manifest,
             )
-            run_manifest = finalize_manifest(run_manifest, status="success", output_uris=uris)
+            run_manifest = finalize_manifest(
+                run_manifest, status="success", output_uris=uris
+            )
         except Exception as exc:
-            run_manifest = finalize_manifest(run_manifest, status="failed", error_message=str(exc))
+            run_manifest = finalize_manifest(
+                run_manifest, status="failed", error_message=str(exc)
+            )
             raise
         finally:
             store.put_json(
@@ -566,7 +631,11 @@ def evaluate_prediction_dir(*, predictions_dir: Path, output_dir: Path) -> dict:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     if predictions_file.exists():
-        rows = [json.loads(line) for line in predictions_file.read_text().splitlines() if line.strip()]
+        rows = [
+            json.loads(line)
+            for line in predictions_file.read_text().splitlines()
+            if line.strip()
+        ]
         predictions = [PredictionRecord.model_validate(row) for row in rows]
         payload = aggregate_prediction_scores(predictions).model_dump()
     elif manifest_file.exists():
@@ -581,7 +650,9 @@ def evaluate_prediction_dir(*, predictions_dir: Path, output_dir: Path) -> dict:
             "average_overall": critic_score["overall"],
         }
     else:
-        raise FileNotFoundError(f"Could not find predictions.jsonl or inference_manifest.json in {predictions_dir}")
+        raise FileNotFoundError(
+            f"Could not find predictions.jsonl or inference_manifest.json in {predictions_dir}"
+        )
 
     _write_json(output_dir / "evaluation_summary.json", payload)
     return payload

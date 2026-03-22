@@ -6,7 +6,12 @@ from rich import print
 
 from compos3d._stages import StagePendingError
 from compos3d.evaluation.service import EvaluateRequest, evaluate_run
-from compos3d.hypothesis.service import InferenceRequest, TrainingRequest, run_frozen_inference, train_hypotheses
+from compos3d.hypothesis.service import (
+    InferenceRequest,
+    TrainingRequest,
+    run_frozen_inference,
+    train_hypotheses,
+)
 from compos3d.procedural.service import (
     BackendSmokeRequest,
     BuildSceneRequest,
@@ -18,7 +23,7 @@ from compos3d.procedural.service import (
 )
 
 app = typer.Typer(
-    help='Compos3D staged research pipeline.',
+    help="Compos3D staged research pipeline.",
     no_args_is_help=True,
     pretty_exceptions_enable=False,
 )
@@ -30,18 +35,22 @@ def _run_or_exit(func):
         if result is not None:
             print(result)
     except StagePendingError as exc:
-        print(f'[yellow]{exc}[/yellow]')
+        print(f"[yellow]{exc}[/yellow]")
         raise typer.Exit(code=1) from exc
     except Exception as exc:  # noqa: BLE001
-        print(f'[red]{exc}[/red]')
+        print(f"[red]{exc}[/red]")
         raise typer.Exit(code=1) from exc
 
 
-@app.command('backend-smoke')
+@app.command("backend-smoke")
 def backend_smoke(
-    asset_name: str = typer.Option('dining_table', help='Controllable asset to smoke-test'),
-    output_dir: Path = typer.Option(Path('artifacts/backend_smoke'), help='Local output directory'),
-    seed: int = typer.Option(0, help='Random seed'),
+    asset_name: str = typer.Option(
+        "dining_table", help="Controllable asset to smoke-test"
+    ),
+    output_dir: Path = typer.Option(
+        Path("artifacts/backend_smoke"), help="Local output directory"
+    ),
+    seed: int = typer.Option(0, help="Random seed"),
 ):
     _run_or_exit(
         lambda: run_backend_smoke(
@@ -50,21 +59,25 @@ def backend_smoke(
     )
 
 
-@app.command('reference-generate')
+@app.command("reference-generate")
 def reference_generate(
-    room_type: str = typer.Option('dining_room', help='Target room type: dining_room, living_room, bedroom'),
-    output_dir: Path = typer.Option(Path('artifacts/reference_runs'), help='Local output directory'),
-    seed: int = typer.Option(0, help='Random seed'),
+    room_type: str = typer.Option(
+        "dining_room", help="Target room type: dining_room, living_room, bedroom"
+    ),
+    output_dir: Path = typer.Option(
+        Path("artifacts/reference_runs"), help="Local output directory"
+    ),
+    seed: int = typer.Option(0, help="Random seed"),
     tasks: str = typer.Option(
-        'coarse',
+        "coarse",
         help='Space-separated infinigen task list. "coarse" generates layout only (~20-45 min). '
-             'Add "populate render" for a fully furnished rendered scene (~60-90 min). '
-             'This is an offline generation job — expect long runtimes.',
+        'Add "populate render" for a fully furnished rendered scene (~60-90 min). '
+        "This is an offline generation job — expect long runtimes.",
     ),
     minimal: bool = typer.Option(
         False,
-        help='Use minimal_solve gin config (fewer annealing steps, faster but sparser layout). '
-             'Reduces coarse time to ~5-15 min.',
+        help="Use minimal_solve gin config (fewer annealing steps, faster but sparser layout). "
+        "Reduces coarse time to ~5-15 min.",
     ),
 ):
     task_list = tuple(tasks.split())
@@ -81,25 +94,36 @@ def reference_generate(
     )
 
 
-@app.command('build-scene')
+@app.command("build-scene")
 def build_scene_cmd(
-    scene_program: Path = typer.Option(..., exists=False,
-        help='Path to scene_program.json from run-inference'),
-    output_dir: Path = typer.Option(Path('artifacts/scenes'),
-        help='Output directory for views, video, and blend file'),
-    seed: int = typer.Option(0, help='Asset variation seed'),
-    resolution: str = typer.Option('512x512',
-        help='Render resolution (WxH, e.g. 512x512 or 1024x1024)'),
-    view_samples: int = typer.Option(48,
-        help='CYCLES samples per 4-view image (48 = fast+clean)'),
-    video_samples: int = typer.Option(16,
-        help='CYCLES samples per orbital video frame (16 = fast)'),
-    video_frames: int = typer.Option(90,
-        help='Number of orbital video frames (90 = 3s @ 30fps)'),
-    no_video: bool = typer.Option(False, '--no-video',
-        help='Skip orbital video rendering; only produce the 4 views'),
-    save_blend: bool = typer.Option(False, '--save-blend',
-        help='Also export the Blender scene file'),
+    scene_program: Path = typer.Option(
+        ..., exists=False, help="Path to scene_program.json from run-inference"
+    ),
+    output_dir: Path = typer.Option(
+        Path("artifacts/scenes"),
+        help="Output directory for views, video, and blend file",
+    ),
+    seed: int = typer.Option(0, help="Asset variation seed"),
+    resolution: str = typer.Option(
+        "512x512", help="Render resolution (WxH, e.g. 512x512 or 1024x1024)"
+    ),
+    view_samples: int = typer.Option(
+        48, help="CYCLES samples per 4-view image (48 = fast+clean)"
+    ),
+    video_samples: int = typer.Option(
+        16, help="CYCLES samples per orbital video frame (16 = fast)"
+    ),
+    video_frames: int = typer.Option(
+        90, help="Number of orbital video frames (90 = 3s @ 30fps)"
+    ),
+    no_video: bool = typer.Option(
+        False,
+        "--no-video",
+        help="Skip orbital video rendering; only produce the 4 views",
+    ),
+    save_blend: bool = typer.Option(
+        False, "--save-blend", help="Also export the Blender scene file"
+    ),
 ):
     """
     Build a 3D scene from a SceneProgram JSON, render 4 canonical views,
@@ -122,35 +146,51 @@ def build_scene_cmd(
     )
 
 
-@app.command('feature-extract')
+@app.command("feature-extract")
 def feature_extract_cmd(
-    input_path: Path = typer.Option(..., exists=False, help='Input artifact root'),
-    output_dir: Path = typer.Option(Path('artifacts/features'), help='Local output directory'),
+    input_path: Path = typer.Option(..., exists=False, help="Input artifact root"),
+    output_dir: Path = typer.Option(
+        Path("artifacts/features"), help="Local output directory"
+    ),
 ):
     _run_or_exit(lambda: feature_extract(input_path=input_path, output_dir=output_dir))
 
 
-@app.command('train-hypotheses')
+@app.command("train-hypotheses")
 def train_hypotheses_cmd(
-    dataset_path: Path = typer.Option(..., exists=False, help='Gold dataset or split manifest'),
-    output_dir: Path = typer.Option(Path('artifacts/training'), help='Local output directory'),
-    experiment_name: str = typer.Option('vertical_slice', help='Experiment label'),
-    llm_provider: str = typer.Option('mock', help='Generator provider to use when config_path is not supplied'),
-    config_path: Path | None = typer.Option(None, exists=False, help='Experiment JSON config for generator, critic, and loop hyperparameters'),
+    dataset_path: Path = typer.Option(
+        ..., exists=False, help="Gold dataset or split manifest"
+    ),
+    output_dir: Path = typer.Option(
+        Path("artifacts/training"), help="Local output directory"
+    ),
+    experiment_name: str = typer.Option("vertical_slice", help="Experiment label"),
+    llm_provider: str = typer.Option(
+        "mock", help="Generator provider to use when config_path is not supplied"
+    ),
+    config_path: Path | None = typer.Option(
+        None,
+        exists=False,
+        help="Experiment JSON config for generator, critic, and loop hyperparameters",
+    ),
     env: Optional[str] = typer.Option(
-        None, '--env',
-        help='Infrastructure environment: local (default), dev, staging, or prod. '
-             'dev/staging/prod route outputs to S3 bronze/silver/gold buckets.',
+        None,
+        "--env",
+        help="Infrastructure environment: local (default), dev, staging, or prod. "
+        "dev/staging/prod route outputs to S3 bronze/silver/gold buckets.",
     ),
 ):
     """Train a hypothesis bank on a labelled scene dataset."""
     store = None
-    if env and env != 'local':
+    if env and env != "local":
         from compos3d.app_config import load_app_config
         from compos3d.storage import get_store
+
         app_cfg = load_app_config(env)  # type: ignore[arg-type]
         store = get_store(app_cfg)
-        print(f'[bold green]Lake storage:[/bold green] {env} → {app_cfg.storage_backend}')
+        print(
+            f"[bold green]Lake storage:[/bold green] {env} → {app_cfg.storage_backend}"
+        )
 
     _run_or_exit(
         lambda: train_hypotheses(
@@ -161,31 +201,45 @@ def train_hypotheses_cmd(
                 llm_provider=llm_provider,
                 config_path=config_path,
                 store=store,
-                compute_platform='local',
+                compute_platform="local",
             )
         )
     )
 
 
-@app.command('run-inference')
+@app.command("run-inference")
 def run_inference_cmd(
-    bank_path: Path = typer.Option(..., exists=False, help='Frozen hypothesis bank'),
-    prompt: str = typer.Option(..., help='Prompt to generate from'),
-    output_dir: Path = typer.Option(Path('artifacts/inference'), help='Local output directory'),
-    llm_provider: str = typer.Option('mock', help='Generator provider to use when config_path is not supplied'),
-    config_path: Path | None = typer.Option(None, exists=False, help='Experiment JSON config for generator and critic'),
-    render_scene: bool = typer.Option(
-        False, '--render-scene',
-        help='After generating the SceneProgram, build the 3D scene, render 4 canonical views, '
-             'and produce an orbital video.  Results go into <output_dir>/scene/.',
+    bank_path: Path = typer.Option(..., exists=False, help="Frozen hypothesis bank"),
+    prompt: str = typer.Option(..., help="Prompt to generate from"),
+    output_dir: Path = typer.Option(
+        Path("artifacts/inference"), help="Local output directory"
     ),
-    render_resolution: str = typer.Option('512x512', help='Render resolution (WxH) when --render-scene is set'),
-    render_view_samples: int = typer.Option(48, help='CYCLES samples per view (48 = fast+clean)'),
-    render_video_frames: int = typer.Option(90, help='Orbital video frames (90 = 3s @ 30fps)'),
-    render_video_samples: int = typer.Option(16, help='CYCLES samples per video frame'),
+    llm_provider: str = typer.Option(
+        "mock", help="Generator provider to use when config_path is not supplied"
+    ),
+    config_path: Path | None = typer.Option(
+        None, exists=False, help="Experiment JSON config for generator and critic"
+    ),
+    render_scene: bool = typer.Option(
+        False,
+        "--render-scene",
+        help="After generating the SceneProgram, build the 3D scene, render 4 canonical views, "
+        "and produce an orbital video.  Results go into <output_dir>/scene/.",
+    ),
+    render_resolution: str = typer.Option(
+        "512x512", help="Render resolution (WxH) when --render-scene is set"
+    ),
+    render_view_samples: int = typer.Option(
+        48, help="CYCLES samples per view (48 = fast+clean)"
+    ),
+    render_video_frames: int = typer.Option(
+        90, help="Orbital video frames (90 = 3s @ 30fps)"
+    ),
+    render_video_samples: int = typer.Option(16, help="CYCLES samples per video frame"),
     env: Optional[str] = typer.Option(
-        None, '--env',
-        help='Infrastructure environment: local (default), dev, staging, or prod.',
+        None,
+        "--env",
+        help="Infrastructure environment: local (default), dev, staging, or prod.",
     ),
 ):
     """
@@ -195,12 +249,15 @@ def run_inference_cmd(
     SceneProgram → 3D Blender scene → 4 canonical views → orbital video → scene_features.json
     """
     store = None
-    if env and env != 'local':
+    if env and env != "local":
         from compos3d.app_config import load_app_config
         from compos3d.storage import get_store
+
         app_cfg = load_app_config(env)  # type: ignore[arg-type]
         store = get_store(app_cfg)
-        print(f'[bold green]Lake storage:[/bold green] {env} → {app_cfg.storage_backend}')
+        print(
+            f"[bold green]Lake storage:[/bold green] {env} → {app_cfg.storage_backend}"
+        )
 
     _run_or_exit(
         lambda: run_frozen_inference(
@@ -216,16 +273,20 @@ def run_inference_cmd(
                 render_video_frames=render_video_frames,
                 render_video_samples=render_video_samples,
                 store=store,
-                compute_platform='local',
+                compute_platform="local",
             )
         )
     )
 
 
-@app.command('evaluate')
+@app.command("evaluate")
 def evaluate_cmd(
-    predictions_dir: Path = typer.Option(..., exists=False, help='Inference artifact root'),
-    output_dir: Path = typer.Option(Path('artifacts/evaluation'), help='Local output directory'),
+    predictions_dir: Path = typer.Option(
+        ..., exists=False, help="Inference artifact root"
+    ),
+    output_dir: Path = typer.Option(
+        Path("artifacts/evaluation"), help="Local output directory"
+    ),
 ):
     _run_or_exit(
         lambda: evaluate_run(
@@ -234,26 +295,33 @@ def evaluate_cmd(
     )
 
 
-@app.command('launch-aws')
+@app.command("launch-aws")
 def launch_aws_cmd(
     command: str = typer.Argument(
         ...,
-        help='compos3d sub-command to run on EC2 (e.g. train-hypotheses, run-inference)',
+        help="compos3d sub-command to run on EC2 (e.g. train-hypotheses, run-inference)",
     ),
     cli_args: Optional[str] = typer.Option(
-        None, '--cli-args',
-        help='Additional CLI arguments as a single quoted string, '
-             'e.g. \'--dataset-path s3://... --config-path configs/compos3d.json --env dev\'',
+        None,
+        "--cli-args",
+        help="Additional CLI arguments as a single quoted string, "
+        "e.g. '--dataset-path s3://... --config-path configs/compos3d.json --env dev'",
     ),
-    env: str = typer.Option('dev', '--env', help='Target environment: dev, staging, prod'),
-    instance_type: Optional[str] = typer.Option(None, help='Override EC2 instance type from env config'),
+    env: str = typer.Option(
+        "dev", "--env", help="Target environment: dev, staging, prod"
+    ),
+    instance_type: Optional[str] = typer.Option(
+        None, help="Override EC2 instance type from env config"
+    ),
     repo_url: str = typer.Option(
-        'https://github.com/yourorg/Compos3D.git',
-        help='Git remote to clone on the EC2 instance',
+        "https://github.com/yourorg/Compos3D.git",
+        help="Git remote to clone on the EC2 instance",
     ),
-    git_ref: str = typer.Option('main', help='Branch or commit to check out'),
-    wait: bool = typer.Option(False, '--wait', help='Block until the EC2 job completes'),
-    log_group: str = typer.Option('/compos3d/jobs', help='CloudWatch Logs log group'),
+    git_ref: str = typer.Option("main", help="Branch or commit to check out"),
+    wait: bool = typer.Option(
+        False, "--wait", help="Block until the EC2 job completes"
+    ),
+    log_group: str = typer.Option("/compos3d/jobs", help="CloudWatch Logs log group"),
 ):
     """
     Launch a compos3d job on AWS EC2 (spot by default).
@@ -295,5 +363,5 @@ def launch_aws_cmd(
     _run_or_exit(_launch)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app()

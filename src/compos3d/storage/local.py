@@ -24,7 +24,9 @@ class LocalStore:
         p.write_text(json.dumps(obj, indent=2, sort_keys=True))
         return str(p)
 
-    def put_bytes(self, rel_path: str, b: bytes, content_type: str = "application/octet-stream") -> str:  # noqa: ARG002
+    def put_bytes(
+        self, rel_path: str, b: bytes, content_type: str = "application/octet-stream"
+    ) -> str:  # noqa: ARG002
         p = self.root / rel_path
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_bytes(b)

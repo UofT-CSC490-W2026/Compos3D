@@ -13,7 +13,9 @@ from pathlib import Path
 
 import pytest
 
-bpy = pytest.importorskip("bpy", reason="bpy not installed — skipping direct render test")
+bpy = pytest.importorskip(
+    "bpy", reason="bpy not installed — skipping direct render test"
+)
 
 from compos3d.hypothesis.engine import run_vertical_inference
 from compos3d.procedural.service import BuildSceneRequest, build_scene
@@ -26,10 +28,16 @@ def frozen_bank(tmp_path) -> Path:
             "hypothesis_id": "h1",
             "text": "anchor composition around dining_table",
             "room_type": "dining_room",
-            "reward": 0.85, "accuracy": 0.90, "mean_score": 0.87,
-            "num_visits": 5, "num_successes": 4, "generation_round": 1,
-            "source_example_ids": [], "support_example_ids": [],
-            "applicability_tags": [], "failure_tags": [],
+            "reward": 0.85,
+            "accuracy": 0.90,
+            "mean_score": 0.87,
+            "num_visits": 5,
+            "num_successes": 4,
+            "generation_round": 1,
+            "source_example_ids": [],
+            "support_example_ids": [],
+            "applicability_tags": [],
+            "failure_tags": [],
         }
     ]
     p = tmp_path / "bank.json"

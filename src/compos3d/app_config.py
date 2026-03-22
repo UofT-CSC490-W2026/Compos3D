@@ -49,12 +49,16 @@ class AppConfig(BaseSettings):
 
     # EC2 compute options (used by launch-aws command).
     ec2_instance_type: str = "g5.xlarge"
-    ec2_ami_id: Optional[str] = None          # defaults to latest Deep Learning AMI at launch time
-    ec2_key_name: Optional[str] = None        # EC2 key pair name for SSH fallback
-    ec2_subnet_id: Optional[str] = None       # VPC subnet (uses default VPC if None)
+    ec2_ami_id: Optional[str] = (
+        None  # defaults to latest Deep Learning AMI at launch time
+    )
+    ec2_key_name: Optional[str] = None  # EC2 key pair name for SSH fallback
+    ec2_subnet_id: Optional[str] = None  # VPC subnet (uses default VPC if None)
     ec2_security_group_id: Optional[str] = None
-    ec2_iam_instance_profile: str = "compos3d-ec2-job"  # instance profile with S3 + CW access
-    ec2_spot: bool = True                     # use spot instances by default
+    ec2_iam_instance_profile: str = (
+        "compos3d-ec2-job"  # instance profile with S3 + CW access
+    )
+    ec2_spot: bool = True  # use spot instances by default
     ec2_spot_max_price: Optional[str] = None  # None → on-demand price cap
 
 

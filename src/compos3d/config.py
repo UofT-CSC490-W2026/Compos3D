@@ -76,6 +76,7 @@ class RenderConfig(BaseModel):
     no_video:     Always True during training (skip orbital video, saves time).
     save_blend:   Save the Blender file alongside renders (useful for debugging).
     """
+
     enabled: bool = False
     resolution: str = "256x256"
     view_samples: int = Field(default=16, ge=1)
@@ -84,7 +85,9 @@ class RenderConfig(BaseModel):
 
 
 class ExperimentConfig(BaseModel):
-    generator: GeneratorConfig = Field(default_factory=lambda: GeneratorConfig(provider="mock"))
+    generator: GeneratorConfig = Field(
+        default_factory=lambda: GeneratorConfig(provider="mock")
+    )
     critic: CriticConfig = Field(default_factory=CriticConfig)
     training: TrainingConfig = Field(default_factory=TrainingConfig)
     render: RenderConfig = Field(default_factory=RenderConfig)
@@ -92,8 +95,15 @@ class ExperimentConfig(BaseModel):
 
 
 DEFAULT_EXPERIMENT_CONFIG = ExperimentConfig(
-    generator=GeneratorConfig(provider="mock", model_id=DEFAULT_TEXT_MODEL_ID, region_name=DEFAULT_REGION),
-    critic=CriticConfig(mode="heuristic", provider="mock", model_id=DEFAULT_VISION_MODEL_ID, region_name=DEFAULT_REGION),
+    generator=GeneratorConfig(
+        provider="mock", model_id=DEFAULT_TEXT_MODEL_ID, region_name=DEFAULT_REGION
+    ),
+    critic=CriticConfig(
+        mode="heuristic",
+        provider="mock",
+        model_id=DEFAULT_VISION_MODEL_ID,
+        region_name=DEFAULT_REGION,
+    ),
     training=TrainingConfig(),
     render=RenderConfig(),
 )
@@ -113,7 +123,9 @@ def load_experiment_config(path: Path | None = None) -> ExperimentConfig:
         if not config.critic.provider:
             config.critic.provider = config.generator.provider
         if config.critic.provider != "bedrock":
-            raise ValueError("VLM critic requires provider='bedrock'. Use heuristic mode for non-VLM evaluation.")
+            raise ValueError(
+                "VLM critic requires provider='bedrock'. Use heuristic mode for non-VLM evaluation."
+            )
         if not config.critic.model_id:
             config.critic.model_id = DEFAULT_VISION_MODEL_ID
 
