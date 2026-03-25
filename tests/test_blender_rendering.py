@@ -3,6 +3,10 @@
 Tests the scene building and rendering pipeline using ``build_scene``.
 Blender (bpy) must be installed in the environment.  These tests are marked
 ``blender`` and are skipped automatically if bpy is not importable.
+
+Edge cases covered:
+- dependency-gated execution (graceful skip when Blender is unavailable)
+- render artifact presence checks after scene build
 """
 
 from __future__ import annotations

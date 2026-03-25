@@ -1,6 +1,9 @@
 """Edge-case tests for heuristic critic scoring behavior.
 
-Covers:
+Heuristic scoring when inputs are empty, mismatched, duplicated, or outside
+supported room types.
+
+Edge cases covered:
 - Empty predicted assets.
 - Reference room-type mismatch.
 - Repeated assets in scene program inputs.

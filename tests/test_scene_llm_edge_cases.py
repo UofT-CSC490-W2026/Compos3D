@@ -1,6 +1,9 @@
 """Edge-case unit tests for `compos3d.llm.scene_llm`.
 
-This file verifies:
+Provider routing, Bedrock response parsing, structured-output validation, and
+determinism knobs for scene/hypothesis generation.
+
+Edge cases covered:
 - Provider selection branches and invalid-provider errors.
 - Bedrock response parsing failures and graceful exception mapping.
 - Structured output validation failures for hypotheses and scene programs.

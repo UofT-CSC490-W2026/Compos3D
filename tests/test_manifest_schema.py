@@ -1,6 +1,9 @@
 """Unit tests for run manifest creation/finalization lifecycle.
 
-Covers:
+Required fields at creation, terminal status transitions, timing/duration,
+and failure metadata persistence.
+
+Edge cases covered:
 - Required metadata at manifest creation time.
 - Status transition from `running` to terminal states.
 - Completion timestamps and duration computation.

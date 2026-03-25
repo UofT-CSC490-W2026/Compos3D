@@ -6,7 +6,7 @@ Why these tests:
 - The Bedrock/VLM branches contain important auto-fill and fail-loud behavior
   that is not covered well by the current suite.
 
-Linked edge cases:
+Edge cases covered:
 - Missing config path -> default experiment config stays usable.
 - Bedrock generator without model id -> default text model is inserted.
 - VLM critic without explicit model id -> default vision model is inserted.

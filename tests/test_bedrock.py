@@ -1,6 +1,9 @@
 """Unit tests for Bedrock client integration surfaces.
 
-Covers:
+Config resolution, converse payloads, optional fields, critic JSON parsing,
+and error mapping for credential vs generic failures.
+
+Edge cases covered:
 - Env/default config resolution and explicit override precedence.
 - Request payload construction for Bedrock `converse` calls.
 - Optional field omission and low-level client exception propagation.

@@ -1,6 +1,9 @@
 """Service-layer request tests for defaults and call forwarding.
 
-Covers:
+Default request fields and exact forwarding from service wrappers to engine
+entrypoints (including evaluate).
+
+Edge cases covered:
 - `TrainingRequest`/`InferenceRequest` default values.
 - Correct argument forwarding from service wrappers to engine functions.
 - `EvaluateRequest` forwarding to evaluation engine entrypoint.
@@ -17,8 +20,6 @@ import sys
 import types
 from pathlib import Path
 
-# `compos3d.hypothesis.engine` imports `compos3d.data.dataset`, but this module
-# is absent in the current checkout. Stub it so service module imports succeed.
 _stub_data_pkg = types.ModuleType("compos3d.data")
 _stub_data_dataset = types.ModuleType("compos3d.data.dataset")
 _stub_data_dataset.load_training_dataset = lambda *_args, **_kwargs: None

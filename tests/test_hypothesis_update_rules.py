@@ -1,6 +1,9 @@
 """Focused tests for hypothesis update/reward mechanics in the loop.
 
-Covers:
+Running averages, failure tagging, reward math with sparse visits, and
+deterministic tie-breaking when sorting records.
+
+Edge cases covered:
 - Running-average score updates and visit/success bookkeeping.
 - Failure-tag updates when scores miss success threshold.
 - Reward math edge behavior (zero visits, early samples, exploration term).

@@ -6,7 +6,7 @@ Why these tests:
 - These flows are important user-facing use cases and should fail loudly if the
   request wiring changes.
 
-Linked edge cases:
+Edge cases covered:
 - `--env dev` on train/inference -> loads app config and injects a store.
 - `--env local`/no env -> keeps local-only behavior.
 - `launch-aws --wait` -> launches and then blocks on runner.wait().

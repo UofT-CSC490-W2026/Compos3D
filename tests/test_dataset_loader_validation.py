@@ -1,6 +1,9 @@
 """Validation-focused tests for training dataset payloads/models.
 
-Covers:
+Malformed examples, required prompts, and schema edge behavior (empty prompt,
+non-enum room types).
+
+Edge cases covered:
 - Rejection of malformed or incomplete training examples.
 - Required prompt field enforcement.
 - Current permissive behavior for empty prompts and room-type strings.

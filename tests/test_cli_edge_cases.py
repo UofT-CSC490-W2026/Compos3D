@@ -1,6 +1,9 @@
 """CLI behavior tests for argument handling and graceful failures.
 
-This file verifies:
+Exit codes, user-visible errors, and smoke paths for representative commands
+with dependencies monkeypatched.
+
+Edge cases covered:
 - `_run_or_exit` returns non-zero on expected failures.
 - Helpful error text is emitted for pending/exception cases.
 - Smoke invocation of representative CLI commands with monkeypatched services.

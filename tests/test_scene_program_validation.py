@@ -1,6 +1,9 @@
 """Validation tests for SceneProgram-related Pydantic models.
 
-Covers:
+Required fields, numeric constraints, render defaults, nested payloads, and
+current permissive `room_type` behavior.
+
+Edge cases covered:
 - Required-field validation for `SceneProgram`, `AssetSpec`, and `ConstraintSpec`.
 - Numeric constraints (e.g., positive asset counts).
 - Default behavior for `RenderSpec`.

@@ -8,7 +8,7 @@ Why these tests:
 - `normalize_assets` is the final safety net before generation, so we test
   deduplication and the fallback-to-default-assets branch.
 
-Linked edge cases:
+Edge cases covered:
 - Ambiguous prompt -> graceful default room type instead of raising.
 - Prompt mentions unsupported assets -> unsupported assets are ignored.
 - All normalized assets invalid -> room defaults returned instead of empty list.

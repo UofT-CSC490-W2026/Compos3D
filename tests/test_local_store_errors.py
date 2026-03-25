@@ -1,6 +1,8 @@
 """Failure-path and edge-case tests for LocalStore behavior.
 
-Covers:
+Read/write failures, JSON decode errors, overwrite semantics, and prefix listing.
+
+Edge cases covered:
 - Missing file reads.
 - Invalid JSON decode failures.
 - Overwrite semantics for repeated writes to same key.

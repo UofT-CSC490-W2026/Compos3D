@@ -6,7 +6,7 @@ Why these tests:
 - The unit tests focus on fail-safe behavior and argument wiring rather than
   Blender execution.
 
-Linked edge cases:
+Edge cases covered:
 - Rendering disabled -> returns `None`.
 - Rendering enabled -> scene program is serialized and passed to `build_scene`.
 - Training renderer always forces `no_video=True`.

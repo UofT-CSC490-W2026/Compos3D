@@ -1,9 +1,9 @@
 """Cross-module tests for graceful error handling on common failure modes.
 
-This file focuses on representative error paths that should fail cleanly with
-actionable exceptions/messages rather than cryptic crashes.
+Representative error paths that should fail cleanly with actionable
+exceptions/messages rather than cryptic crashes.
 
-Covered failure categories:
+Edge cases covered:
 - malformed model/critic JSON payload extraction
 - unavailable/expired Bedrock credentials mapping
 - missing local files for storage reads

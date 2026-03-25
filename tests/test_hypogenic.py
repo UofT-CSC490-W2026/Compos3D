@@ -2,6 +2,11 @@
 
 Verifies the hypothesis selection, update, persistence, and statistics logic
 that powers the UCB-style hypothesis bank in Compos3D.
+
+Edge cases covered:
+- empty/degenerate hypothesis pools
+- numerical stability in UCB-style update and selection math
+- persistence round-trip behavior with partial state
 """
 
 from __future__ import annotations

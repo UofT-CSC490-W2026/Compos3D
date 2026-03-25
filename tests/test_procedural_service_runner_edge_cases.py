@@ -1,6 +1,9 @@
 """Edge-case unit tests for procedural service and runner modules.
 
-This file verifies:
+Validation in service entrypoints, subprocess outcomes, and missing artifacts
+in procedural build flows.
+
+Edge cases covered:
 - Request validation branches in procedural service commands.
 - Missing expected output files after subprocess success.
 - Runner subprocess failure and capture-output behavior.

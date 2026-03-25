@@ -1,6 +1,8 @@
 """Unit tests for canonical bronze/silver/gold path builders.
 
-Covers:
+Stable key strings for training/inference layers and UTC date partition parts.
+
+Edge cases covered:
 - Stable key-format generation for training/inference prefixes.
 - UTC date partition helper output formatting.
 

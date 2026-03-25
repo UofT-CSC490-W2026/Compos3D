@@ -3,6 +3,10 @@
 Tests the inference / scene generation pipeline: loading a hypothesis bank,
 selecting hypotheses by UCB score, calling the LLM (mock), and scoring the
 resulting SceneProgram with the heuristic critic.
+
+Edge cases covered:
+- inference behavior with missing/invalid bank artifacts
+- selection and scoring robustness when candidate hypotheses are limited
 """
 
 from __future__ import annotations

@@ -1,6 +1,9 @@
 """Edge-case unit tests for `compos3d.hypothesis.loop`.
 
-This file verifies:
+Guards early returns, threshold logic, bank replacement, renderer and critic
+failures, and baseline-mode branches in the hypothesis loop.
+
+Edge cases covered:
 - Early-return branches in `_maybe_regenerate`.
 - Threshold behavior in `_wrong_threshold`.
 - Deduplication and truncation behavior in `_replace_room_bank`.

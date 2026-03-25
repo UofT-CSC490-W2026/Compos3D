@@ -1,11 +1,13 @@
 """Integration-style tests for repair/regeneration flow in hypothesis training.
 
-This file verifies a forced-failure scenario where critic scores are always below
-the success threshold, which should:
-- record failures into `failed_scene_bank.jsonl`
-- trigger repair regeneration (`focus="repair"`)
-- clear pending failure buffers after regeneration
-- still complete training and write normal output artifacts
+Forced low critic scores drive repair regeneration and failure-bank recording
+while the loop still completes.
+
+Edge cases covered:
+- Critic always below success threshold (persistent failure until repair/regen).
+- Failure bank (`failed_scene_bank.jsonl`) and trace artifacts populated.
+- Repair focus (`focus="repair"`) and pending-failure buffer clearing.
+- Training completes and writes normal outputs despite the stress scenario.
 
 Expected outcomes:
 - Training returns successfully with at least one regeneration event.

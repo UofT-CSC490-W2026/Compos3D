@@ -1,4 +1,12 @@
-"""Tests for the storage abstraction and AppConfig."""
+"""Tests for storage abstraction and AppConfig behavior.
+
+Edge cases covered:
+- missing required S3 bucket configuration for `storage_backend="s3"`
+- prefix listing behavior and path-shape expectations
+- layer separation invariants across bronze/silver/gold
+
+Primarily happy-path checks are also included for local read/write and defaults.
+"""
 
 from __future__ import annotations
 

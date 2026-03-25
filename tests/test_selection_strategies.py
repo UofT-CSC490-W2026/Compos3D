@@ -1,6 +1,8 @@
 """Isolated selection-strategy tests for hypothesis bank sampling.
 
-Covers:
+UCB, greedy, and random strategies with empty banks and room-scoped filters.
+
+Edge cases covered:
 - Empty-bank handling.
 - UCB strategy ordering (reward-first via existing sort rules).
 - Greedy strategy ordering (accuracy, mean score, visits).

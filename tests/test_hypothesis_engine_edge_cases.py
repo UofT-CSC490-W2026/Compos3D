@@ -1,6 +1,9 @@
 """Edge-case unit tests for `compos3d.hypothesis.engine`.
 
-This file verifies:
+Ranking, config conversion, lake mirroring, manifest finalization, and
+evaluation summary paths in training and inference.
+
+Edge cases covered:
 - Inference hypothesis selection ranking/tie/top-k behavior.
 - Training/loop config conversion helper functions.
 - Lake mirroring with optional files absent.

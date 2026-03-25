@@ -6,7 +6,7 @@ Why these tests:
 - These branches are pure unit-test targets because they can be verified with
   a fake boto3 client and no real AWS access.
 
-Linked edge cases:
+Edge cases covered:
 - Layered paths route to the matching bucket, case-insensitively.
 - Ambiguous paths default to bronze.
 - Paginated `list_prefix` responses are fully collected.
