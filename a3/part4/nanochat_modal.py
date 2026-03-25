@@ -54,6 +54,7 @@ from modal import Secret, Volume
 # =============================================================================
 
 # ── Shared ────────────────────────────────────────────────────────────────────
+<<<<<<< HEAD
 TOTAL_BATCH_SIZE        = 524_288
 TARGET_PARAM_DATA_RATIO = 10.5        # Chinchilla ratio used throughout nanochat
 PHASE1_FRAC             = 0.40        # 40 % of budget at short context
@@ -77,6 +78,16 @@ MTP_ROPE = "rope"   # standard RoPE (not YaRN — see Part 2 discussion)
 #                                                                      value-embed extras)
 #
 # For d8 and d12 the formula is used directly (small models, no GQA).
+=======
+TOTAL_BATCH_SIZE = 524_288
+TARGET_PARAM_DATA_RATIO = 10.5  # Chinchilla ratio used throughout nanochat
+PHASE1_FRAC = 0.40  # 40 % of budget at short context
+VOCAB_SIZE = 32_768
+
+# MTP settings for the final nanochat
+MTP_K = 2  # MTP-2
+MTP_ROPE = "rope"  # standard RoPE (not YaRN — see Part 2 discussion)
+>>>>>>> main
 
 
 def _sp(d: int) -> int:
@@ -96,6 +107,7 @@ def _ns(d: int, batch: int = TOTAL_BATCH_SIZE) -> int:
 
 
 # ── Scaling-law runs ──────────────────────────────────────────────────────────
+<<<<<<< HEAD
 DEPTH_D8  = 8
 DEPTH_D12 = 12
 
@@ -151,11 +163,72 @@ TIMEOUT_SMOKE    = 60 * 60 * 1    # 1 h
 VOLUME_MOUNT    = "/vol"
 NANOCHAT_CACHE  = f"{VOLUME_MOUNT}/nanochat_cache"
 BASE_DIR        = "/data/.cache/nanochat"
+=======
+DEPTH_D8 = 8
+DEPTH_D12 = 12
+
+CHINCHILLA_D8 = _ct(8)  # ≈  440 M tokens  (~42M scaling params)
+CHINCHILLA_D12 = _ct(12)  # ≈ 1156 M tokens  (~110M scaling params)
+N_STEPS_D8 = _ns(8)  # ≈  840 steps
+N_STEPS_D12 = _ns(12)  # ≈ 2204 steps
+
+# ── Nanochat d20 + MTP-2 + curriculum ─────────────────────────────────────────
+DEPTH_NANO = 20
+CHINCHILLA_D20 = 4_810_000_000  # 10.5 × ~458M  (same as original Part 3)
+N_TOTAL_NANO = CHINCHILLA_D20 // TOTAL_BATCH_SIZE  # 9 174
+N_PHASE1_NANO = int(N_TOTAL_NANO * PHASE1_FRAC)  # 3 669
+N_PHASE2_NANO = N_TOTAL_NANO - N_PHASE1_NANO  # 5 505
+
+# ── Checkpoint tags ───────────────────────────────────────────────────────────
+TAG_D8 = "part4/d8_scaling"
+TAG_D12 = "part4/d12_scaling"
+TAG_D20_P1 = "part4/d20_mtp2_ctx512"
+TAG_D20_P2 = "part4/d20_mtp2_ctx2048"
+
+# Tags from earlier parts — no new training needed for these
+TAG_D16_BASELINE = "a2mtp/d16_baseline"  # Part 2 — d16 no-curriculum baseline
+TAG_D16_P2 = "part3/d16_ctx2048"  # Part 3 — d16 curriculum Phase 2 (plain, no MTP)
+TAG_D20_CURRICULUM = (
+    "part3/d20_ctx2048"  # old Part 3 d20 — d20 curriculum-only ablation
+)
+
+# ── WandB ─────────────────────────────────────────────────────────────────────
+WANDB_PROJECT = "nanochat-part4"
+
+# ── GPU / device batch ────────────────────────────────────────────────────────
+GPU_SMALL = "H100:2"  # d8 (tiny model)
+GPU_MED = "H100:2"  # d12
+GPU_LARGE = "H100:8"  # d16, d20 main runs
+GPU_EVAL = "H100:4"
+
+DEVICE_BATCH_D8 = 64  # d8 is tiny — double the batch per GPU is fine
+DEVICE_BATCH_D12 = 32
+DEVICE_BATCH_P1 = 32  # ctx=512  (d20 Phase 1)
+DEVICE_BATCH_P2 = 16  # ctx=2048 (d20 Phase 2) — halved vs Phase 1: MTP-2 retains
+# k extra hidden-state slices, ~1.5× memory at seq=2048 on d20
+
+_N_TRAIN_GPUS = 8
+_N_EVAL_GPUS = 4
+
+# ── Timeouts ──────────────────────────────────────────────────────────────────
+TIMEOUT_D8 = 60 * 60 * 2  # 2 h  (840 steps, d8)
+TIMEOUT_D12 = 60 * 60 * 8  # 8 h  (2204 steps, d12, H100:2)
+TIMEOUT_P1_NANO = 60 * 60 * 3  # 3 h  (3669 steps, d20 Phase 1)
+TIMEOUT_P2_NANO = 60 * 60 * 5  # 5 h  (5505 steps, d20 Phase 2)
+TIMEOUT_EVAL = 60 * 60 * 3  # 3 h  (eval checkpoints)
+TIMEOUT_SMOKE = 60 * 60 * 1  # 1 h
+
+# ── Volume / cache ────────────────────────────────────────────────────────────
+VOLUME_MOUNT = "/vol"
+NANOCHAT_CACHE = f"{VOLUME_MOUNT}/nanochat_cache"
+BASE_DIR = "/data/.cache/nanochat"
+>>>>>>> main
 
 # =============================================================================
 # MODAL PRIMITIVES
 # =============================================================================
 
+<<<<<<< HEAD
 app    = modal.App("nanochat-part4")
 volume = Volume.from_name("nanochat-vol", create_if_missing=True)
 secret = Secret.from_name("nanochat-secrets")
@@ -164,6 +237,16 @@ _THIS_DIR     = os.path.dirname(os.path.abspath(__file__))
 _NANOCHAT_DIR = os.path.join(_THIS_DIR, "..", "nanochat")
 # Reuse Part 2's patches — already support --mtp-k, --rope-type, --yarn-scale
 _PATCHES_DIR  = os.path.join(_THIS_DIR, "..", "part2_mtp", "patches")
+=======
+app = modal.App("nanochat-part4")
+volume = Volume.from_name("nanochat-vol", create_if_missing=True)
+secret = Secret.from_name("nanochat-secrets")
+
+_THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+_NANOCHAT_DIR = os.path.join(_THIS_DIR, "..", "nanochat")
+# Reuse Part 2's patches — already support --mtp-k, --rope-type, --yarn-scale
+_PATCHES_DIR = os.path.join(_THIS_DIR, "..", "part2_mtp", "patches")
+>>>>>>> main
 
 image = (
     ModalImage.from_registry("nvidia/cuda:12.8.1-devel-ubuntu24.04", add_python="3.11")
@@ -243,6 +326,7 @@ def _setup_cache() -> None:
 
 
 def _find_last_step(model_tag: str) -> int:
+<<<<<<< HEAD
     """Return the highest step number saved under base_checkpoints/<model_tag>/."""
     ckpt_dir = os.path.join(NANOCHAT_CACHE, "base_checkpoints", model_tag)
     volume.reload()
@@ -254,6 +338,20 @@ def _find_last_step(model_tag: str) -> int:
     if not steps:
         raise RuntimeError(f"No checkpoints found under {ckpt_dir}")
     return max(steps)
+=======
+    """Return the highest checkpoint step saved under base_checkpoints/<model_tag>/.
+
+    Checkpoints are written as flat files model_{step:06d}.pt inside the tag directory.
+    """
+    import glob
+
+    ckpt_dir = os.path.join(NANOCHAT_CACHE, "base_checkpoints", model_tag)
+    volume.reload()
+    files = glob.glob(os.path.join(ckpt_dir, "model_*.pt"))
+    if not files:
+        raise RuntimeError(f"No checkpoints found under {ckpt_dir}")
+    return max(int(os.path.basename(f).split("_")[1].split(".")[0]) for f in files)
+>>>>>>> main
 
 
 def _ensure_eval_bundle() -> None:
@@ -483,9 +581,13 @@ def stage_d20_mtp2_p2(
         nproc=_N_TRAIN_GPUS,
     )
     volume.commit()
+<<<<<<< HEAD
     print(
         f"FINAL NANOCHAT done.  Tag: {TAG_D20_P2}  steps {p1_step}→{total_iters}"
     )
+=======
+    print(f"FINAL NANOCHAT done.  Tag: {TAG_D20_P2}  steps {p1_step}→{total_iters}")
+>>>>>>> main
 
 
 # =============================================================================
@@ -519,7 +621,11 @@ def stage_eval() -> None:
     eval_tags = [
         TAG_D8,
         TAG_D12,
+<<<<<<< HEAD
         TAG_D20_P2,   # d20 + MTP-2 + curriculum  — the final nanochat
+=======
+        TAG_D20_P2,  # d20 + MTP-2 + curriculum  — the final nanochat
+>>>>>>> main
     ]
 
     results: dict[str, str | None] = {}
@@ -628,6 +734,136 @@ def quick_test() -> None:
 
 
 # =============================================================================
+<<<<<<< HEAD
+=======
+# EMERGENT ABILITIES — picochat (d16) vs nanochat (d20) text generation
+# =============================================================================
+
+_EMERGENT_PROMPTS = [
+    "The water cycle is a natural process by which water evaporates from oceans,"
+    " rises into the atmosphere, and",
+    "The Pythagorean theorem states that in a right triangle, the square of the"
+    " hypotenuse equals",
+    "Democracy is a form of government in which political power is held by",
+    "The main difference between a virus and a bacterium is that viruses",
+    "To convert a temperature from Celsius to Fahrenheit, you multiply by 9/5 and",
+    "Newton's first law of motion states that an object at rest will remain at rest"
+    " unless",
+    "Shakespeare wrote the tragedy Hamlet, in which Prince Hamlet seeks revenge"
+    " against his uncle Claudius, who",
+    "In computer science, an algorithm is a finite sequence of well-defined"
+    " instructions that",
+    "The mitochondria are often called the powerhouse of the cell because they",
+    "The French Revolution began in 1789 when economic hardship and social"
+    " inequality led",
+    "Photosynthesis is the process by which plants use sunlight, water, and"
+    " carbon dioxide to produce",
+    "The circumference of a circle is calculated by multiplying pi by",
+    "The immune system protects the body against disease by recognising"
+    " and destroying",
+    "A sonnet is a 14-line poem that typically follows a strict rhyme scheme."
+    " Shakespeare's sonnets are famous for",
+    "In economics, the law of supply and demand states that when the price of"
+    " a good rises,",
+]
+
+
+@app.function(
+    image=image,
+    volumes={VOLUME_MOUNT: volume},
+    secrets=[secret],
+    gpu="H100:1",
+    timeout=60 * 30,  # 30 min — single-GPU inference, two models
+)
+def stage_emergent_abilities(
+    max_new_tokens: int = 80,
+) -> None:
+    """
+    Load the d16 baseline (picochat) and d20 baseline (nanochat) models,
+    run greedy generation on each prompt, and save results to the volume
+    as JSON for later use in the LaTeX report.
+
+    Runs inference inside the uv-managed venv (same pattern as training stages)
+    to avoid 'No module named torch' errors when importing from system Python.
+    """
+    import json
+    import textwrap
+
+    volume.reload()
+    _setup_cache()
+
+    out_dir = os.path.join(NANOCHAT_CACHE, "report")
+    os.makedirs(out_dir, exist_ok=True)
+    out_path = os.path.join(out_dir, "emergent_abilities.json")
+
+    # Serialise prompt list and model tags into the script so there are
+    # no import/pickle complications across the subprocess boundary.
+    prompts_repr = repr(_EMERGENT_PROMPTS)
+    tag_d16 = TAG_D16_BASELINE
+    tag_d20 = TAG_D20_CURRICULUM
+
+    script = textwrap.dedent(f"""
+        import glob, json, os, sys
+        import torch
+        from contextlib import nullcontext
+        sys.path.insert(0, "/root/nanochat")
+        os.environ["BASE_DIR"] = "{NANOCHAT_CACHE}"
+
+        from nanochat.checkpoint_manager import load_model
+
+        PROMPTS = {prompts_repr}
+        TAGS = [("{tag_d16}", "picochat_d16"), ("{tag_d20}", "nanochat_d20")]
+        MAX_TOK = {max_new_tokens}
+        device = torch.device("cuda")
+        autocast_ctx = torch.amp.autocast(device_type="cuda", dtype=torch.bfloat16)
+
+        def find_step(tag):
+            ckpt_dir = os.path.join("{NANOCHAT_CACHE}", "base_checkpoints", tag)
+            files = glob.glob(os.path.join(ckpt_dir, "model_*.pt"))
+            if not files:
+                raise RuntimeError(f"No checkpoints under {{ckpt_dir}}")
+            return max(int(os.path.basename(f).split("_")[1].split(".")[0]) for f in files)
+
+        results = []
+        for tag, label in TAGS:
+            step = find_step(tag)
+            print(f"\\nLoading {{label}} ({{tag}}) @ step {{step}}", flush=True)
+            model, tokenizer, _ = load_model("base", device=device, phase="eval",
+                                             model_tag=tag, step=step)
+            model.eval()
+            for prompt in PROMPTS:
+                ids = tokenizer.encode(prompt)
+                generated = []
+                with autocast_ctx:
+                    for tok in model.generate(ids, max_tokens=MAX_TOK, temperature=0, seed=42):
+                        generated.append(tok)
+                cont = tokenizer.decode(generated)
+                results.append(dict(model=label, prompt=prompt, continuation=cont,
+                                    full=prompt + cont))
+                print(f"  [{{label}}] {{prompt[:55]}}...\\n    → {{cont[:100]}}", flush=True)
+            del model
+
+        out = "{out_path}"
+        with open(out, "w") as fh:
+            json.dump(results, fh, indent=2)
+        print(f"\\nSaved {{len(results)}} entries → {{out}}")
+    """)
+
+    script_path = "/tmp/run_emergent.py"
+    with open(script_path, "w") as f:
+        f.write(script)
+
+    _run(
+        f"cd /root/nanochat && "
+        f"PYTHONPATH=/root/nanochat:$PYTHONPATH "
+        f"uv run python {script_path}"
+    )
+    volume.commit()
+    print("Done — results written to volume.")
+
+
+# =============================================================================
+>>>>>>> main
 # MAIN ENTRYPOINT — full Part 4 pipeline
 # =============================================================================
 
@@ -656,8 +892,13 @@ def main() -> None:
     w = 64
     print("\n" + "=" * w)
     print("Part 4: Final Nanochat  (d20 + MTP-2 + Context Curriculum)")
+<<<<<<< HEAD
     print(f"  d8  scaling  : {N_STEPS_D8} steps  ({CHINCHILLA_D8/1e6:.0f}M tokens)")
     print(f"  d12 scaling  : {N_STEPS_D12} steps  ({CHINCHILLA_D12/1e9:.3f}B tokens)")
+=======
+    print(f"  d8  scaling  : {N_STEPS_D8} steps  ({CHINCHILLA_D8 / 1e6:.0f}M tokens)")
+    print(f"  d12 scaling  : {N_STEPS_D12} steps  ({CHINCHILLA_D12 / 1e9:.3f}B tokens)")
+>>>>>>> main
     print(
         f"  d20 nanochat : P1={N_PHASE1_NANO} + P2={N_PHASE2_NANO} = {N_TOTAL_NANO} steps"
     )
@@ -665,8 +906,13 @@ def main() -> None:
 
     # Phase A — scaling law anchors + d20 Phase 1 in parallel
     print("[A] Scaling d8, d12 + d20 MTP-2 Phase 1 in parallel...")
+<<<<<<< HEAD
     h_d8    = stage_scaling_d8.spawn()
     h_d12   = stage_scaling_d12.spawn()
+=======
+    h_d8 = stage_scaling_d8.spawn()
+    h_d12 = stage_scaling_d12.spawn()
+>>>>>>> main
     h_d20p1 = stage_d20_mtp2_p1.spawn()
     h_d8.get()
     h_d12.get()

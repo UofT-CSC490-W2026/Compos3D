@@ -221,6 +221,13 @@ def main():
         help="nanochat model tag to identify the checkpoint directory",
     )
     parser.add_argument(
+        "--model-source",
+        type=str,
+        default="base",
+        choices=["base", "mid", "sft", "rl"],
+        help="checkpoint source: 'base' → base_checkpoints/, 'mid' → mid_checkpoints/ (a4/part2 midtraining)",
+    )
+    parser.add_argument(
         "--step", type=int, default=None, help="Model step to load (default = last)"
     )
     parser.add_argument(
@@ -274,7 +281,11 @@ def main():
         model_slug = args.hf_path.replace("/", "-")
     else:
         model, tokenizer, meta = load_model(
-            "base", device, phase="eval", model_tag=args.model_tag, step=args.step
+            args.model_source,
+            device,
+            phase="eval",
+            model_tag=args.model_tag,
+            step=args.step,
         )
         sequence_len = meta["model_config"]["sequence_len"]
         token_bytes = get_token_bytes(device=device)

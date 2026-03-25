@@ -71,6 +71,8 @@ Once the sweeps have finished, generate the figures (CPU-only job, no GPU needed
 
 ```sh
 modal run part3/nanochat_modal.py::stage_make_sweep_figures_p3 2>&1 | tee /tmp/p3_sweep_figures.log
+<<<<<<< HEAD
+=======
 ```
 
 This saves two PNGs to the volume under `nanochat_cache/report/` and logs them to the `part3_sweep` W&B project:
@@ -83,6 +85,21 @@ Validates the full two-phase curriculum pipeline end-to-end at d12 scale
 before spending money on d16.
 
 ```sh
+modal run part3/nanochat_modal.py::quick_test_d12 2>&1 | tee /tmp/p3_quicktest.log
+>>>>>>> main
+```
+
+This saves two PNGs to the volume under `nanochat_cache/report/` and logs them to the `part3_sweep` W&B project:
+- `p3_sweep_loss_curves.png` — 2×2 panel loss curves (rows = seq len, columns = phase, 3 coloured lines per frac).
+- `p3_sweep_bar_chart.png` — grouped bar chart of final-step loss across all 4 groups (s256_p1/p2, s512_p1/p2).
+
+### 2. Smoke test
+
+Validates the full two-phase curriculum pipeline end-to-end at d12 scale
+before spending money on d16.
+
+```sh
+<<<<<<< HEAD
 modal run part3/nanochat_modal.py::quick_test_d12 2>&1 | tee /tmp/p3_quicktest.log
 ```
 
@@ -101,6 +118,17 @@ modal run part3/nanochat_modal.py::stage_pretrain_baseline  2>&1 | tee /tmp/p3_d
 wait
 ```
 
+=======
+# Phase 1 first (sequential)
+modal run part3/nanochat_modal.py::stage_pretrain_phase1 2>&1 | tee /tmp/p3_d16_phase1.log
+
+# Then Phase 2 and Baseline in parallel
+modal run part3/nanochat_modal.py::stage_pretrain_phase2    2>&1 | tee /tmp/p3_d16_phase2.log &
+modal run part3/nanochat_modal.py::stage_pretrain_baseline  2>&1 | tee /tmp/p3_d16_baseline.log &
+wait
+```
+
+>>>>>>> main
 ### 4. Eval + report
 
 Runs CORE benchmark + needle-in-haystack custom eval on all three d16
