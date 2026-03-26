@@ -18,22 +18,11 @@ Expected outcomes:
 from __future__ import annotations
 
 import json
-import sys
-import types
 
 import pytest
 
 from compos3d.config import GeneratorConfig
 from compos3d.evaluation import critic as critic_mod
-
-# Repo-local import shim: some branches import compos3d.data.dataset even when
-# this package is absent in checkout state.
-_stub_data_pkg = types.ModuleType("compos3d.data")
-_stub_data_dataset = types.ModuleType("compos3d.data.dataset")
-_stub_data_dataset.load_training_dataset = lambda *_args, **_kwargs: None
-sys.modules.setdefault("compos3d.data", _stub_data_pkg)
-sys.modules.setdefault("compos3d.data.dataset", _stub_data_dataset)
-
 from compos3d.hypothesis import engine
 from compos3d.llm.scene_llm import BedrockSceneLLM, LLMUnavailableError, StructuredOutputError, build_scene_llm
 from compos3d.storage.local import LocalStore

@@ -14,17 +14,7 @@ Edge cases covered:
 
 from __future__ import annotations
 
-import sys
-import types
-
 from typer.testing import CliRunner
-
-# Test-local import shim for repo state where `compos3d.data.dataset` is absent.
-_stub_data_pkg = types.ModuleType("compos3d.data")
-_stub_data_dataset = types.ModuleType("compos3d.data.dataset")
-_stub_data_dataset.load_training_dataset = lambda *_args, **_kwargs: None
-sys.modules.setdefault("compos3d.data", _stub_data_pkg)
-sys.modules.setdefault("compos3d.data.dataset", _stub_data_dataset)
 
 import compos3d.app_config as app_config_module
 import compos3d.cli as cli

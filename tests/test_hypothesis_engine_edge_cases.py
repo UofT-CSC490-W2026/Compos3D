@@ -20,18 +20,9 @@ Expected outcomes:
 from __future__ import annotations
 
 import json
-import sys
-import types
 from pathlib import Path
 
 import pytest
-
-# Test-local import shim for repo state where `compos3d.data.dataset` is absent.
-_stub_data_pkg = types.ModuleType("compos3d.data")
-_stub_data_dataset = types.ModuleType("compos3d.data.dataset")
-_stub_data_dataset.load_training_dataset = lambda *_args, **_kwargs: None
-sys.modules.setdefault("compos3d.data", _stub_data_pkg)
-sys.modules.setdefault("compos3d.data.dataset", _stub_data_dataset)
 
 from compos3d.config import DEFAULT_EXPERIMENT_CONFIG
 from compos3d.hypothesis import engine
