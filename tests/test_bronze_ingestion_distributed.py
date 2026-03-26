@@ -4,6 +4,10 @@ In the current architecture Bronze ingestion happens as part of the training
 pipeline: ``train_vertical_slice`` with a store writes raw ScenePrograms and
 bank snapshots to ``bronze/training/<run_id>/``.  These tests verify that the
 bronze write path works correctly using a local store.
+
+Edge cases covered:
+- integration behavior when bronze is populated through training-side mirroring
+- prefix-isolated listing and manifest placement expectations
 """
 
 from __future__ import annotations

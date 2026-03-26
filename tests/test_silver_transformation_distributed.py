@@ -2,6 +2,11 @@
 
 Silver represents validated, cleaned data.  In Compos3D this means validated
 hypothesis banks, critic scores, and metrics written after training completes.
+
+Edge cases covered:
+- listing a missing silver prefix returns `[]` without raising
+- score clamping behavior for out-of-range values
+- integration path where silver artifacts are expected after training with store
 """
 
 from __future__ import annotations

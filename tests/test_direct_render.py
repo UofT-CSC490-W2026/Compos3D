@@ -4,6 +4,10 @@ Verifies that a SceneProgram can be built end-to-end: generation pipeline
 produces a scene_program.json, which build_scene then renders.
 
 Blender (bpy) must be installed.  Skip gracefully if it is not.
+
+Edge cases covered:
+- dependency-gated execution (graceful skip when bpy is unavailable)
+- render pipeline behavior when only minimal artifacts are present
 """
 
 from __future__ import annotations

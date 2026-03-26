@@ -2,6 +2,11 @@
 
 Verifies that raw scene data (ScenePrograms, training examples) can be written
 to and read back from the bronze layer of the local data lake store.
+
+Edge cases covered:
+- prefix isolation across layers
+- bytes round-trip behavior
+- dataset validation at ingestion boundary
 """
 
 from __future__ import annotations

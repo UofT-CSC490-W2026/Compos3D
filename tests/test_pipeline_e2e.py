@@ -7,6 +7,10 @@ Verifies the full data lake flow:
 
 All LLM calls use the mock provider; storage uses a LocalStore backed by a
 pytest tmp_path directory, so no AWS credentials are required.
+
+Edge cases covered:
+- end-to-end resilience when some layer-specific artifacts may be absent
+- data-lake status checks across bronze/silver/gold boundaries
 """
 
 from __future__ import annotations

@@ -2,6 +2,10 @@
 
 Gold represents the final, publication-ready artifacts: the trained hypothesis
 bank ready for inference, aggregated metrics, and scene features.
+
+Edge cases covered:
+- gold-layer availability checks after training with lake mirroring
+- prefix/listing behavior when intermediate artifacts are sparse
 """
 
 from __future__ import annotations

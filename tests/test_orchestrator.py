@@ -2,6 +2,10 @@
 
 Verifies that the full data pipeline (train → infer → evaluate) can be run
 end-to-end through the service layer.  All LLM calls use the mock provider.
+
+Edge cases covered:
+- missing prediction directories and explicit failure behavior in orchestration
+- pipeline stage wiring under constrained local-only test environment
 """
 
 from __future__ import annotations
