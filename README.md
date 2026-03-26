@@ -415,6 +415,10 @@ All tests use mock providers and run without any API credentials or Blender.
 
 ## 🤗 Credits
 
+---
+
+![tests](https://github.com/<ORG>/<REPO>/actions/workflows/tests.yml/badge.svg)
+
 This codebase builds on:
 
 - [Infinigen](https://github.com/princeton-vl/infinigen)
