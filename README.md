@@ -417,7 +417,7 @@ All tests use mock providers and run without any API credentials or Blender.
 
 ---
 
-![tests](https://github.com/<ORG>/<REPO>/actions/workflows/tests.yml/badge.svg)
+![tests](https://github.com/UofT-CSC490-W2026/Compos3D/actions/workflows/tests.yml/badge.svg)
 
 This codebase builds on:
 
