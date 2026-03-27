@@ -1,0 +1,76 @@
+{
+  "dataset_id": "dummy_fast",
+  "llm_provider": "mock",
+  "config_path": null,
+  "hypothesis_loop_config": {
+    "num_init_examples_per_room": 1,
+    "init_hypotheses_per_room": 3,
+    "k": 2,
+    "alpha": 0.5,
+    "max_num_hypotheses_per_room": 8,
+    "num_wrong_scale": 0.8,
+    "update_batch_size": 1,
+    "num_hypotheses_to_update": 1,
+    "update_hypotheses_per_batch": 2,
+    "only_best_hypothesis": false,
+    "num_epochs": 2,
+    "success_threshold": 0.65,
+    "save_every_n_examples": 5,
+    "selection_strategy": "ucb",
+    "use_repair": true,
+    "baseline_mode": null,
+    "seed": 42
+  },
+  "experiment_config": {
+    "generator": {
+      "provider": "mock",
+      "model_id": "qwen.qwen3-next-80b-a3b",
+      "region_name": "us-east-1",
+      "max_tokens": 1200,
+      "temperature": 0.0,
+      "top_p": null
+    },
+    "critic": {
+      "mode": "heuristic",
+      "provider": "mock",
+      "model_id": "qwen.qwen3-vl-235b-a22b",
+      "region_name": "us-east-1",
+      "max_tokens": 800,
+      "temperature": 0.0
+    },
+    "training": {
+      "num_init_examples_per_room": 1,
+      "init_hypotheses_per_room": 3,
+      "top_k": 2,
+      "alpha": 0.5,
+      "max_num_hypotheses_per_room": 8,
+      "num_wrong_scale": 0.8,
+      "update_batch_size": 1,
+      "num_hypotheses_to_update": 1,
+      "update_hypotheses_per_batch": 2,
+      "only_best_hypothesis": false,
+      "num_epochs": 2,
+      "success_threshold": 0.65,
+      "save_every_n_examples": 5,
+      "selection_strategy": "ucb",
+      "use_repair": true,
+      "baseline_mode": null,
+      "seed": 42
+    },
+    "render": {
+      "enabled": false,
+      "resolution": "256x256",
+      "view_samples": 16,
+      "no_video": true,
+      "save_blend": false
+    },
+    "room_types": null
+  },
+  "bank_path": "artifacts/e2e_test/training/e2e_test/hypothesis_bank.json",
+  "predictions_path": "artifacts/e2e_test/training/e2e_test/predictions.jsonl",
+  "training_trace_path": "artifacts/e2e_test/training/e2e_test/training_trace.jsonl",
+  "failed_scene_bank_path": "artifacts/e2e_test/training/e2e_test/failed_scene_bank.jsonl",
+  "num_hypotheses": 6,
+  "num_predictions": 6,
+  "num_regeneration_events": 0
+}

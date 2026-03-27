@@ -1,0 +1,133 @@
+[
+  {
+    "hypothesis_id": "hyp_005",
+    "text": "When the prompt specifies style cues for a living_room, preserve them while keeping placements simple and realistic.",
+    "room_type": "living_room",
+    "applicability_tags": [
+      "living_room"
+    ],
+    "reward": 1.3399,
+    "accuracy": 1.0,
+    "mean_score": 1.0,
+    "num_visits": 3,
+    "num_successes": 3,
+    "generation_round": 0,
+    "source_example_ids": [
+      "lr_001"
+    ],
+    "support_example_ids": [
+      "lr_001",
+      "lr_002"
+    ],
+    "failure_tags": []
+  },
+  {
+    "hypothesis_id": "hyp_003",
+    "text": "In a living_room, anchor the composition around sofa, table_top, lamp.",
+    "room_type": "living_room",
+    "applicability_tags": [
+      "living_room"
+    ],
+    "reward": 1.3399,
+    "accuracy": 1.0,
+    "mean_score": 0.9472,
+    "num_visits": 3,
+    "num_successes": 3,
+    "generation_round": 0,
+    "source_example_ids": [
+      "lr_001"
+    ],
+    "support_example_ids": [
+      "lr_001",
+      "lr_002"
+    ],
+    "failure_tags": []
+  },
+  {
+    "hypothesis_id": "hyp_004",
+    "text": "For a living_room, only use assets from the supported room catalog and avoid unrelated objects.",
+    "room_type": "living_room",
+    "applicability_tags": [
+      "living_room"
+    ],
+    "reward": 1.3026,
+    "accuracy": 1.0,
+    "mean_score": 1.0,
+    "num_visits": 3,
+    "num_successes": 3,
+    "generation_round": 0,
+    "source_example_ids": [
+      "lr_001"
+    ],
+    "support_example_ids": [
+      "lr_001",
+      "lr_002"
+    ],
+    "failure_tags": []
+  },
+  {
+    "hypothesis_id": "hyp_000",
+    "text": "In a dining_room, anchor the composition around dining_table, chair, lamp.",
+    "room_type": "dining_room",
+    "applicability_tags": [
+      "dining_room"
+    ],
+    "reward": 1.2403,
+    "accuracy": 1.0,
+    "mean_score": 0.9472,
+    "num_visits": 3,
+    "num_successes": 3,
+    "generation_round": 0,
+    "source_example_ids": [
+      "dr_001"
+    ],
+    "support_example_ids": [
+      "dr_001",
+      "dr_002"
+    ],
+    "failure_tags": []
+  },
+  {
+    "hypothesis_id": "hyp_001",
+    "text": "For a dining_room, only use assets from the supported room catalog and avoid unrelated objects.",
+    "room_type": "dining_room",
+    "applicability_tags": [
+      "dining_room"
+    ],
+    "reward": 1.2081,
+    "accuracy": 1.0,
+    "mean_score": 1.0,
+    "num_visits": 4,
+    "num_successes": 4,
+    "generation_round": 0,
+    "source_example_ids": [
+      "dr_001"
+    ],
+    "support_example_ids": [
+      "dr_001",
+      "dr_002"
+    ],
+    "failure_tags": []
+  },
+  {
+    "hypothesis_id": "hyp_002",
+    "text": "When the prompt specifies style cues for a dining_room, preserve them while keeping placements simple and realistic.",
+    "room_type": "dining_room",
+    "applicability_tags": [
+      "dining_room"
+    ],
+    "reward": 1.0,
+    "accuracy": 1.0,
+    "mean_score": 1.0,
+    "num_visits": 2,
+    "num_successes": 2,
+    "generation_round": 0,
+    "source_example_ids": [
+      "dr_001"
+    ],
+    "support_example_ids": [
+      "dr_001"
+    ],
+    "failure_tags": []
+  }
+]

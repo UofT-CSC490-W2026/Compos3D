@@ -23,4 +23,5 @@ __pycache__/
 
 # Temp files
 tmp/
+tmp_*/
 .coverage

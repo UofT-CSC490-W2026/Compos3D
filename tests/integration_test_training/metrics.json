@@ -1,0 +1,9 @@
+{
+  "num_predictions": 6,
+  "average_validity": 1.0,
+  "average_prompt_adherence": 0.9445,
+  "average_asset_precision": 0.8333,
+  "average_asset_recall": 1.0,
+  "average_room_match": 1.0,
+  "average_overall": 0.9472
+}
