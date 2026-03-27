@@ -85,21 +85,17 @@ def _normalize_constraints(raw_constraints: object) -> list[dict[str, str]]:
         if isinstance(item, str) and item.strip():
             normalized.append({"text": item.strip()})
             continue
+        if isinstance(item, str):
+            continue
         if not isinstance(item, dict):
             raise StructuredOutputError(
                 "Each SceneProgram constraint must be a string or an object with a text field."
             )
         text = str(item.get("text", "")).strip()
         if not text:
-            raise StructuredOutputError(
-                "Each SceneProgram constraint must contain a non-empty text field."
-            )
+            continue
         normalized.append({"text": text})
 
-    if not normalized:
-        raise StructuredOutputError(
-            "SceneProgram response must include at least one valid constraint."
-        )
     return normalized
 
 
