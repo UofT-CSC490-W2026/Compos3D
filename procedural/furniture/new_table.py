@@ -49,7 +49,8 @@ class TableDiningFactory(AssetFactory):
         leg_material = material_assignments.tableware[0][0]()()
         x, y, z = params['dimensions']
         def_params = {'Top Profile N-gon': 4, 'Leg NGon': 4, 'Top Profile Width': 1.414 * x, 'Top Profile Aspect Ratio': y / x, 'Height': z, 'Top Height': z - params['Top Thickness'], 'Leg Height': 1.0, 'TopMaterial': top_material, 'LegMaterial': leg_material}
-        params.update(def_params)
+        for key, value in def_params.items():
+            params.setdefault(key, value)
         self.params = params
 
     def create_asset(self, **params):
