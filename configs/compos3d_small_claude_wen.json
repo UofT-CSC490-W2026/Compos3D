@@ -18,7 +18,7 @@
   "render": {
     "enabled": true,
     "resolution": "256x256",
-    "view_samples": 8,
+    "view_samples": 16,
     "no_video": true,
     "save_blend": false
   },
@@ -29,7 +29,14 @@
     "wandb_tags": ["small-smoke"],
     "log_every_n_examples": 1,
     "log_bank_table_every_n_examples": 2,
-    "upload_artifact_at_end": true
+    "log_prediction_media_every_n_examples": 1,
+    "log_hypothesis_eval_media_every_n_examples": 1,
+    "log_initial_media": true,
+    "log_failure_media": true,
+    "create_animation_gif": true,
+    "max_media_images": 4,
+    "upload_artifact_at_end": true,
+    "upload_media_artifact_at_end": true
   },
   "training": {
     "num_init_examples_per_room": 1,
