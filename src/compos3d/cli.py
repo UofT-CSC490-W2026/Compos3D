@@ -173,6 +173,31 @@ def train_hypotheses_cmd(
         exists=False,
         help="Experiment JSON config for generator, critic, and loop hyperparameters",
     ),
+    resume: bool = typer.Option(
+        False,
+        "--resume",
+        help="Resume an interrupted training run from <output_dir>/<experiment_name>/resume_state.json",
+    ),
+    wandb_project: str | None = typer.Option(
+        None,
+        help="Enable W&B logging and override the project name",
+    ),
+    wandb_entity: str | None = typer.Option(
+        None,
+        help="Optional W&B entity/team",
+    ),
+    wandb_mode: str | None = typer.Option(
+        None,
+        help="Optional W&B mode override: online, offline, or disabled",
+    ),
+    wandb_run_name: str | None = typer.Option(
+        None,
+        help="Optional W&B run name override",
+    ),
+    wandb_tags: str = typer.Option(
+        "",
+        help="Comma-separated W&B tags",
+    ),
     env: Optional[str] = typer.Option(
         None,
         "--env",
@@ -200,6 +225,14 @@ def train_hypotheses_cmd(
                 experiment_name=experiment_name,
                 llm_provider=llm_provider,
                 config_path=config_path,
+                resume=resume,
+                wandb_project=wandb_project,
+                wandb_entity=wandb_entity,
+                wandb_mode=wandb_mode,
+                wandb_run_name=wandb_run_name,
+                wandb_tags=tuple(
+                    item.strip() for item in wandb_tags.split(",") if item.strip()
+                ),
                 store=store,
                 compute_platform="local",
             )

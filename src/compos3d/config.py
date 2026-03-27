@@ -12,6 +12,7 @@ DEFAULT_REGION = "us-east-1"
 
 SelectionStrategy = Literal["ucb", "greedy", "random"]
 BaselineMode = Literal["no_hypotheses", "fixed_hypotheses"] | None
+WandbMode = Literal["online", "offline", "disabled"]
 
 
 class GeneratorConfig(BaseModel):
@@ -73,7 +74,7 @@ class RenderConfig(BaseModel):
 
     resolution:   WxH string, e.g. "256x256" (fast training) or "512x512" (paper quality).
     view_samples: CYCLES samples per image (8-16 for training, 48+ for paper figures).
-    no_video:     Always True during training (skip orbital video, saves time).
+    no_video:     Usually True during training (skip orbital video, saves time).
     save_blend:   Save the Blender file alongside renders (useful for debugging).
     """
 
@@ -84,6 +85,25 @@ class RenderConfig(BaseModel):
     save_blend: bool = False
 
 
+class LoggingConfig(BaseModel):
+    enable_wandb: bool = False
+    wandb_project: str = "compos3d"
+    wandb_entity: str | None = None
+    wandb_mode: WandbMode = "online"
+    wandb_run_name: str | None = None
+    wandb_tags: list[str] = Field(default_factory=list)
+    log_every_n_examples: int = Field(default=1, ge=1)
+    log_bank_table_every_n_examples: int = Field(default=10, ge=1)
+    log_prediction_media_every_n_examples: int = Field(default=1, ge=1)
+    log_hypothesis_eval_media_every_n_examples: int = Field(default=5, ge=1)
+    log_initial_media: bool = True
+    log_failure_media: bool = True
+    create_animation_gif: bool = True
+    max_media_images: int = Field(default=4, ge=1)
+    upload_artifact_at_end: bool = True
+    upload_media_artifact_at_end: bool = True
+
+
 class ExperimentConfig(BaseModel):
     generator: GeneratorConfig = Field(
         default_factory=lambda: GeneratorConfig(provider="mock")
@@ -91,6 +111,7 @@ class ExperimentConfig(BaseModel):
     critic: CriticConfig = Field(default_factory=CriticConfig)
     training: TrainingConfig = Field(default_factory=TrainingConfig)
     render: RenderConfig = Field(default_factory=RenderConfig)
+    logging: LoggingConfig = Field(default_factory=LoggingConfig)
     room_types: list[str] | None = None
 
 
@@ -106,6 +127,7 @@ DEFAULT_EXPERIMENT_CONFIG = ExperimentConfig(
     ),
     training=TrainingConfig(),
     render=RenderConfig(),
+    logging=LoggingConfig(),
 )
 
 

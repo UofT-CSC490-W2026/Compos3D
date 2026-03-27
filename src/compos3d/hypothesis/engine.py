@@ -92,11 +92,13 @@ def _mirror_training_to_lake(
             )
             written.append(uri)
 
-    # Bronze: training trace + failed scenes for full provenance.
+    # Bronze: training trace + failed scenes
     for fname in (
         "predictions.jsonl",
         "training_trace.jsonl",
+        "hypothesis_evaluations.jsonl",
         "failed_scene_bank.jsonl",
+        "resume_state.json",
     ):
         p = run_dir / fname
         if p.exists():
@@ -569,31 +571,55 @@ def _experiment_config_from_args(
     use_repair: bool,
     baseline_mode: str | None,
     seed: int,
+    wandb_project: str | None,
+    wandb_entity: str | None,
+    wandb_mode: str | None,
+    wandb_run_name: str | None,
+    wandb_tags: list[str] | None,
 ) -> ExperimentConfig:
     if config_path is not None:
-        return load_experiment_config(config_path)
+        config = load_experiment_config(config_path)
+    else:
+        config = DEFAULT_EXPERIMENT_CONFIG.model_copy(deep=True)
+        config.generator.provider = llm_provider
+        config.training = _training_config_from_args(
+            num_init_examples_per_room=num_init_examples_per_room,
+            init_hypotheses_per_room=init_hypotheses_per_room,
+            top_k=top_k,
+            alpha=alpha,
+            max_num_hypotheses_per_room=max_num_hypotheses_per_room,
+            num_wrong_scale=num_wrong_scale,
+            update_batch_size=update_batch_size,
+            num_hypotheses_to_update=num_hypotheses_to_update,
+            update_hypotheses_per_batch=update_hypotheses_per_batch,
+            only_best_hypothesis=only_best_hypothesis,
+            num_epochs=num_epochs,
+            success_threshold=success_threshold,
+            save_every_n_examples=save_every_n_examples,
+            selection_strategy=selection_strategy,
+            use_repair=use_repair,
+            baseline_mode=baseline_mode,
+            seed=seed,
+        )
 
-    config = DEFAULT_EXPERIMENT_CONFIG.model_copy(deep=True)
-    config.generator.provider = llm_provider
-    config.training = _training_config_from_args(
-        num_init_examples_per_room=num_init_examples_per_room,
-        init_hypotheses_per_room=init_hypotheses_per_room,
-        top_k=top_k,
-        alpha=alpha,
-        max_num_hypotheses_per_room=max_num_hypotheses_per_room,
-        num_wrong_scale=num_wrong_scale,
-        update_batch_size=update_batch_size,
-        num_hypotheses_to_update=num_hypotheses_to_update,
-        update_hypotheses_per_batch=update_hypotheses_per_batch,
-        only_best_hypothesis=only_best_hypothesis,
-        num_epochs=num_epochs,
-        success_threshold=success_threshold,
-        save_every_n_examples=save_every_n_examples,
-        selection_strategy=selection_strategy,
-        use_repair=use_repair,
-        baseline_mode=baseline_mode,
-        seed=seed,
-    )
+    logging_updates: dict[str, object] = {}
+    if wandb_project is not None:
+        logging_updates["enable_wandb"] = True
+        logging_updates["wandb_project"] = wandb_project
+    if wandb_entity is not None:
+        logging_updates["enable_wandb"] = True
+        logging_updates["wandb_entity"] = wandb_entity
+    if wandb_mode is not None:
+        logging_updates["enable_wandb"] = wandb_mode != "disabled"
+        logging_updates["wandb_mode"] = wandb_mode
+    if wandb_run_name is not None:
+        logging_updates["enable_wandb"] = True
+        logging_updates["wandb_run_name"] = wandb_run_name
+    if wandb_tags:
+        logging_updates["enable_wandb"] = True
+        logging_updates["wandb_tags"] = wandb_tags
+    if logging_updates:
+        config.logging = config.logging.model_copy(update=logging_updates)
     return config
 
 
@@ -646,6 +672,12 @@ def train_vertical_slice(
     use_repair: bool = True,
     baseline_mode: str | None = None,
     seed: int = 42,
+    resume: bool = False,
+    wandb_project: str | None = None,
+    wandb_entity: str | None = None,
+    wandb_mode: str | None = None,
+    wandb_run_name: str | None = None,
+    wandb_tags: list[str] | None = None,
     store: "AnyStore | None" = None,
     compute_platform: str = "local",
     instance_type: str | None = None,
@@ -671,6 +703,11 @@ def train_vertical_slice(
         use_repair=use_repair,
         baseline_mode=baseline_mode,
         seed=seed,
+        wandb_project=wandb_project,
+        wandb_entity=wandb_entity,
+        wandb_mode=wandb_mode,
+        wandb_run_name=wandb_run_name,
+        wandb_tags=wandb_tags,
     )
 
     # Apply room_types filter if set in config
@@ -700,11 +737,14 @@ def train_vertical_slice(
         llm=llm,
         critic=critic,
         run_dir=run_dir,
+        experiment_name=experiment_name,
         llm_provider=experiment_config.generator.provider,
         config=config,
+        logging_config=experiment_config.logging,
         experiment_config=experiment_config.model_dump(),
         config_path=str(config_path) if config_path is not None else None,
         renderer=renderer,
+        resume=resume,
     )
     result = loop.train()
 

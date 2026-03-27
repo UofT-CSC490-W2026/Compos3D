@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -30,6 +30,12 @@ class TrainingRequest:
     num_epochs: int = 2
     success_threshold: float = 0.65
     save_every_n_examples: int = 5
+    resume: bool = False
+    wandb_project: str | None = None
+    wandb_entity: str | None = None
+    wandb_mode: str | None = None
+    wandb_run_name: str | None = None
+    wandb_tags: tuple[str, ...] = ()
     # Lake storage (optional — if None, outputs go to local output_dir only)
     store: "AnyStore | None" = None
     compute_platform: str = "local"
@@ -77,6 +83,12 @@ def train_hypotheses(request: TrainingRequest) -> dict:
         num_epochs=request.num_epochs,
         success_threshold=request.success_threshold,
         save_every_n_examples=request.save_every_n_examples,
+        resume=request.resume,
+        wandb_project=request.wandb_project,
+        wandb_entity=request.wandb_entity,
+        wandb_mode=request.wandb_mode,
+        wandb_run_name=request.wandb_run_name,
+        wandb_tags=list(request.wandb_tags),
         store=request.store,
         compute_platform=request.compute_platform,
         instance_type=request.instance_type,
