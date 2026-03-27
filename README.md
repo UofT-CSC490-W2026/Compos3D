@@ -5,11 +5,9 @@ This repository provides the implementation of **Compos3D**, a system that uses 
 The hypothesis loop is a UCB-style multi-armed bandit that maintains a bank of scene design hypotheses, evaluates them by generating and rendering scenes, scores them with either a heuristic or VLM critic, and iteratively repairs low-performing hypotheses. This gives the system an explicit, inspectable inductive bias that is updated from experience.
 
 
-
 ## Contents
 
 - [🔧 Installation](#-installation)
-- [🚀 Quick Start](#-quick-start)
 - [📖 Codebase Overview](#-codebase-overview)
 - [📚 Dataset Format](#-dataset-format)
 - [💻 Training the Hypothesis Bank](#-training-the-hypothesis-bank)
@@ -46,64 +44,6 @@ For real LLM and VLM calls (training with Bedrock), load your AWS credentials:
 source api_key
 ```
 
-## 🚀 Quick Start
-
-The full pipeline has three steps: train a hypothesis bank from scene examples, run inference to generate a `SceneProgram`, then render it to images and video.
-
-First load your AWS credentials, then run the three steps:
-
-```bash
-source api_key
-```
-
-**Train a hypothesis bank:**
-
-```bash
-compos3d train-hypotheses \
-  --dataset-path examples/vertical_slice_dataset.json \
-  --output-dir artifacts/run \
-  --experiment-name my_experiment \
-  --config-path configs/compos3d.json
-```
-
-**Generate a scene** from the trained bank:
-
-```bash
-compos3d run-inference \
-  --bank-path artifacts/run/my_experiment/hypothesis_bank.json \
-  --prompt "a cozy dining room with a wooden table, four chairs, and warm lighting" \
-  --output-dir artifacts/run/inference \
-  --config-path configs/compos3d.json
-```
-
-**Render the scene** to 4 canonical views and an orbital video:
-
-```bash
-compos3d build-scene \
-  --scene-program artifacts/run/inference/scene_program.json \
-  --output-dir artifacts/run/scene \
-  --resolution 512x512 \
-  --view-samples 48
-```
-
-Outputs will be at `artifacts/run/scene/views/view_{overhead,front,left,right}.png` and `artifacts/run/scene/video.mp4`.
-
-You can also combine inference and rendering in one command:
-
-```bash
-compos3d run-inference \
-  --bank-path artifacts/run/my_experiment/hypothesis_bank.json \
-  --prompt "a cozy dining room with a wooden table, four chairs, and warm lighting" \
-  --output-dir artifacts/run/inference_with_render \
-  --config-path configs/compos3d.json \
-  --render-scene \
-  --render-resolution 512x512 \
-  --render-view-samples 48 \
-  --render-video-frames 90
-```
-
-
-
 ## 📖 Codebase Overview
 
 ```
@@ -122,9 +62,16 @@ src/compos3d/
   evaluation/
     critic.py            , Heuristic and VLM critic implementations
     service.py           , Evaluation service
+  data/
+    dataset.py           , Training dataset loader
+    spatiallm.py         , SpatialLM → Compos3D dataset conversion logic
   procedural/
     runner.py            , Subprocess runner for Blender scripts (sets PYTHONPATH for infinigen + furniture)
     service.py           , Procedural backend service (backend-smoke, reference-generate)
+
+scripts/
+  build_spatiallm_dataset.py, Downloads SpatialLM and builds examples/vertical_slice_dataset.json
+  run_pipeline_on_anyscale.py, Remote execution helper
 
 procedural/
   scripts/
@@ -139,14 +86,27 @@ configs/
 
 examples/
   dummy_fast.json        , Small dataset for smoke testing without API calls
-  vertical_slice_dataset.json, Full vertical slice dataset for dining/living/bedroom
+  vertical_slice_dataset.json, Balanced real dataset derived from SpatialLM
 
 infinigen/               , Princeton Infinigen submodule (asset factories, gin configs, bpy utilities)
+
+data/
+  external/spatiallm/    , Downloaded raw SpatialLM files (split.csv, spatiallm_train.json)
 ```
 
 
 
 ## 📚 Dataset Format
+
+The dataset is built from the public [SpatialLM dataset](https://huggingface.co/datasets/manycore-research/SpatialLM-Dataset). The conversion keeps room types that map cleanly onto Compos3D (`dining_room`, `living_room`, `bedroom`), remaps SpatialLM object labels into the local asset catalog, and writes the result to `examples/vertical_slice_dataset.json`.
+
+Build or rebuild it with:
+
+```bash
+python scripts/build_spatiallm_dataset.py --max-per-room 60
+```
+
+By default this downloads `split.csv` and `spatiallm_train.json` into `data/external/spatiallm/` and produces a balanced dataset with 60 examples per room type. SpatialLM is licensed `CC-BY-NC-4.0`, so it is appropriate for research and non-commercial use.
 
 Training examples are JSON files with the following structure:
 
@@ -178,6 +138,14 @@ Supported room types are `dining_room`, `living_room`, and `bedroom`. The `requi
 ## 💻 Training the Hypothesis Bank
 
 Training runs the UCB hypothesis loop over your dataset. Each epoch selects hypotheses using UCB1, generates a `SceneProgram` conditioned on the selected hypothesis, scores it with the critic, and updates the bank. Failed examples accumulate into a repair pool that triggers hypothesis regeneration.
+
+The current recommended configuration is:
+
+- Generator: `us.anthropic.claude-sonnet-4-5-20250929-v1:0`
+- Critic: `qwen.qwen3-vl-235b-a22b`
+- Training renders: `256x256`, `16` samples
+- Selection strategy: `ucb`
+- Repair enabled: `true`
 
 ```bash
 source api_key
@@ -355,7 +323,7 @@ Use `launch-aws` to spin up a spot instance that bootstraps itself and runs a `c
 
 ```bash
 compos3d launch-aws train-hypotheses \
-  --cli-args '--dataset-path s3://compos3d-dev-bronze/datasets/vs.json --config-path configs/compos3d.json --env dev' \
+  --cli-args '--dataset-path examples/vertical_slice_dataset.json --config-path configs/compos3d.json --env dev' \
   --env dev \
   --git-ref main \
   --wait
