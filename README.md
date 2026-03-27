@@ -75,7 +75,7 @@ procedural/
 scripts/
   build_spatiallm_dataset.py Download and convert SpatialLM into training data
 
-configs/
+train_configs/
   compos3d.json              Full recommended training config
   compos3d_small_claude_wen.json
                              Small 1-epoch Bedrock smoke config
@@ -201,7 +201,7 @@ Training runs the hypothesis loop over the dataset:
 5. Update rewards.
 6. Collect failures and repair / regenerate hypotheses when needed.
 
-The recommended training run uses `configs/compos3d.json`:
+The recommended training run uses `train_configs/compos3d.json`:
 
 ```bash
 source api_key
@@ -209,7 +209,7 @@ source api_key
   --dataset-path examples/vertical_slice_dataset.json \
   --output-dir artifacts/training \
   --experiment-name claude_qwen \
-  --config-path configs/compos3d.json
+  --config-path train_configs/compos3d.json
 ```
 
 The current full config uses:
@@ -261,7 +261,7 @@ source api_key
   --bank-path artifacts/training/claude_qwen/hypothesis_bank.json \
   --prompt "a bright living room with a sofa, rug, lamp, and coffee table" \
   --output-dir artifacts/inference/living_room \
-  --config-path configs/compos3d.json \
+  --config-path train_configs/compos3d.json \
   --inference-strategy filter_and_weight \
   --render-scene
 ```
@@ -326,12 +326,12 @@ artifacts/scenes/<name>/
 
 The two most important config files are:
 
-- `configs/compos3d.json`
+- `train_configs/compos3d.json`
   Full recommended Bedrock training config.
-- `configs/compos3d_small_claude_wen.json`
+- `train_configs/compos3d_small_claude_wen.json`
   Small 1-epoch smoke config.
 
-Example `configs/compos3d.json` choices:
+Example `train_configs/compos3d.json` choices:
 
 - generator provider/model
 - critic provider/mode/model
@@ -352,7 +352,7 @@ Run the full training job on AWS infrastructure with:
 
 ```bash
 ./.venv/bin/compos3d launch-aws train-hypotheses \
-  --cli-args '--dataset-path examples/vertical_slice_dataset.json --output-dir artifacts/training --experiment-name claude_qwen --config-path configs/compos3d.json --env dev' \
+  --cli-args '--dataset-path examples/vertical_slice_dataset.json --output-dir artifacts/training --experiment-name claude_qwen --config-path train_configs/compos3d.json --env dev' \
   --env dev \
   --git-ref main \
   --wait
