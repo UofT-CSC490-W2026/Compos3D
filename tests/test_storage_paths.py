@@ -41,4 +41,3 @@ def test_inference_path_builders_are_stable() -> None:
 def test_utc_date_parts_zero_padded_and_utc_based() -> None:
     ts = datetime(2026, 3, 4, 1, 2, 3, tzinfo=timezone.utc)
     assert utc_date_parts(ts) == ("2026", "03", "04")
-

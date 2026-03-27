@@ -24,7 +24,13 @@ from pathlib import Path
 from compos3d.evaluation.critic import CriticUnavailableError
 from compos3d.hypothesis import loop as loop_mod
 from compos3d.hypothesis.loop import HypothesisLoopConfig, SceneHypothesisLoop
-from compos3d.models import CriticScore, HypothesisRecord, SceneProgram, TrainingDataset, TrainingExample
+from compos3d.models import (
+    CriticScore,
+    HypothesisRecord,
+    SceneProgram,
+    TrainingDataset,
+    TrainingExample,
+)
 
 
 def _make_loop(**cfg_overrides) -> SceneHypothesisLoop:
@@ -83,9 +89,21 @@ def test_replace_room_bank_dedup_and_cap() -> None:
         )
     ]
     new_records = [
-        HypothesisRecord(hypothesis_id="h2", text="place BED near wall", room_type="bedroom", reward=0.9),
-        HypothesisRecord(hypothesis_id="h3", text="Add lamp by bed", room_type="bedroom", reward=0.8),
-        HypothesisRecord(hypothesis_id="h4", text="Keep walkway clear", room_type="bedroom", reward=0.7),
+        HypothesisRecord(
+            hypothesis_id="h2",
+            text="place BED near wall",
+            room_type="bedroom",
+            reward=0.9,
+        ),
+        HypothesisRecord(
+            hypothesis_id="h3", text="Add lamp by bed", room_type="bedroom", reward=0.8
+        ),
+        HypothesisRecord(
+            hypothesis_id="h4",
+            text="Keep walkway clear",
+            room_type="bedroom",
+            reward=0.7,
+        ),
     ]
     loop._replace_room_bank("bedroom", new_records)  # noqa: SLF001
     assert len(loop.bank) == 2
@@ -106,7 +124,9 @@ def test_score_handles_critic_unavailable(monkeypatch) -> None:
         raise CriticUnavailableError("missing creds")
 
     monkeypatch.setattr(loop_mod, "evaluate_scene_program", _raise)
-    score = loop._score(SceneProgram(prompt="p", room_type="bedroom"), loop.dataset.examples[0], [])  # noqa: SLF001
+    score = loop._score(
+        SceneProgram(prompt="p", room_type="bedroom"), loop.dataset.examples[0], []
+    )  # noqa: SLF001
     assert score.overall == 0.0
     assert score.critic_mode == "unavailable"
     assert "CriticUnavailable" in score.notes[0]
@@ -118,7 +138,9 @@ def test_write_jsonl_creates_parent_and_reuses_cached_directory(
     mkdir_calls: list[Path] = []
     real_mkdir = Path.mkdir
 
-    def _counting_mkdir(self: Path, parents: bool = False, exist_ok: bool = False) -> None:
+    def _counting_mkdir(
+        self: Path, parents: bool = False, exist_ok: bool = False
+    ) -> None:
         mkdir_calls.append(self)
         real_mkdir(self, parents=parents, exist_ok=exist_ok)
 
@@ -160,4 +182,3 @@ def test_baseline_mode_no_hypotheses_branch() -> None:
     pred = loop._build_prediction(loop.dataset.examples[0], ["h1", "h2"])  # noqa: SLF001
     assert captured["selected_hypotheses"] == []
     assert pred.selected_hypotheses == []
-

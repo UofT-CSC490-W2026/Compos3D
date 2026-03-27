@@ -22,7 +22,12 @@ import pytest
 
 from compos3d.config import GeneratorConfig
 from compos3d.llm import scene_llm
-from compos3d.llm.scene_llm import BedrockSceneLLM, LLMUnavailableError, StructuredOutputError, build_scene_llm
+from compos3d.llm.scene_llm import (
+    BedrockSceneLLM,
+    LLMUnavailableError,
+    StructuredOutputError,
+    build_scene_llm,
+)
 from compos3d.models import TrainingExample
 
 
@@ -63,7 +68,14 @@ def test_generate_hypotheses_bad_payload_raises() -> None:
     with pytest.raises(StructuredOutputError, match="hypotheses list"):
         llm.generate_hypotheses(
             "bedroom",
-            [TrainingExample(example_id="e1", room_type="bedroom", prompt="p", required_assets=["bed"])],
+            [
+                TrainingExample(
+                    example_id="e1",
+                    room_type="bedroom",
+                    prompt="p",
+                    required_assets=["bed"],
+                )
+            ],
             num_hypotheses=1,
         )
 
@@ -72,24 +84,36 @@ def test_generate_scene_program_normalization_failure_raises() -> None:
     llm = BedrockSceneLLM(GeneratorConfig(provider="bedrock"))
     llm._run_json_prompt = lambda _p: {"room_type": "living_room"}  # noqa: SLF001
     with pytest.raises(StructuredOutputError, match="expected 'bedroom'"):
-        llm.generate_scene_program(prompt="p", room_type="bedroom", selected_hypotheses=["h"])
+        llm.generate_scene_program(
+            prompt="p", room_type="bedroom", selected_hypotheses=["h"]
+        )
 
 
 def test_determinism_controls_forwarded_inference_config() -> None:
     captured = {}
-    llm = BedrockSceneLLM(GeneratorConfig(provider="bedrock", max_tokens=321, temperature=0.0))
+    llm = BedrockSceneLLM(
+        GeneratorConfig(provider="bedrock", max_tokens=321, temperature=0.0)
+    )
 
     class _FakeClient:
         def converse(self, **kwargs):
             captured.update(kwargs)
-            return {"output": {"message": {"content": [{"text": '{"hypotheses":["h1"]}'}]}}}
+            return {
+                "output": {"message": {"content": [{"text": '{"hypotheses":["h1"]}'}]}}
+            }
 
     llm.client = _FakeClient()
     llm.generate_hypotheses(
         "bedroom",
-        [TrainingExample(example_id="e1", room_type="bedroom", prompt="p", required_assets=["bed"])],
+        [
+            TrainingExample(
+                example_id="e1",
+                room_type="bedroom",
+                prompt="p",
+                required_assets=["bed"],
+            )
+        ],
         num_hypotheses=1,
     )
     assert captured["inference_config"]["temperature"] == 0.0
     assert captured["inference_config"]["maxTokens"] == 321
-

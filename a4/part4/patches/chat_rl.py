@@ -142,20 +142,20 @@ parser.add_argument(
 parser.add_argument(
     "--base_reward_weight",
     type=float,
-    default=float(1/3),
-    help="weight of how much binary correction is counted towards overall reward"
+    default=float(1 / 3),
+    help="weight of how much binary correction is counted towards overall reward",
 )
 parser.add_argument(
     "--format_reward_weight",
     type=float,
-    default=float(1/3),
-    help="weight of how much reasoning format correction is counted towards overall reward"
+    default=float(1 / 3),
+    help="weight of how much reasoning format correction is counted towards overall reward",
 )
 parser.add_argument(
     "--arithmetic_reward_weight",
     type=float,
-    default=float(1/3),
-    help="weight of how much arithmetic computation correction is counted towards overall reward"
+    default=float(1 / 3),
+    help="weight of how much arithmetic computation correction is counted towards overall reward",
 )
 parser.add_argument("--local-rank", "--local_rank", type=int, default=0)
 
@@ -250,17 +250,17 @@ def get_batch():
             base_reward = train_task.reward(conversation, generated_text)
 
             # if ddp_rank == 0:
-                # print("\n=== DEBUG conversation ===")
-                # print("type(conversation):", type(conversation))
-                # print("conversation keys:", conversation.keys() if isinstance(conversation, dict) else None)
-                # print("type(conversation['messages']):", type(conversation["messages"]))
-                # print("len(conversation['messages']):", len(conversation["messages"]))
-                # for i, msg in enumerate(conversation["messages"]):
-                #     print(f"\nmessage {i}")
-                #     print("role:", msg["role"])
-                #     print("content type:", type(msg["content"]))
-                #     print("content:", msg["content"])
-                # print("=== END DEBUG ===\n")
+            # print("\n=== DEBUG conversation ===")
+            # print("type(conversation):", type(conversation))
+            # print("conversation keys:", conversation.keys() if isinstance(conversation, dict) else None)
+            # print("type(conversation['messages']):", type(conversation["messages"]))
+            # print("len(conversation['messages']):", len(conversation["messages"]))
+            # for i, msg in enumerate(conversation["messages"]):
+            #     print(f"\nmessage {i}")
+            #     print("role:", msg["role"])
+            #     print("content type:", type(msg["content"]))
+            #     print("content:", msg["content"])
+            # print("=== END DEBUG ===\n")
 
             format_reward = compute_format_reward(conversation, generated_text)
             arithmetic_reward = compute_arithmetic_reward(conversation, generated_text)
@@ -298,46 +298,50 @@ def get_batch():
         # yield inputs/targets as (B, T) of ids and rewards as (B,) of floats
         yield generated_token_sequences, inputs, targets, rewards, advantages
 
+
 import re
 
 
 def extract_steps(reasoning: str) -> list[str]:
     # Remove final answer line if present
-    reasoning = re.sub(r'^\s*####\s*.*$', '', reasoning, flags=re.MULTILINE).strip()
+    reasoning = re.sub(r"^\s*####\s*.*$", "", reasoning, flags=re.MULTILINE).strip()
 
     # Normalize line endings
-    reasoning = reasoning.replace('\r\n', '\n').replace('\r', '\n')
+    reasoning = reasoning.replace("\r\n", "\n").replace("\r", "\n")
 
     steps = []
-    for line in reasoning.split('\n'):
+    for line in reasoning.split("\n"):
         line = line.strip()
         if not line:
             continue
 
         # Split cases where multiple reasoning sentences are on one line
-        parts = re.split(r'\.\s+', line)
+        parts = re.split(r"\.\s+", line)
         for part in parts:
-            part = part.strip().rstrip('.')
+            part = part.strip().rstrip(".")
             if part:
                 steps.append(part)
 
     return steps
 
+
 def extract_question_numbers(question: str) -> list[str]:
     # integers / decimals / negatives
-    return re.findall(r'-?\d+(?:\.\d+)?', question)
+    return re.findall(r"-?\d+(?:\.\d+)?", question)
 
 
 def extract_boxed_equations(text: str) -> list[str]:
     # GSM8K-style arithmetic annotations: <<expr=result>>
-    return re.findall(r'<<(.*?)>>', text)
+    return re.findall(r"<<(.*?)>>", text)
+
 
 def parse_equation(eq: str):
     eq = eq.strip()
-    if '=' not in eq:
+    if "=" not in eq:
         return eq, None
-    lhs, rhs = eq.split('=', 1)
+    lhs, rhs = eq.split("=", 1)
     return lhs.strip(), rhs.strip()
+
 
 import re
 
@@ -372,6 +376,7 @@ def get_question_text(conversation) -> str:
     assert user_message["role"] == "user"
     return extract_text_content(user_message["content"])
 
+
 def compute_format_reward(conversation, generated_text: str) -> float:
     groundtruth_answer = get_groundtruth_answer(conversation)
     correct_reasoning = groundtruth_answer.split("###")[0]
@@ -390,6 +395,7 @@ def compute_format_reward(conversation, generated_text: str) -> float:
 
     reward = min(n_correct, n_generated) / max(n_correct, n_generated)
     return min(1.0, max(0.0, reward))
+
 
 def compute_arithmetic_reward(conversation, generated_text: str) -> float:
     """

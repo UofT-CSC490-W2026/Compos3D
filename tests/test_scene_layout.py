@@ -14,7 +14,11 @@ def test_resolve_asset_positions_respects_dining_relationships() -> None:
         "prompt": "A cozy dining room with a round table, chairs, and a rug",
         "room_type": "dining_room",
         "assets": [
-            {"asset_type": "dining_table", "count": 1, "placement": "centered in the room"},
+            {
+                "asset_type": "dining_table",
+                "count": 1,
+                "placement": "centered in the room",
+            },
             {
                 "asset_type": "chair",
                 "count": 4,
@@ -25,14 +29,20 @@ def test_resolve_asset_positions_respects_dining_relationships() -> None:
     }
 
     anchors = preview_anchor_map(scene_program)
-    chair_positions = resolve_asset_positions(scene_program, scene_program["assets"][1], anchors)
-    rug_positions = resolve_asset_positions(scene_program, scene_program["assets"][2], anchors)
+    chair_positions = resolve_asset_positions(
+        scene_program, scene_program["assets"][1], anchors
+    )
+    rug_positions = resolve_asset_positions(
+        scene_program, scene_program["assets"][2], anchors
+    )
 
     assert anchors["dining_table"]["xy"] == (0.0, 0.0)
     assert len(chair_positions) == 4
     assert rug_positions == [{"xy": (0.0, 0.0), "rot_z": 0.0}]
 
-    observed = {tuple(round(value, 3) for value in pose["xy"]) for pose in chair_positions}
+    observed = {
+        tuple(round(value, 3) for value in pose["xy"]) for pose in chair_positions
+    }
     expected = {
         (0.0, round(-CHAIR_ORBIT_RADIUS, 3)),
         (round(CHAIR_ORBIT_RADIUS, 3), 0.0),
@@ -59,8 +69,16 @@ def test_resolve_factory_params_adds_round_table_and_rug_hints() -> None:
             "rationale": "A round dining table anchors the room",
         },
         {
-            "a": {"dimensions": (1.8, 0.9, 0.75), "Top Thickness": 0.04, "Leg Diameter": 0.07},
-            "b": {"dimensions": (1.4, 0.7, 0.75), "Top Thickness": 0.035, "Leg Diameter": 0.18},
+            "a": {
+                "dimensions": (1.8, 0.9, 0.75),
+                "Top Thickness": 0.04,
+                "Leg Diameter": 0.07,
+            },
+            "b": {
+                "dimensions": (1.4, 0.7, 0.75),
+                "Top Thickness": 0.035,
+                "Leg Diameter": 0.18,
+            },
         },
     )
     rug_params = resolve_factory_params(
@@ -74,7 +92,12 @@ def test_resolve_factory_params_adds_round_table_and_rug_hints() -> None:
         {
             "a": {"width": 2.0, "length": 3.0, "rug_shape": "rectangle"},
             "b": {"width": 2.5, "length": 2.5, "rug_shape": "circle"},
-            "c": {"width": 2.0, "length": 3.5, "rug_shape": "rounded", "rounded_buffer": 0.5},
+            "c": {
+                "width": 2.0,
+                "length": 3.5,
+                "rug_shape": "rounded",
+                "rounded_buffer": 0.5,
+            },
         },
     )
 

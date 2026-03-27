@@ -66,4 +66,3 @@ def test_scene_program_current_model_does_not_enforce_room_enum() -> None:
     # Guard current behavior: room_type is a plain str field in the model.
     program = SceneProgram(prompt="test", room_type="not_a_real_room")
     assert program.room_type == "not_a_real_room"
-

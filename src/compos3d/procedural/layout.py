@@ -179,7 +179,11 @@ def resolve_asset_positions(
             return [_offset_pose(sofa_anchor, dy=0.75) for _ in range(count)]
         if sofa_anchor and _contains_any(
             placement_text,
-            ("in front of the sofa", "in front of sofa", "directly in front of the sofa"),
+            (
+                "in front of the sofa",
+                "in front of sofa",
+                "directly in front of the sofa",
+            ),
         ):
             return [_offset_pose(sofa_anchor, dy=1.45) for _ in range(count)]
 
@@ -215,7 +219,9 @@ def resolve_asset_positions(
         if anchor is not None:
             return [_offset_pose(anchor, z_offset=0.62) for _ in range(count)]
 
-    return [_clone_pose(fallback) or {"xy": (0.0, 0.0), "rot_z": 0.0} for _ in range(count)]
+    return [
+        _clone_pose(fallback) or {"xy": (0.0, 0.0), "rot_z": 0.0} for _ in range(count)
+    ]
 
 
 def resolve_factory_params(
@@ -231,7 +237,10 @@ def resolve_factory_params(
         spec.get("placement", ""),
         spec.get("rationale", ""),
         *scene_program.get("hypotheses", []),
-        *(constraint.get("text", "") for constraint in scene_program.get("constraints", [])),
+        *(
+            constraint.get("text", "")
+            for constraint in scene_program.get("constraints", [])
+        ),
     )
 
     if asset_type == "dining_table" and "round" in text:

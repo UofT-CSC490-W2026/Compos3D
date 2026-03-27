@@ -24,7 +24,12 @@ import pytest
 from compos3d.config import GeneratorConfig
 from compos3d.evaluation import critic as critic_mod
 from compos3d.hypothesis import engine
-from compos3d.llm.scene_llm import BedrockSceneLLM, LLMUnavailableError, StructuredOutputError, build_scene_llm
+from compos3d.llm.scene_llm import (
+    BedrockSceneLLM,
+    LLMUnavailableError,
+    StructuredOutputError,
+    build_scene_llm,
+)
 from compos3d.storage.local import LocalStore
 
 
@@ -71,7 +76,9 @@ def test_local_store_read_missing_file_raises_file_not_found(tmp_path) -> None:
         store.read_json("bronze/missing.json")
 
 
-def test_evaluate_prediction_dir_missing_artifacts_raises_file_not_found(tmp_path) -> None:
+def test_evaluate_prediction_dir_missing_artifacts_raises_file_not_found(
+    tmp_path,
+) -> None:
     with pytest.raises(FileNotFoundError, match="Could not find predictions.jsonl"):
         engine.evaluate_prediction_dir(
             predictions_dir=tmp_path / "does_not_exist",
@@ -84,11 +91,14 @@ def test_build_scene_llm_unsupported_provider_raises_value_error() -> None:
         build_scene_llm("totally-unsupported-provider")
 
 
-def test_evaluate_prediction_dir_fallback_manifest_without_critic_file_raises(tmp_path) -> None:
+def test_evaluate_prediction_dir_fallback_manifest_without_critic_file_raises(
+    tmp_path,
+) -> None:
     pred_dir = tmp_path / "pred"
     pred_dir.mkdir()
     (pred_dir / "inference_manifest.json").write_text(json.dumps({"ok": True}))
     # fallback path requires critic_score.json; verify failure is explicit.
     with pytest.raises(FileNotFoundError):
-        engine.evaluate_prediction_dir(predictions_dir=pred_dir, output_dir=tmp_path / "out")
-
+        engine.evaluate_prediction_dir(
+            predictions_dir=pred_dir, output_dir=tmp_path / "out"
+        )

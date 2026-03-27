@@ -86,4 +86,3 @@ def test_evaluate_request_forwarding(monkeypatch, tmp_path) -> None:
     assert out == {"metric": 1.0}
     assert seen["predictions_dir"] == req.predictions_dir
     assert seen["output_dir"] == req.output_dir
-

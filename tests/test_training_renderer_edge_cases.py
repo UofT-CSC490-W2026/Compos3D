@@ -108,7 +108,9 @@ def test_make_training_renderer_writes_scene_program_and_filters_missing_paths(
 
         scene_program_path = render_root / "scene_program.json"
         assert scene_program_path.exists()
-        assert json.loads(written[str(scene_program_path)])["room_type"] == "dining_room"
+        assert (
+            json.loads(written[str(scene_program_path)])["room_type"] == "dining_room"
+        )
 
         req = captured["request"]
         assert req.scene_program_path == scene_program_path

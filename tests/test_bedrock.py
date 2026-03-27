@@ -41,7 +41,9 @@ class _FakeRuntimeClient:
         return self.response
 
 
-def test_resolve_bedrock_config_uses_env_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_resolve_bedrock_config_uses_env_defaults(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setenv("COMPOS3D_BEDROCK_MODEL_ID", "env-model")
     monkeypatch.setenv("COMPOS3D_BEDROCK_REGION", "us-west-2")
 
@@ -179,4 +181,3 @@ def test_bedrock_vlm_non_retryable_error_maps_to_unavailable_generic(tmp_path) -
             scene_program=SceneProgram(prompt="bedroom", room_type="bedroom"),
             image_paths=[image],
         )
-

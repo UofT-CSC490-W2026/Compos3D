@@ -53,4 +53,3 @@ def test_list_prefix_nested_paths_and_missing_prefix(tmp_path) -> None:
     listed = [item.replace("\\", "/") for item in store.list_prefix("gold/a")]
     assert listed == ["gold/a/nested/y.json", "gold/a/x.json"]
     assert store.list_prefix("gold/does_not_exist") == []
-

@@ -5,12 +5,84 @@ from numpy.random import choice, normal, uniform
 
 CLS = TableDiningFactory
 DOCUMENTATION = '\nControllable parameters for `TableDiningFactory` (dining table)\n\n`TableDiningFactory` consumes a **parameter dictionary** that controls the\ntabletop footprint, thickness/edge treatment, and the leg system. Unless noted,\nall length-like values are **meters**.\n\nThis documentation is written to be actionable: for each parameter we include\nwhat it is, what it changes in the output, and typical bounds/options.\n\nParameters\n----------\n\n"dimensions" : tuple[float, float, float]  (length, width, height)\n    Description:\n        Overall table size: plan footprint (length x width) and total height.\n    Effect on output:\n        Larger length/width increases tabletop size and pushes legs outward\n        (since leg anchors are placed relative to the top profile). Height\n        increases leg length and raises the tabletop.\n    Typical bounds:\n        - length: ~1.4–2.8\n        - width:  ~0.9–1.2\n        - height: ~0.65–0.85 (dining) or up to ~1.05 (bar height)\n\n"Top Thickness" : float\n    Description:\n        Thickness of the tabletop slab.\n    Effect on output:\n        Thicker tops look heavier/more robust and reduce leg length slightly\n        (top is positioned at `height - Top Thickness`).\n    Typical bounds:\n        ~0.03–0.06 (3–6 cm). Must be < dimensions[2].\n\n"Top Profile Fillet Ratio" : float\n    Description:\n        Plan-view corner rounding of the tabletop footprint. Internally, the\n        fillet radius is computed as roughly `Top Profile Width * ratio`.\n    Effect on output:\n        Higher values produce more rounded “stadium” corners; 0 yields sharp\n        corners (rect-like for N-gon=4).\n    Typical bounds:\n        ~0.00–0.10 is common; sampling often uses ~0.00–0.02 for subtle rounding.\n        Very large values can over-round the profile.\n\n"Top Vertical Fillet Ratio" : float\n    Description:\n        Vertical edge rounding of the tabletop (despite the name, it behaves\n        like a *dimensionless* ratio relative to thickness inside the nodegroup).\n    Effect on output:\n        Higher values make the tabletop edge softer/more “bullnosed”. Near-zero\n        values produce a sharper edge.\n    Typical bounds:\n        ~0.00–0.40. Sampling often uses ~0.10–0.30 for noticeable softness.\n\n"Leg Style" : {"straight", "single_stand", "square"}\n    Description:\n        Which leg system to generate.\n    Effect on output:\n        - "straight": 4 independent legs (typically), optionally with stretchers.\n        - "single_stand": pedestal-like stand (implemented via 2 close anchors).\n        - "square": paired slab-like legs, optional bottom connector.\n    Typical options:\n        Exactly one of: "straight", "single_stand", "square".\n\n"Leg Number" : int\n    Description:\n        Number of anchor points around the tabletop profile used to place leg\n        instances.\n    Effect on output:\n        More anchors produce more legs/stands distributed around the top\n        footprint (when supported by the chosen style).\n    Typical bounds / options:\n        - "straight": typically 4\n        - "single_stand": typically 2\n        - "square": typically 2\n\n"Leg Placement Top Relative Scale" : float\n    Description:\n        Relative scale of the *anchor ring* compared to the tabletop size.\n        Internally scales the anchor profile width.\n    Effect on output:\n        Higher values move legs outward toward corners/edges (wider stance).\n        Lower values pull legs inward (more inset / more “pedestal-like”).\n        For "square" style, this also strongly affects the slab-leg width.\n    Typical bounds:\n        ~0.30–0.95. Common: ~0.75–0.90 (corner-inset) or ~0.30–0.70 (centered).\n\n"Leg Placement Bottom Relative Scale" : float\n    Description:\n        Relative scaling applied toward the leg bottoms during instancing.\n    Effect on output:\n        Values > 1.0 make the feet flare outward; values < 1.0 pull the bottoms\n        inward. 1.0 keeps legs more vertical.\n    Typical bounds:\n        ~0.60–1.30. Common: 1.0; for "straight" style sampling often uses ~1.0–1.2.\n\n"Leg Diameter" : float\n    Description:\n        Primary leg thickness parameter. Interpretation depends on `Leg Style`.\n    Effect on output:\n        - "straight": thicker/thinner legs; also affects stretcher thickness\n          (stretcher profile width is ~0.5 * Leg Diameter).\n        - "single_stand": overall pedestal thickness.\n        - "square": slab-leg profile width (thickness of the slab).\n    Typical bounds:\n        - "straight": ~0.04–0.09 (4–9 cm)\n        - "square":  ~0.06–0.12 (6–12 cm)\n        - "single_stand": often scales with table length, roughly\n          ~0.18*length–0.30*length (e.g. ~0.25–0.70 for common sizes)\n\n"Leg Curve Control Points" : list[tuple[float, float]] or None\n    Description:\n        Curve/taper profile for legs expressed as control points for a 1D curve:\n        (t, scale) pairs where `t` is a height fraction in [0, 1] and `scale`\n        multiplies the base leg radius/diameter at that height.\n    Effect on output:\n        Creates tapers, waists, and flares. Smaller `scale` values narrow the\n        leg; larger values thicken/flare it. This is used by "straight" and\n        "single_stand". For "square" legs this should be None (unused).\n    Typical bounds / format:\n        - Use 2–5 points, sorted by increasing `t`\n        - `t`: 0.0–1.0\n        - `scale`: ~0.1–1.3 (0.1 very thin, 1.0 “base”, >1.0 flared)\n        Examples:\n            - Straight taper: [(0.0, 1.0), (1.0, 0.6)]\n            - Pedestal waist+flare: [(0.0, 1.0), (0.6, 0.7), (1.0, 1.15)]\n\n"Strecher Increament" : int\n    Description:\n        Connectivity step for generating stretchers between leg anchors.\n        (Name is misspelled in code; keep the exact key spelling.)\n    Effect on output:\n        Higher values connect each anchor to a farther neighbor, changing the\n        brace pattern:\n        - 0: effectively disables stretchers (no meaningful connections)\n        - 1: connects adjacent anchors (perimeter bracing)\n        - 2: connects opposite anchors (cross bracing) for 4 anchors\n        For "square" style this toggles a bottom connector: `> 0` enables it.\n    Typical bounds:\n        Integer in {0, 1, 2}. (Other integers are interpreted as a step size on\n        the anchor ring and may produce unexpected patterns.)\n\n"Strecher Relative Pos" : float\n    Description:\n        Relative height along the legs where stretchers attach.\n    Effect on output:\n        Lower values place stretchers closer to the floor; higher values move\n        them upward toward the tabletop, affecting visual lightness and\n        perceived stability.\n    Typical bounds:\n        ~0.0–1.0; common ~0.20–0.60. Primarily used for "straight" legs.\n\nNotes on derived / internal parameters\n--------------------------------------\n\nThe factory derives some internal geometry inputs from `dimensions`, e.g.:\n  - Top profile width ~= 1.414 * length\n  - Top profile aspect ratio = width / length\n  - Top height = height - Top Thickness\n\nYou generally **should not** provide these derived keys yourself (they are\nfilled in internally).\n\n\n'
-start_params = {'dimensions': (1.8, 0.9, 0.75), 'Top Thickness': 0.04, 'Top Profile Fillet Ratio': 0.05, 'Top Vertical Fillet Ratio': 0.03, 'Leg Style': 'straight', 'Leg Number': 4, 'Leg Placement Top Relative Scale': 0.9, 'Leg Placement Bottom Relative Scale': 0.95, 'Leg Diameter': 0.07, 'Leg Curve Control Points': [(0.0, 1.0), (1.0, 0.9)], 'Strecher Increament': 1, 'Strecher Relative Pos': 0.35}
-edit_params = {'dimensions': (1.4, 0.7, 1.05), 'Top Thickness': 0.035, 'Top Profile Fillet Ratio': 0.08, 'Top Vertical Fillet Ratio': 0.05, 'Leg Style': 'single_stand', 'Leg Number': 2, 'Leg Placement Top Relative Scale': 0.35, 'Leg Placement Bottom Relative Scale': 0.65, 'Leg Diameter': 0.18, 'Leg Curve Control Points': [(0.0, 1.0), (0.6, 0.7), (1.0, 1.15)], 'Strecher Increament': 0, 'Strecher Relative Pos': 0.0}
-init_guess_s0 = {'dimensions': [1.4, 1.4, 0.75], 'Top Thickness': 0.045, 'Top Profile Fillet Ratio': 0.015, 'Top Vertical Fillet Ratio': 0.18, 'Leg Style': 'straight', 'Leg Number': 4, 'Leg Placement Top Relative Scale': 0.85, 'Leg Placement Bottom Relative Scale': 1.05, 'Leg Diameter': 0.065, 'Leg Curve Control Points': [], 'Strecher Increament': 1, 'Strecher Relative Pos': 0.35}
-guess_1_s0 = {'dimensions': [1.4, 1.4, 0.75], 'Top Thickness': 0.045, 'Top Profile Fillet Ratio': 0.01, 'Top Vertical Fillet Ratio': 0.16, 'Leg Style': 'square', 'Leg Number': 2, 'Leg Placement Top Relative Scale': 0.88, 'Leg Placement Bottom Relative Scale': 1.0, 'Leg Diameter': 0.075, 'Leg Curve Control Points': [], 'Strecher Increament': 1, 'Strecher Relative Pos': 0.35}
-guess_2_s0 = {'dimensions': [1.4, 1.4, 0.75], 'Top Thickness': 0.042, 'Top Profile Fillet Ratio': 0.008, 'Top Vertical Fillet Ratio': 0.12, 'Leg Style': 'square', 'Leg Number': 2, 'Leg Placement Top Relative Scale': 0.92, 'Leg Placement Bottom Relative Scale': 1.0, 'Leg Diameter': 0.06, 'Leg Curve Control Points': [], 'Strecher Increament': 1, 'Strecher Relative Pos': 0.35}
-PARAM_OPTS = {'a': start_params, 'b': edit_params, 'c': init_guess_s0, 'd': guess_1_s0, 'e': guess_2_s0}
+start_params = {
+    "dimensions": (1.8, 0.9, 0.75),
+    "Top Thickness": 0.04,
+    "Top Profile Fillet Ratio": 0.05,
+    "Top Vertical Fillet Ratio": 0.03,
+    "Leg Style": "straight",
+    "Leg Number": 4,
+    "Leg Placement Top Relative Scale": 0.9,
+    "Leg Placement Bottom Relative Scale": 0.95,
+    "Leg Diameter": 0.07,
+    "Leg Curve Control Points": [(0.0, 1.0), (1.0, 0.9)],
+    "Strecher Increament": 1,
+    "Strecher Relative Pos": 0.35,
+}
+edit_params = {
+    "dimensions": (1.4, 0.7, 1.05),
+    "Top Thickness": 0.035,
+    "Top Profile Fillet Ratio": 0.08,
+    "Top Vertical Fillet Ratio": 0.05,
+    "Leg Style": "single_stand",
+    "Leg Number": 2,
+    "Leg Placement Top Relative Scale": 0.35,
+    "Leg Placement Bottom Relative Scale": 0.65,
+    "Leg Diameter": 0.18,
+    "Leg Curve Control Points": [(0.0, 1.0), (0.6, 0.7), (1.0, 1.15)],
+    "Strecher Increament": 0,
+    "Strecher Relative Pos": 0.0,
+}
+init_guess_s0 = {
+    "dimensions": [1.4, 1.4, 0.75],
+    "Top Thickness": 0.045,
+    "Top Profile Fillet Ratio": 0.015,
+    "Top Vertical Fillet Ratio": 0.18,
+    "Leg Style": "straight",
+    "Leg Number": 4,
+    "Leg Placement Top Relative Scale": 0.85,
+    "Leg Placement Bottom Relative Scale": 1.05,
+    "Leg Diameter": 0.065,
+    "Leg Curve Control Points": [],
+    "Strecher Increament": 1,
+    "Strecher Relative Pos": 0.35,
+}
+guess_1_s0 = {
+    "dimensions": [1.4, 1.4, 0.75],
+    "Top Thickness": 0.045,
+    "Top Profile Fillet Ratio": 0.01,
+    "Top Vertical Fillet Ratio": 0.16,
+    "Leg Style": "square",
+    "Leg Number": 2,
+    "Leg Placement Top Relative Scale": 0.88,
+    "Leg Placement Bottom Relative Scale": 1.0,
+    "Leg Diameter": 0.075,
+    "Leg Curve Control Points": [],
+    "Strecher Increament": 1,
+    "Strecher Relative Pos": 0.35,
+}
+guess_2_s0 = {
+    "dimensions": [1.4, 1.4, 0.75],
+    "Top Thickness": 0.042,
+    "Top Profile Fillet Ratio": 0.008,
+    "Top Vertical Fillet Ratio": 0.12,
+    "Leg Style": "square",
+    "Leg Number": 2,
+    "Leg Placement Top Relative Scale": 0.92,
+    "Leg Placement Bottom Relative Scale": 1.0,
+    "Leg Diameter": 0.06,
+    "Leg Curve Control Points": [],
+    "Strecher Increament": 1,
+    "Strecher Relative Pos": 0.35,
+}
+PARAM_OPTS = {
+    "a": start_params,
+    "b": edit_params,
+    "c": init_guess_s0,
+    "d": guess_1_s0,
+    "e": guess_2_s0,
+}
+
 
 def random_sample_table_params():
     width = uniform(0.91, 1.16)
@@ -21,27 +93,51 @@ def random_sample_table_params():
     dimensions = (length, width, uniform(0.65, 0.85))
     x, y, z = dimensions
     NGon = 4
-    leg_style = choice(['straight', 'single_stand', 'square'], p=[0.5, 0.1, 0.4])
-    if leg_style == 'single_stand':
+    leg_style = choice(["straight", "single_stand", "square"], p=[0.5, 0.1, 0.4])
+    if leg_style == "single_stand":
         leg_number = 2
         leg_diameter = uniform(0.22 * x, 0.28 * x)
-        leg_curve_ctrl_pts = [(0.0, uniform(0.1, 0.2)), (0.5, uniform(0.1, 0.2)), (0.9, uniform(0.2, 0.3)), (1.0, 1.0)]
+        leg_curve_ctrl_pts = [
+            (0.0, uniform(0.1, 0.2)),
+            (0.5, uniform(0.1, 0.2)),
+            (0.9, uniform(0.2, 0.3)),
+            (1.0, 1.0),
+        ]
         top_scale = uniform(0.6, 0.7)
         bottom_scale = 1.0
-    elif leg_style == 'square':
+    elif leg_style == "square":
         leg_number = 2
         leg_diameter = uniform(0.07, 0.1)
         leg_curve_ctrl_pts = None
         top_scale = 0.8
         bottom_scale = 1.0
-    elif leg_style == 'straight':
+    elif leg_style == "straight":
         leg_diameter = uniform(0.05, 0.07)
         leg_number = 4
-        leg_curve_ctrl_pts = [(0.0, 1.0), (0.4, uniform(0.85, 0.95)), (1.0, uniform(0.4, 0.6))]
+        leg_curve_ctrl_pts = [
+            (0.0, 1.0),
+            (0.4, uniform(0.85, 0.95)),
+            (1.0, uniform(0.4, 0.6)),
+        ]
         top_scale = 0.8
         bottom_scale = uniform(1.0, 1.2)
     else:
         raise NotImplementedError
     top_thickness = uniform(0.03, 0.06)
-    parameters = {'Top Profile Fillet Ratio': uniform(0.0, 0.02), 'Top Thickness': top_thickness, 'Top Vertical Fillet Ratio': uniform(0.1, 0.3), 'Leg Number': leg_number, 'Leg Style': leg_style, 'Leg Placement Top Relative Scale': top_scale, 'Leg Placement Bottom Relative Scale': bottom_scale, 'Leg Diameter': leg_diameter, 'Leg Curve Control Points': leg_curve_ctrl_pts, 'Strecher Increament': choice([0, 1, 2]), 'TopMaterial': weighted_sample(material_assignments.table_top)()(), 'LegMaterial': weighted_sample(material_assignments.tableware)()(), 'dimensions': dimensions, 'Strecher Relative Pos': uniform(0.2, 0.6)}
+    parameters = {
+        "Top Profile Fillet Ratio": uniform(0.0, 0.02),
+        "Top Thickness": top_thickness,
+        "Top Vertical Fillet Ratio": uniform(0.1, 0.3),
+        "Leg Number": leg_number,
+        "Leg Style": leg_style,
+        "Leg Placement Top Relative Scale": top_scale,
+        "Leg Placement Bottom Relative Scale": bottom_scale,
+        "Leg Diameter": leg_diameter,
+        "Leg Curve Control Points": leg_curve_ctrl_pts,
+        "Strecher Increament": choice([0, 1, 2]),
+        "TopMaterial": weighted_sample(material_assignments.table_top)()(),
+        "LegMaterial": weighted_sample(material_assignments.tableware)()(),
+        "dimensions": dimensions,
+        "Strecher Relative Pos": uniform(0.2, 0.6),
+    }
     return parameters

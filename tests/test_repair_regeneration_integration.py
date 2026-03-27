@@ -42,14 +42,21 @@ class _RepairAwareLLM:
         self.focus_calls: list[str] = []
 
     def generate_hypotheses(
-        self, room_type: str, examples: list[TrainingExample], *, num_hypotheses: int, focus: str
+        self,
+        room_type: str,
+        examples: list[TrainingExample],
+        *,
+        num_hypotheses: int,
+        focus: str,
     ) -> list[str]:
         self.focus_calls.append(focus)
         if focus == "repair":
             return [f"repair rule {i} for {room_type}" for i in range(num_hypotheses)]
         return [f"initial rule {i} for {room_type}" for i in range(num_hypotheses)]
 
-    def generate_scene_program(self, *, prompt: str, room_type: str, selected_hypotheses: list[str]) -> SceneProgram:
+    def generate_scene_program(
+        self, *, prompt: str, room_type: str, selected_hypotheses: list[str]
+    ) -> SceneProgram:
         return SceneProgram(
             prompt=prompt,
             room_type=room_type,
@@ -57,7 +64,9 @@ class _RepairAwareLLM:
         )
 
 
-def test_repair_regeneration_path_writes_failure_artifacts_and_completes(tmp_path: Path) -> None:
+def test_repair_regeneration_path_writes_failure_artifacts_and_completes(
+    tmp_path: Path,
+) -> None:
     dataset = TrainingDataset(
         dataset_id="regen_ds",
         examples=[
@@ -106,7 +115,11 @@ def test_repair_regeneration_path_writes_failure_artifacts_and_completes(tmp_pat
 
     failed_path = tmp_path / "run" / "failed_scene_bank.jsonl"
     assert failed_path.exists()
-    rows = [json.loads(line) for line in failed_path.read_text().splitlines() if line.strip()]
+    rows = [
+        json.loads(line)
+        for line in failed_path.read_text().splitlines()
+        if line.strip()
+    ]
     assert len(rows) >= 1
     assert rows[0]["room_type"] == "bedroom"
 
@@ -114,4 +127,3 @@ def test_repair_regeneration_path_writes_failure_artifacts_and_completes(tmp_pat
     assert (tmp_path / "run" / "predictions.jsonl").exists()
     assert (tmp_path / "run" / "training_trace.jsonl").exists()
     assert (tmp_path / "run" / "manifest.json").exists()
-

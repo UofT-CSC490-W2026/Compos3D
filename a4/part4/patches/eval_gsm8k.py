@@ -141,10 +141,12 @@ def run_gsm8k_eval(
             generated_tokens = sample_tokens[prefix_length:]
             generated_text = tokenizer.decode(generated_tokens)
             is_correct = task.evaluate(conversation, generated_text)
-            outcomes.append({
-                "generated_text": generated_text,
-                "is_correct": is_correct,
-            })
+            outcomes.append(
+                {
+                    "generated_text": generated_text,
+                    "is_correct": is_correct,
+                }
+            )
         record = {"idx": idx, "outcomes": outcomes}
         yield record
 

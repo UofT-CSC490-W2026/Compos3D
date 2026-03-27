@@ -70,4 +70,3 @@ def test_manifest_timestamp_consistency_after_finalize() -> None:
     assert finalized.completed_at >= started_at
     assert finalized.duration_seconds is not None
     assert finalized.duration_seconds >= 7.0
-

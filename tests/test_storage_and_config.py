@@ -58,7 +58,9 @@ class TestAppConfig:
         assert cfg.ec2_spot is False  # prod uses on-demand
 
     def test_get_store_local(self, tmp_path: Path) -> None:
-        cfg = AppConfig(env="local", storage_backend="local", local_lake_root=str(tmp_path))
+        cfg = AppConfig(
+            env="local", storage_backend="local", local_lake_root=str(tmp_path)
+        )
         store = get_store(cfg)
         assert isinstance(store, LocalStore)
 

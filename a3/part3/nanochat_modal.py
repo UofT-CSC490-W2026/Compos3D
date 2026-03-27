@@ -1410,7 +1410,9 @@ def stage_make_eval_figures_p3() -> None:
             if not runs:
                 runs = api.runs(cur_project_path, filters={"display_name": run_name})
             if not runs:
-                print(f"  WARNING: no W&B run found for name {run_name!r} in {cur_project_path!r}")
+                print(
+                    f"  WARNING: no W&B run found for name {run_name!r} in {cur_project_path!r}"
+                )
                 return [], []
             run = runs[0]
             for key in ["val_bpb", "val/bpb", "train/loss", "loss", "train_loss"]:
@@ -1429,7 +1431,9 @@ def stage_make_eval_figures_p3() -> None:
     fig1, ax1 = plt.subplots(figsize=(10, 5), constrained_layout=True)
 
     for tag in tags:
-        steps, vals = fetch_run_history(run_names[tag], project_override=run_projects[tag])
+        steps, vals = fetch_run_history(
+            run_names[tag], project_override=run_projects[tag]
+        )
         if steps:
             ls = "--" if tag == TAG_BASELINE else "-"
             ax1.plot(

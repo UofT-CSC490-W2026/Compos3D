@@ -70,9 +70,7 @@ RUNS: Final[list[dict[str, object]]] = [
     },
 ]
 
-CFG_MAP: Final[dict[str, dict[str, object]]] = {
-    str(cfg["key"]): cfg for cfg in RUNS
-}
+CFG_MAP: Final[dict[str, dict[str, object]]] = {str(cfg["key"]): cfg for cfg in RUNS}
 
 # =============================================================================
 # MODAL SETUP
@@ -157,7 +155,6 @@ def _torchrun(script_path: str, args: list[str] | None = None, *, nproc: int) ->
     _run(cmd)
 
 
-
 def _setup_cache() -> None:
     os.makedirs(NANOCHAT_CACHE, exist_ok=True)
     if not os.path.exists(BASE_DIR):
@@ -165,10 +162,8 @@ def _setup_cache() -> None:
         os.symlink(NANOCHAT_CACHE, BASE_DIR)
 
 
-
 def _rl_results_path(tag_rl: str) -> str:
     return os.path.join(NANOCHAT_CACHE, f"{tag_rl.replace('/', '_')}_results.jsonl")
-
 
 
 def _run_cfg(cfg: dict[str, object]) -> None:
@@ -293,7 +288,9 @@ def run_ablation_remote(which: str) -> None:
     volume.reload()
 
     if which not in CFG_MAP:
-        raise ValueError(f"Unknown ablation '{which}'. Expected one of {list(CFG_MAP.keys())}")
+        raise ValueError(
+            f"Unknown ablation '{which}'. Expected one of {list(CFG_MAP.keys())}"
+        )
 
     cfg = CFG_MAP[which]
     print(f"Running ablation remotely: {which}")

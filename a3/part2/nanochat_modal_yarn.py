@@ -27,7 +27,9 @@ FINETUNE_TIMEOUT_SEC = 60 * 60 * 2
 DOWNLOAD_TIMEOUT_SEC = 60 * 90
 _N_PRETRAIN_GPUS = int(GPU_PRETRAIN.split(":")[1]) if ":" in GPU_PRETRAIN else 1
 _N_FINETUNE_GPUS = int(GPU_FINETUNE.split(":")[1]) if ":" in GPU_FINETUNE else 1
-IDENTITY_JSONL_URL = "https://karpathy-public.s3.us-west-2.amazonaws.com/identity_conversations.jsonl"
+IDENTITY_JSONL_URL = (
+    "https://karpathy-public.s3.us-west-2.amazonaws.com/identity_conversations.jsonl"
+)
 
 YARN_MAX_SEQ_LEN = 8192
 YARN_ORIGINAL_SEQUENCE_LEN = 2048
@@ -44,7 +46,9 @@ image = (
     ModalImage.from_registry("nvidia/cuda:12.8.1-devel-ubuntu24.04", add_python="3.11")
     .apt_install("git", "build-essential", "curl", "wget", "unzip")
     .add_local_dir(
-        local_path=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "nanochat"),
+        local_path=os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "..", "nanochat"
+        ),
         remote_path="/root/nanochat",
         copy=True,
     )
@@ -77,11 +81,13 @@ image = (
         "bash -c 'source $HOME/.cargo/env'",
     )
     .pip_install("uv")
-    .env({
-        "OMP_NUM_THREADS": "1",
-        "NANOCHAT_BASE_DIR": BASE_DIR,
-        "HF_HOME": "/data/.cache/huggingface",
-    })
+    .env(
+        {
+            "OMP_NUM_THREADS": "1",
+            "NANOCHAT_BASE_DIR": BASE_DIR,
+            "HF_HOME": "/data/.cache/huggingface",
+        }
+    )
     .run_commands("ls /root/nanochat/.venv/bin/python || echo 'VENV NOT FOUND'")
     .run_commands("cd /root/nanochat && uv sync --extra gpu --no-install-project")
 )
@@ -97,7 +103,9 @@ def _run(cmd: str) -> None:
         raise RuntimeError(f"Command exited with code {result.returncode}:\n  {cmd}")
 
 
-def _python(module: str, args: list | None = None, *, cwd: str = "/root/nanochat") -> None:
+def _python(
+    module: str, args: list | None = None, *, cwd: str = "/root/nanochat"
+) -> None:
     args = args or []
     _run(f"cd {cwd} && uv run python -m {module} {' '.join(args)}")
 
@@ -192,7 +200,9 @@ def stage_pretrain_yarn(
 
     yarn_scale = max_seq_len / original_seq_len
     model_tag = f"d{depth}-yarn"
-    total_batch_size = device_batch_size * max_seq_len * _N_PRETRAIN_GPUS  # YaRN patch: keep total batch divisible by one full micro-batch.
+    total_batch_size = (
+        device_batch_size * max_seq_len * _N_PRETRAIN_GPUS
+    )  # YaRN patch: keep total batch divisible by one full micro-batch.
     print(
         f"Starting YaRN pretraining: depth={depth}, "
         f"device_batch_size={device_batch_size}, nproc={_N_PRETRAIN_GPUS}, "
@@ -249,8 +259,10 @@ def stage_sft_yarn(wandb_run: str = WANDB_RUN, model_tag: str = YARN_MODEL_TAG) 
     _torchrun(
         "scripts.chat_eval",
         [
-            "-i", "sft",
-            "-g", model_tag,
+            "-i",
+            "sft",
+            "-g",
+            model_tag,
         ],
         nproc=_N_FINETUNE_GPUS,
     )
@@ -283,8 +295,10 @@ def stage_rl_yarn(wandb_run: str = WANDB_RUN, model_tag: str = YARN_MODEL_TAG) -
     _torchrun(
         "scripts.chat_eval",
         [
-            "-i", "rl",
-            "-g", model_tag,
+            "-i",
+            "rl",
+            "-g",
+            model_tag,
         ],
         nproc=_N_FINETUNE_GPUS,
     )

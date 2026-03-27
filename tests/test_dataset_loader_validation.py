@@ -30,7 +30,9 @@ def test_training_dataset_rejects_missing_required_fields() -> None:
 def test_training_dataset_rejects_missing_prompt() -> None:
     payload = {
         "dataset_id": "d1",
-        "examples": [{"example_id": "e1", "room_type": "bedroom", "required_assets": ["bed"]}],
+        "examples": [
+            {"example_id": "e1", "room_type": "bedroom", "required_assets": ["bed"]}
+        ],
     }
     with pytest.raises(ValidationError):
         TrainingDataset.model_validate(payload)
@@ -66,4 +68,3 @@ def test_training_dataset_room_type_is_not_enum_restricted() -> None:
     }
     ds = TrainingDataset.model_validate(payload)
     assert ds.examples[0].room_type == "unknown_room"
-

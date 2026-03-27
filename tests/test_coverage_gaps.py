@@ -64,7 +64,9 @@ def test_supported_room_types_returns_keys_tuple() -> None:
     assert set(rooms) == set(catalog.SUPPORTED_ASSETS_BY_ROOM.keys())
 
 
-def test_load_experiment_config_vlm_defaults_provider_to_generator(tmp_path: Path) -> None:
+def test_load_experiment_config_vlm_defaults_provider_to_generator(
+    tmp_path: Path,
+) -> None:
     p = tmp_path / "cfg.json"
     p.write_text(
         json.dumps(
@@ -108,7 +110,9 @@ def test_cli_reference_generate_splits_tasks(monkeypatch, tmp_path: Path) -> Non
     assert captured["minimal"] is True
 
 
-def test_cli_build_scene_and_feature_extract_routes(monkeypatch, tmp_path: Path) -> None:
+def test_cli_build_scene_and_feature_extract_routes(
+    monkeypatch, tmp_path: Path
+) -> None:
     seen = {"build": None, "extract": None}
 
     def _fake_build_scene(req):
@@ -143,7 +147,13 @@ def test_cli_build_scene_and_feature_extract_routes(monkeypatch, tmp_path: Path)
 
     res2 = runner.invoke(
         cli.app,
-        ["feature-extract", "--input-path", str(tmp_path), "--output-dir", str(tmp_path / "feat")],
+        [
+            "feature-extract",
+            "--input-path",
+            str(tmp_path),
+            "--output-dir",
+            str(tmp_path / "feat"),
+        ],
     )
     assert res2.exit_code == 0
     assert seen["extract"] == (tmp_path, tmp_path / "feat")
@@ -259,7 +269,9 @@ def test_manifest_git_info_remote_url_missing_and_packages_unknown(monkeypatch) 
 
     monkeypatch.setattr(importlib_metadata, "version", _fake_version)
 
-    m = manifest_mod.create_manifest(run_id="r1", run_type="training", config_snapshot={})
+    m = manifest_mod.create_manifest(
+        run_id="r1", run_type="training", config_snapshot={}
+    )
     assert m.git_info is not None
     assert m.git_info.remote_url is None
     assert all(v == "unknown" for v in m.package_versions.values())
@@ -347,7 +359,9 @@ def test_runner_find_gin_config_root_from_sibling(tmp_path: Path, monkeypatch) -
     root.mkdir()
     sibling = tmp_path / "sibling_infinigen"
     (sibling / "infinigen_examples" / "configs_indoor").mkdir(parents=True)
-    (sibling / "infinigen_examples" / "configs_indoor" / "singleroom.gin").write_text("x")
+    (sibling / "infinigen_examples" / "configs_indoor" / "singleroom.gin").write_text(
+        "x"
+    )
 
     monkeypatch.setattr(runner_mod, "PROJECT_ROOT", root)
     # Make parent.iterdir() yield the sibling.
@@ -414,7 +428,9 @@ def test_critic_remaining_branches_and_empty_aggregate(tmp_path: Path) -> None:
         vlm.evaluate(scene_program=sp, image_paths=[])
 
 
-def test_hypothesis_loop_render_success_and_only_best_hypothesis(tmp_path: Path) -> None:
+def test_hypothesis_loop_render_success_and_only_best_hypothesis(
+    tmp_path: Path,
+) -> None:
     ds = TrainingDataset(
         dataset_id="d",
         examples=[
@@ -478,8 +494,12 @@ def test_hypothesis_loop_render_success_and_only_best_hypothesis(tmp_path: Path)
 
     # cover only_best_hypothesis branch line 492 by monkeypatching _make_records
     monkey_records = [
-        HypothesisRecord(hypothesis_id="h1", text="a", room_type="dining_room", reward=0.9),
-        HypothesisRecord(hypothesis_id="h2", text="b", room_type="dining_room", reward=0.1),
+        HypothesisRecord(
+            hypothesis_id="h1", text="a", room_type="dining_room", reward=0.9
+        ),
+        HypothesisRecord(
+            hypothesis_id="h2", text="b", room_type="dining_room", reward=0.1
+        ),
     ]
     loop._make_records = lambda **_k: monkey_records  # type: ignore[method-assign] # noqa: SLF001
     loop._sort_records = lambda recs: recs  # type: ignore[method-assign] # noqa: SLF001
@@ -488,7 +508,9 @@ def test_hypothesis_loop_render_success_and_only_best_hypothesis(tmp_path: Path)
     assert any(r.hypothesis_id == "h1" for r in loop.bank)
 
 
-def test_hypothesis_engine_mirror_inference_and_store_fields(tmp_path: Path, monkeypatch) -> None:
+def test_hypothesis_engine_mirror_inference_and_store_fields(
+    tmp_path: Path, monkeypatch
+) -> None:
     # Cover _mirror_inference_to_lake write branches (177-204) and store output fields (609, 623-624)
     out = tmp_path / "out"
     out.mkdir()
@@ -524,12 +546,28 @@ def test_hypothesis_engine_mirror_inference_and_store_fields(tmp_path: Path, mon
 
     # Store branch in run_vertical_inference: monkeypatch to avoid heavy work.
     monkeypatch.setattr(hyp_engine, "_mirror_inference_to_lake", lambda **_k: ["u1"])  # noqa: SLF001
-    monkeypatch.setattr(hyp_engine, "create_manifest", lambda **_k: types.SimpleNamespace(model_dump=lambda **_x: {}))  # noqa: SLF001
+    monkeypatch.setattr(
+        hyp_engine,
+        "create_manifest",
+        lambda **_k: types.SimpleNamespace(model_dump=lambda **_x: {}),
+    )  # noqa: SLF001
     monkeypatch.setattr(hyp_engine, "finalize_manifest", lambda m, **_k: m)  # noqa: SLF001
     monkeypatch.setattr(hyp_engine, "_load_bank", lambda _p: [])  # noqa: SLF001
-    monkeypatch.setattr(hyp_engine, "build_scene_llm", lambda _c: types.SimpleNamespace(generate_scene_program=lambda **_k: SceneProgram(prompt="p", room_type="living_room")))  # noqa: SLF001
-    monkeypatch.setattr(hyp_engine, "build_scene_critic", lambda _c: HeuristicSceneCritic())  # noqa: SLF001
-    monkeypatch.setattr(hyp_engine, "_select_hypotheses_for_inference", lambda *a, **k: [])  # noqa: SLF001,ARG005
+    monkeypatch.setattr(
+        hyp_engine,
+        "build_scene_llm",
+        lambda _c: types.SimpleNamespace(
+            generate_scene_program=lambda **_k: SceneProgram(
+                prompt="p", room_type="living_room"
+            )
+        ),
+    )  # noqa: SLF001
+    monkeypatch.setattr(
+        hyp_engine, "build_scene_critic", lambda _c: HeuristicSceneCritic()
+    )  # noqa: SLF001
+    monkeypatch.setattr(
+        hyp_engine, "_select_hypotheses_for_inference", lambda *a, **k: []
+    )  # noqa: SLF001,ARG005
     manifest = hyp_engine.run_vertical_inference(
         bank_path=tmp_path / "bank.json",
         prompt="p",
@@ -543,21 +581,35 @@ def test_hypothesis_engine_mirror_inference_and_store_fields(tmp_path: Path, mon
 
 def test_scene_llm_bedrock_paths_and_build_scene_llm_branches(monkeypatch) -> None:
     # generic bedrock failure -> LLMUnavailableError (line 325)
-    llm = scene_llm_mod.BedrockSceneLLM(config_mod.GeneratorConfig(provider="bedrock", model_id="m"))  # type: ignore[arg-type]
+    llm = scene_llm_mod.BedrockSceneLLM(
+        config_mod.GeneratorConfig(provider="bedrock", model_id="m")
+    )  # type: ignore[arg-type]
 
     class _Boom:
         def converse(self, **_k):
             raise RuntimeError("some other error")
 
     llm.client = _Boom()
-    with pytest.raises(scene_llm_mod.LLMUnavailableError, match="Bedrock request failed"):
+    with pytest.raises(
+        scene_llm_mod.LLMUnavailableError, match="Bedrock request failed"
+    ):
         llm._run_json_prompt("x")  # noqa: SLF001
 
     # generate_hypotheses repair prompt branch (line 348) and empty hypotheses branch (382)
-    monkeypatch.setattr(scene_llm_mod.BedrockSceneLLM, "_run_json_prompt", lambda *_a, **_k: {"hypotheses": []})  # noqa: SLF001
-    llm2 = scene_llm_mod.BedrockSceneLLM(config_mod.GeneratorConfig(provider="bedrock", model_id="m"))  # type: ignore[arg-type]
-    ex = TrainingExample(example_id="e", room_type="dining_room", prompt="p", required_assets=["chair"])
-    with pytest.raises(scene_llm_mod.StructuredOutputError, match="no valid hypotheses"):
+    monkeypatch.setattr(
+        scene_llm_mod.BedrockSceneLLM,
+        "_run_json_prompt",
+        lambda *_a, **_k: {"hypotheses": []},
+    )  # noqa: SLF001
+    llm2 = scene_llm_mod.BedrockSceneLLM(
+        config_mod.GeneratorConfig(provider="bedrock", model_id="m")
+    )  # type: ignore[arg-type]
+    ex = TrainingExample(
+        example_id="e", room_type="dining_room", prompt="p", required_assets=["chair"]
+    )
+    with pytest.raises(
+        scene_llm_mod.StructuredOutputError, match="no valid hypotheses"
+    ):
         llm2.generate_hypotheses("dining_room", [ex], focus="repair")
 
     # generate_scene_program success path (covers return at line 405)
@@ -579,12 +631,21 @@ def test_scene_llm_bedrock_paths_and_build_scene_llm_branches(monkeypatch) -> No
             "render_spec": {"mode": "program_only"},
         },
     )  # noqa: SLF001
-    llm3 = scene_llm_mod.BedrockSceneLLM(config_mod.GeneratorConfig(provider="bedrock", model_id="m"))  # type: ignore[arg-type]
-    sp = llm3.generate_scene_program(prompt="p", room_type="dining_room", selected_hypotheses=["h"])
+    llm3 = scene_llm_mod.BedrockSceneLLM(
+        config_mod.GeneratorConfig(provider="bedrock", model_id="m")
+    )  # type: ignore[arg-type]
+    sp = llm3.generate_scene_program(
+        prompt="p", room_type="dining_room", selected_hypotheses=["h"]
+    )
     assert sp.room_type == "dining_room"
 
     # build_scene_llm branches (413-415, 421)
-    assert scene_llm_mod.build_scene_llm(config_mod.GeneratorConfig(provider="bedrock", model_id="m")).provider_name == "bedrock"  # type: ignore[arg-type]
+    assert (
+        scene_llm_mod.build_scene_llm(
+            config_mod.GeneratorConfig(provider="bedrock", model_id="m")
+        ).provider_name
+        == "bedrock"
+    )  # type: ignore[arg-type]
     assert scene_llm_mod.build_scene_llm("bedrock").provider_name == "bedrock"
     with pytest.raises(ValueError, match="Unsupported llm provider"):
         scene_llm_mod.build_scene_llm(config_mod.GeneratorConfig(provider="nope"))  # type: ignore[arg-type]
@@ -650,7 +711,7 @@ def test_multilayer_s3_store_read_json_and_exists_true() -> None:
 
     class _Body:
         def read(self):
-            return b"{\"a\": 1}"
+            return b'{"a": 1}'
 
     class _FakeS3:
         class exceptions:
@@ -715,9 +776,11 @@ def test_hypothesis_engine_train_config_path_room_filter_and_inference_render_sc
 
     monkeypatch.setattr(hyp_engine, "SceneHypothesisLoop", _FakeLoop)
     monkeypatch.setattr(
-        hyp_engine, "make_training_renderer", lambda _cfg: (lambda *_a, **_k: [])
+        hyp_engine, "make_training_renderer", lambda _cfg: lambda *_a, **_k: []
     )
-    monkeypatch.setattr(hyp_engine, "build_scene_llm", lambda _cfg: types.SimpleNamespace())
+    monkeypatch.setattr(
+        hyp_engine, "build_scene_llm", lambda _cfg: types.SimpleNamespace()
+    )
     monkeypatch.setattr(
         hyp_engine, "build_scene_critic", lambda _cfg: types.SimpleNamespace()
     )
@@ -734,16 +797,24 @@ def test_hypothesis_engine_train_config_path_room_filter_and_inference_render_sc
     bank_path.write_text("[]")
     view = tmp_path / "render.png"
     view.write_bytes(b"x")
-    monkeypatch.setattr(hyp_engine, "build_scene", lambda _req: {"rendered_views": [str(view)]})
+    monkeypatch.setattr(
+        hyp_engine, "build_scene", lambda _req: {"rendered_views": [str(view)]}
+    )
     monkeypatch.setattr(
         hyp_engine,
         "build_scene_llm",
         lambda _cfg: types.SimpleNamespace(
-            generate_scene_program=lambda **_k: SceneProgram(prompt="p", room_type="dining_room")
+            generate_scene_program=lambda **_k: SceneProgram(
+                prompt="p", room_type="dining_room"
+            )
         ),
     )
-    monkeypatch.setattr(hyp_engine, "build_scene_critic", lambda _cfg: HeuristicSceneCritic())
-    monkeypatch.setattr(hyp_engine, "_select_hypotheses_for_inference", lambda *a, **k: [])  # noqa: ARG005
+    monkeypatch.setattr(
+        hyp_engine, "build_scene_critic", lambda _cfg: HeuristicSceneCritic()
+    )
+    monkeypatch.setattr(
+        hyp_engine, "_select_hypotheses_for_inference", lambda *a, **k: []
+    )  # noqa: ARG005
 
     m = hyp_engine.run_vertical_inference(
         bank_path=bank_path,
@@ -755,7 +826,9 @@ def test_hypothesis_engine_train_config_path_room_filter_and_inference_render_sc
     assert m["render_scene"] is True
 
 
-def test_runner_run_script_non_capture_success_and_failure(monkeypatch, tmp_path: Path) -> None:
+def test_runner_run_script_non_capture_success_and_failure(
+    monkeypatch, tmp_path: Path
+) -> None:
     script = tmp_path / "x.py"
     script.write_text("print('hi')\n")
 
@@ -764,7 +837,9 @@ def test_runner_run_script_non_capture_success_and_failure(monkeypatch, tmp_path
         return types.SimpleNamespace(returncode=0)
 
     monkeypatch.setattr(runner_mod.subprocess, "run", _ok_run)
-    out = runner_mod.run_script(script, ["--a", "1"], capture_output=False, cwd=tmp_path)
+    out = runner_mod.run_script(
+        script, ["--a", "1"], capture_output=False, cwd=tmp_path
+    )
     assert out["exit_code"] == 0
     assert "stdout" not in out
 
@@ -779,7 +854,7 @@ def test_runner_run_script_non_capture_success_and_failure(monkeypatch, tmp_path
 
 def test_scene_llm_normalizers_cover_error_branches() -> None:
     # fenced code path
-    payload = scene_llm_mod._extract_json_payload("```json\n{\"a\": 1}\n```")  # noqa: SLF001
+    payload = scene_llm_mod._extract_json_payload('```json\n{"a": 1}\n```')  # noqa: SLF001
     assert payload["a"] == 1
 
     assert scene_llm_mod._extract_style("A calm modern room") in {"calm", "modern"}  # noqa: SLF001
@@ -822,7 +897,14 @@ def test_scene_llm_normalizers_cover_error_branches() -> None:
         )
     with pytest.raises(scene_llm_mod.StructuredOutputError):  # noqa: SLF001
         scene_llm_mod._normalize_assets(  # noqa: SLF001
-            [{"asset_type": "chair", "count": "nope", "placement": "p", "rationale": "r"}],
+            [
+                {
+                    "asset_type": "chair",
+                    "count": "nope",
+                    "placement": "p",
+                    "rationale": "r",
+                }
+            ],
             "dining_room",
         )
     with pytest.raises(scene_llm_mod.StructuredOutputError):  # noqa: SLF001
@@ -881,7 +963,9 @@ def test_scene_llm_normalizers_cover_error_branches() -> None:
             required_assets=["chair"],
         )
     ]
-    out = scene_llm_mod._mock_hypotheses("dining_room", examples, num_hypotheses=3, focus="repair")  # noqa: SLF001,E501
+    out = scene_llm_mod._mock_hypotheses(
+        "dining_room", examples, num_hypotheses=3, focus="repair"
+    )  # noqa: SLF001,E501
     assert len(out) == 3
 
 
@@ -894,8 +978,16 @@ def test_ec2_runner_resolve_ami_and_wait_paths(monkeypatch) -> None:
         def describe_images(self, **_kwargs):
             return {
                 "Images": [
-                    {"CreationDate": "2024-01-01T00:00:00.000Z", "ImageId": "ami_old", "Name": "old"},
-                    {"CreationDate": "2025-01-01T00:00:00.000Z", "ImageId": "ami_new", "Name": "new"},
+                    {
+                        "CreationDate": "2024-01-01T00:00:00.000Z",
+                        "ImageId": "ami_old",
+                        "Name": "old",
+                    },
+                    {
+                        "CreationDate": "2025-01-01T00:00:00.000Z",
+                        "ImageId": "ami_new",
+                        "Name": "new",
+                    },
                 ]
             }
 
@@ -940,4 +1032,3 @@ def test_ec2_runner_resolve_ami_and_wait_paths(monkeypatch) -> None:
     state = runner.wait(instance_id, poll_interval_seconds=0, timeout_minutes=1)
     assert state == "terminated"
     runner.terminate(instance_id)
-

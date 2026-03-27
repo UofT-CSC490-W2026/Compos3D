@@ -27,7 +27,10 @@ def _loop(strategy: str = "ucb", k: int = 2) -> SceneHypothesisLoop:
         dataset_id="d",
         examples=[
             TrainingExample(
-                example_id="e1", room_type="bedroom", prompt="p", required_assets=["bed"]
+                example_id="e1",
+                room_type="bedroom",
+                prompt="p",
+                required_assets=["bed"],
             )
         ],
     )
@@ -43,9 +46,33 @@ def _loop(strategy: str = "ucb", k: int = 2) -> SceneHypothesisLoop:
 
 def _records() -> list[HypothesisRecord]:
     return [
-        HypothesisRecord(hypothesis_id="h1", text="one", room_type="bedroom", reward=0.9, accuracy=0.7, mean_score=0.7, num_visits=3),
-        HypothesisRecord(hypothesis_id="h2", text="two", room_type="bedroom", reward=0.6, accuracy=0.8, mean_score=0.6, num_visits=1),
-        HypothesisRecord(hypothesis_id="h3", text="three", room_type="bedroom", reward=0.7, accuracy=0.6, mean_score=0.9, num_visits=5),
+        HypothesisRecord(
+            hypothesis_id="h1",
+            text="one",
+            room_type="bedroom",
+            reward=0.9,
+            accuracy=0.7,
+            mean_score=0.7,
+            num_visits=3,
+        ),
+        HypothesisRecord(
+            hypothesis_id="h2",
+            text="two",
+            room_type="bedroom",
+            reward=0.6,
+            accuracy=0.8,
+            mean_score=0.6,
+            num_visits=1,
+        ),
+        HypothesisRecord(
+            hypothesis_id="h3",
+            text="three",
+            room_type="bedroom",
+            reward=0.7,
+            accuracy=0.6,
+            mean_score=0.9,
+            num_visits=5,
+        ),
     ]
 
 
@@ -76,4 +103,3 @@ def test_selection_random_respects_k_and_room_filter() -> None:
     selected = loop._select_for_training("bedroom")  # noqa: SLF001
     assert len(selected) == 2
     assert all(item.room_type == "bedroom" for item in selected)
-

@@ -638,8 +638,7 @@ _EMERGENT_PROMPTS = [
     "Photosynthesis is the process by which plants use sunlight, water, and"
     " carbon dioxide to produce",
     "The circumference of a circle is calculated by multiplying pi by",
-    "The immune system protects the body against disease by recognising"
-    " and destroying",
+    "The immune system protects the body against disease by recognising and destroying",
     "A sonnet is a 14-line poem that typically follows a strict rhyme scheme."
     " Shakespeare's sonnets are famous for",
     "In economics, the law of supply and demand states that when the price of"

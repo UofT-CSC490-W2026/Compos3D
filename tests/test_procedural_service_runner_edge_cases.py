@@ -33,7 +33,9 @@ def test_generate_reference_scene_invalid_room_type_raises(tmp_path) -> None:
 
 
 def test_run_backend_smoke_missing_render_raises(monkeypatch, tmp_path) -> None:
-    monkeypatch.setattr(service, "run_script", lambda *_a, **_k: {"exit_code": 0}, raising=False)
+    monkeypatch.setattr(
+        service, "run_script", lambda *_a, **_k: {"exit_code": 0}, raising=False
+    )
     # patch in module namespace that function uses
     import compos3d.procedural.runner as runner_mod
 
@@ -44,7 +46,9 @@ def test_run_backend_smoke_missing_render_raises(monkeypatch, tmp_path) -> None:
         )
 
 
-def test_build_scene_missing_input_file_surfaces_subprocess_error(monkeypatch, tmp_path) -> None:
+def test_build_scene_missing_input_file_surfaces_subprocess_error(
+    monkeypatch, tmp_path
+) -> None:
     import compos3d.procedural.runner as runner_mod
 
     def _boom(*_a, **_k):
@@ -81,4 +85,3 @@ def test_runner_run_script_capture_output_success(monkeypatch, tmp_path) -> None
     result = runner.run_script(tmp_path / "script.py", ["--x"], capture_output=True)
     assert result["exit_code"] == 0
     assert result["stdout"] == "ok"
-

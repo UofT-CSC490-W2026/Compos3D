@@ -37,7 +37,11 @@ def test_run_or_exit_stage_pending_returns_exit1(monkeypatch) -> None:
 
 def test_run_or_exit_generic_exception_returns_exit1(monkeypatch) -> None:
     r = CliRunner()
-    monkeypatch.setattr(cli, "evaluate_run", lambda *_a, **_k: (_ for _ in ()).throw(RuntimeError("bad input")))
+    monkeypatch.setattr(
+        cli,
+        "evaluate_run",
+        lambda *_a, **_k: (_ for _ in ()).throw(RuntimeError("bad input")),
+    )
     result = r.invoke(
         cli.app,
         ["evaluate", "--predictions-dir", "x", "--output-dir", "y"],
@@ -77,4 +81,3 @@ def test_cli_smoke_train_and_inference_commands(monkeypatch, tmp_path) -> None:
     )
     assert train.exit_code == 0
     assert infer.exit_code == 0
-

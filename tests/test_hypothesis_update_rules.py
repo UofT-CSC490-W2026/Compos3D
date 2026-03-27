@@ -23,7 +23,12 @@ from pathlib import Path
 import pytest
 
 from compos3d.hypothesis.loop import HypothesisLoopConfig, SceneHypothesisLoop
-from compos3d.models import CriticScore, HypothesisRecord, TrainingDataset, TrainingExample
+from compos3d.models import (
+    CriticScore,
+    HypothesisRecord,
+    TrainingDataset,
+    TrainingExample,
+)
 
 
 def _make_loop() -> SceneHypothesisLoop:
@@ -31,7 +36,10 @@ def _make_loop() -> SceneHypothesisLoop:
         dataset_id="d",
         examples=[
             TrainingExample(
-                example_id="e1", room_type="bedroom", prompt="p", required_assets=["bed"]
+                example_id="e1",
+                room_type="bedroom",
+                prompt="p",
+                required_assets=["bed"],
             )
         ],
     )
@@ -65,7 +73,12 @@ def test_update_record_updates_running_mean_accuracy_and_counts() -> None:
         example_id="e2", room_type="bedroom", prompt="p2", required_assets=["bed"]
     )
     score = CriticScore(
-        validity=1, prompt_adherence=1, asset_precision=1, asset_recall=1, room_match=1, overall=0.8
+        validity=1,
+        prompt_adherence=1,
+        asset_precision=1,
+        asset_recall=1,
+        room_match=1,
+        overall=0.8,
     )
     loop._update_record(record, example, score, current_sample=3)  # noqa: SLF001
 
@@ -83,7 +96,12 @@ def test_update_record_adds_failure_tag_when_below_threshold() -> None:
         example_id="e3", room_type="bedroom", prompt="p3", required_assets=["bed"]
     )
     score = CriticScore(
-        validity=1, prompt_adherence=1, asset_precision=1, asset_recall=1, room_match=1, overall=0.1
+        validity=1,
+        prompt_adherence=1,
+        asset_precision=1,
+        asset_recall=1,
+        room_match=1,
+        overall=0.1,
     )
     loop._update_record(record, example, score, current_sample=3)  # noqa: SLF001
     assert record.num_successes == 1
@@ -122,4 +140,3 @@ def test_sort_records_tie_breaking_is_deterministic() -> None:
     ranked = loop._sort_records([r1, r2])  # noqa: SLF001
     assert ranked[0].hypothesis_id == "h1"
     assert ranked[1].hypothesis_id == "h2"
-

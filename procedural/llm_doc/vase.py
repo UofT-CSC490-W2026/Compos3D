@@ -1,6 +1,39 @@
 from furniture.vase import VaseFactory
+
 CLS = VaseFactory
-DOCUMENTATION = '\nParameters for VaseFactory\n\nBuilds a procedural vase (lofted star profile). All linear dimensions in meters.\n\nRequired / common\n-----------------\ndimensions : tuple[float, float, float]\n    (x, y, z) with x=y typically; Height=z, Diameter=x.\nHeight : float\n    Total height (meters).\nDiameter : float\n    Base/top diameter.\n\nOptional (geometry)\n-------------------\nProfile Inner Radius : float\n    Star profile inner radius (0.8--1.0). Default 1.0.\nProfile Star Points : int\n    Star points (16--32). Default 24.\nU_resolution, V_resolution : int\n    Loft resolution. Default 64.\nTop Scale : float\n    Neck top scale factor.\nNeck Mid Position : float\n    Normalized height (0.7--0.95).\nNeck Position : float\n    Normalized height.\nNeck Scale : float\n    Neck scale (0.2--0.8).\nShoulder Position : float\n    Normalized (0.3--0.7).\nShoulder Thickness : float\n    (0.1--0.25).\nFoot Scale : float\n    (0.4--0.6).\nFoot Height : float\n    (0.01--0.1).\nMaterial\n    Material instance. Omit for default (marble/tableware).\n'
-vase_small = {'dimensions': (0.08, 0.08, 0.2), 'Height': 0.2, 'Diameter': 0.08, 'Profile Inner Radius': 1.0, 'Profile Star Points': 24, 'U_resolution': 64, 'V_resolution': 64, 'Top Scale': 0.4, 'Neck Mid Position': 0.85, 'Neck Position': 0.55, 'Neck Scale': 0.5, 'Shoulder Position': 0.5, 'Shoulder Thickness': 0.15, 'Foot Scale': 0.5, 'Foot Height': 0.03}
-vase_tall = {'dimensions': (0.1, 0.1, 0.4), 'Height': 0.4, 'Diameter': 0.1, 'Profile Inner Radius': 0.9, 'Profile Star Points': 20, 'U_resolution': 64, 'V_resolution': 64, 'Top Scale': 0.35, 'Neck Mid Position': 0.9, 'Neck Position': 0.6, 'Neck Scale': 0.4, 'Shoulder Position': 0.4, 'Shoulder Thickness': 0.2, 'Foot Scale': 0.45, 'Foot Height': 0.04}
-PARAM_OPTS = {'a': vase_small, 'b': vase_tall}
+DOCUMENTATION = "\nParameters for VaseFactory\n\nBuilds a procedural vase (lofted star profile). All linear dimensions in meters.\n\nRequired / common\n-----------------\ndimensions : tuple[float, float, float]\n    (x, y, z) with x=y typically; Height=z, Diameter=x.\nHeight : float\n    Total height (meters).\nDiameter : float\n    Base/top diameter.\n\nOptional (geometry)\n-------------------\nProfile Inner Radius : float\n    Star profile inner radius (0.8--1.0). Default 1.0.\nProfile Star Points : int\n    Star points (16--32). Default 24.\nU_resolution, V_resolution : int\n    Loft resolution. Default 64.\nTop Scale : float\n    Neck top scale factor.\nNeck Mid Position : float\n    Normalized height (0.7--0.95).\nNeck Position : float\n    Normalized height.\nNeck Scale : float\n    Neck scale (0.2--0.8).\nShoulder Position : float\n    Normalized (0.3--0.7).\nShoulder Thickness : float\n    (0.1--0.25).\nFoot Scale : float\n    (0.4--0.6).\nFoot Height : float\n    (0.01--0.1).\nMaterial\n    Material instance. Omit for default (marble/tableware).\n"
+vase_small = {
+    "dimensions": (0.08, 0.08, 0.2),
+    "Height": 0.2,
+    "Diameter": 0.08,
+    "Profile Inner Radius": 1.0,
+    "Profile Star Points": 24,
+    "U_resolution": 64,
+    "V_resolution": 64,
+    "Top Scale": 0.4,
+    "Neck Mid Position": 0.85,
+    "Neck Position": 0.55,
+    "Neck Scale": 0.5,
+    "Shoulder Position": 0.5,
+    "Shoulder Thickness": 0.15,
+    "Foot Scale": 0.5,
+    "Foot Height": 0.03,
+}
+vase_tall = {
+    "dimensions": (0.1, 0.1, 0.4),
+    "Height": 0.4,
+    "Diameter": 0.1,
+    "Profile Inner Radius": 0.9,
+    "Profile Star Points": 20,
+    "U_resolution": 64,
+    "V_resolution": 64,
+    "Top Scale": 0.35,
+    "Neck Mid Position": 0.9,
+    "Neck Position": 0.6,
+    "Neck Scale": 0.4,
+    "Shoulder Position": 0.4,
+    "Shoulder Thickness": 0.2,
+    "Foot Scale": 0.45,
+    "Foot Height": 0.04,
+}
+PARAM_OPTS = {"a": vase_small, "b": vase_tall}

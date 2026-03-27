@@ -68,7 +68,9 @@ class _Body:
 
 def test_multilayer_s3_store_routes_writes_to_expected_buckets(monkeypatch) -> None:
     fake = _FakeS3Client()
-    monkeypatch.setattr("compos3d.storage.multibucket_s3.boto3.client", lambda *_a, **_k: fake)
+    monkeypatch.setattr(
+        "compos3d.storage.multibucket_s3.boto3.client", lambda *_a, **_k: fake
+    )
 
     store = MultiLayerS3Store("bronze-b", "silver-b", "gold-b", prefix="prefix")
     bronze_uri = store.put_json("bronze/run/data.json", {"a": 1})
@@ -86,7 +88,9 @@ def test_multilayer_s3_store_routes_writes_to_expected_buckets(monkeypatch) -> N
 
 def test_multilayer_s3_store_defaults_ambiguous_paths_to_bronze(monkeypatch) -> None:
     fake = _FakeS3Client()
-    monkeypatch.setattr("compos3d.storage.multibucket_s3.boto3.client", lambda *_a, **_k: fake)
+    monkeypatch.setattr(
+        "compos3d.storage.multibucket_s3.boto3.client", lambda *_a, **_k: fake
+    )
 
     store = MultiLayerS3Store("bronze-b", "silver-b", "gold-b", prefix="")
     store.put_json("run/data.json", {"a": 1})
@@ -94,9 +98,13 @@ def test_multilayer_s3_store_defaults_ambiguous_paths_to_bronze(monkeypatch) -> 
     assert fake.put_calls[0]["Bucket"] == "bronze-b"
 
 
-def test_multilayer_s3_store_list_prefix_collects_paginated_results(monkeypatch) -> None:
+def test_multilayer_s3_store_list_prefix_collects_paginated_results(
+    monkeypatch,
+) -> None:
     fake = _FakeS3Client()
-    monkeypatch.setattr("compos3d.storage.multibucket_s3.boto3.client", lambda *_a, **_k: fake)
+    monkeypatch.setattr(
+        "compos3d.storage.multibucket_s3.boto3.client", lambda *_a, **_k: fake
+    )
 
     store = MultiLayerS3Store("bronze-b", "silver-b", "gold-b", prefix="prefix")
     listed = store.list_prefix("silver/run")
@@ -109,7 +117,9 @@ def test_multilayer_s3_store_list_prefix_collects_paginated_results(monkeypatch)
 
 def test_multilayer_s3_store_exists_returns_false_on_client_error(monkeypatch) -> None:
     fake = _FakeS3Client()
-    monkeypatch.setattr("compos3d.storage.multibucket_s3.boto3.client", lambda *_a, **_k: fake)
+    monkeypatch.setattr(
+        "compos3d.storage.multibucket_s3.boto3.client", lambda *_a, **_k: fake
+    )
 
     store = MultiLayerS3Store("bronze-b", "silver-b", "gold-b", prefix="prefix")
     assert store.exists("gold/run/file.json") is False
