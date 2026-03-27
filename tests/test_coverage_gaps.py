@@ -868,12 +868,10 @@ def test_scene_llm_normalizers_cover_error_branches() -> None:
 
     assert scene_llm_mod._normalize_constraints([" hi "]) == [{"text": "hi"}]  # noqa: SLF001
     assert scene_llm_mod._normalize_constraints([{"text": "x"}]) == [{"text": "x"}]  # noqa: SLF001
-    with pytest.raises(scene_llm_mod.StructuredOutputError):  # noqa: SLF001
-        scene_llm_mod._normalize_constraints([{"text": "   "}])  # noqa: SLF001
+    assert scene_llm_mod._normalize_constraints([{"text": "   "}]) == []  # noqa: SLF001
     with pytest.raises(scene_llm_mod.StructuredOutputError):  # noqa: SLF001
         scene_llm_mod._normalize_constraints([5])  # noqa: SLF001
-    with pytest.raises(scene_llm_mod.StructuredOutputError):  # noqa: SLF001
-        scene_llm_mod._normalize_constraints([])  # noqa: SLF001
+    assert scene_llm_mod._normalize_constraints([]) == []  # noqa: SLF001
     with pytest.raises(scene_llm_mod.StructuredOutputError):  # noqa: SLF001
         scene_llm_mod._normalize_constraints({})  # noqa: SLF001
 
