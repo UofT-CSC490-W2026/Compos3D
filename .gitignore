@@ -24,3 +24,4 @@ __pycache__/
 # Temp files
 tmp/
 .coverage
+data/external/spatiallm/
