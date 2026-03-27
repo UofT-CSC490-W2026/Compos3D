@@ -1,12 +1,16 @@
 """Pytest configuration and shared fixtures."""
 
-import tempfile
+import sys
 from pathlib import Path
 
 import pytest
 
-from src.compos3d.app_config import AppConfig
-from src.compos3d.storage.local import LocalStore
+_SRC_ROOT = Path(__file__).parent / "src"
+if str(_SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(_SRC_ROOT))
+
+from compos3d.app_config import AppConfig
+from compos3d.storage.local import LocalStore
 
 
 @pytest.fixture(scope="session")

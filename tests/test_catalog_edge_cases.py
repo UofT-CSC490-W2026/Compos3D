@@ -17,6 +17,7 @@ Edge cases covered:
 from __future__ import annotations
 
 from compos3d.catalog import (
+    all_supported_assets,
     assets_mentioned_in_prompt,
     infer_room_type,
     normalize_assets,
@@ -47,6 +48,19 @@ def test_assets_mentioned_in_prompt_uses_room_defaults_when_nothing_matches() ->
         room_type="bedroom",
     )
     assert assets == ["lamp", "rug", "window"]
+
+
+def test_all_supported_assets_returns_expected_flat_set() -> None:
+    assert all_supported_assets() == (
+        "chair",
+        "dining_table",
+        "lamp",
+        "rug",
+        "sofa",
+        "table_top",
+        "vase",
+        "window",
+    )
 
 
 def test_normalize_assets_deduplicates_and_falls_back_for_unsupported_inputs() -> None:

@@ -112,6 +112,17 @@ def test_score_handles_critic_unavailable(monkeypatch) -> None:
     assert "CriticUnavailable" in score.notes[0]
 
 
+def test_write_jsonl_creates_parent_and_tracks_cached_directory(tmp_path: Path) -> None:
+    loop_mod._CREATED_JSON_DIRS.clear()
+    out_path = tmp_path / "nested" / "rows.jsonl"
+
+    loop_mod._write_jsonl(out_path, [{"a": 1}, {"b": 2}])
+
+    assert out_path.exists()
+    assert out_path.read_text() == '{"a": 1}\n{"b": 2}\n'
+    assert out_path.parent in loop_mod._CREATED_JSON_DIRS
+
+
 def test_baseline_mode_no_hypotheses_branch() -> None:
     captured = {}
 
