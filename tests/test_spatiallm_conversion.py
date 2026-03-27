@@ -266,7 +266,9 @@ def test_spatiallm_loader_branches_and_candidate_filters(
             "conversations": [{}, {"value": "bbox=Bbox(sofa,1,2,3,0,1,1,1)"}],
         },
     ]
-    monkeypatch.setattr(spatiallm, "load_local_spatiallm_rows", lambda _path: iter(rows))
+    monkeypatch.setattr(
+        spatiallm, "load_local_spatiallm_rows", lambda _path: iter(rows)
+    )
 
     candidates = collect_spatiallm_candidates(
         split_metadata=split_metadata,

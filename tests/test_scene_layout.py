@@ -224,14 +224,25 @@ def test_layout_edge_fallback_helpers() -> None:
         "prompt": "A dining room with a lamp near the dining table",
         "room_type": "dining_room",
         "assets": [
-            {"asset_type": "dining_table", "count": 1, "placement": "centered in the room"},
+            {
+                "asset_type": "dining_table",
+                "count": 1,
+                "placement": "centered in the room",
+            },
             {"asset_type": "dining_table", "count": 1, "placement": "duplicate anchor"},
-            {"asset_type": "lamp", "count": 1, "placement": "near the dining table", "rationale": "light"},
+            {
+                "asset_type": "lamp",
+                "count": 1,
+                "placement": "near the dining table",
+                "rationale": "light",
+            },
         ],
     }
 
     anchors = preview_anchor_map(scene_program)
-    lamp_positions = resolve_asset_positions(scene_program, scene_program["assets"][2], anchors)
+    lamp_positions = resolve_asset_positions(
+        scene_program, scene_program["assets"][2], anchors
+    )
     no_chairs = _chair_positions({"xy": (0.0, 0.0), "rot_z": 0.0}, 0)
     no_room_positions = resolve_asset_positions(
         {"room_type": "garage", "prompt": "", "assets": []},

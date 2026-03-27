@@ -92,7 +92,9 @@ def test_runner_find_gin_root_and_non_capture_mode(monkeypatch, tmp_path) -> Non
     project_root.mkdir()
     sibling = tmp_path / "alt_infinigen"
     (sibling / "infinigen_examples" / "configs_indoor").mkdir(parents=True)
-    (sibling / "infinigen_examples" / "configs_indoor" / "singleroom.gin").write_text("")
+    (sibling / "infinigen_examples" / "configs_indoor" / "singleroom.gin").write_text(
+        ""
+    )
     monkeypatch.setattr(runner, "PROJECT_ROOT", project_root)
 
     found = runner._find_gin_config_root()  # noqa: SLF001
