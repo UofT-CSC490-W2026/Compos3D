@@ -8,23 +8,12 @@ import time
 from pathlib import Path
 import bpy
 from mathutils import Vector
+from compos3d.procedural.layout import preview_anchor_map, resolve_asset_positions, resolve_factory_params
 from infinigen.core import init
 from infinigen.core.util import blender as butil
 from infinigen.core.util.math import FixedSeed
 from infinigen.core.rendering.render import set_displacement_mode
 from infinigen.assets.lighting import sky_lighting
-PLACEMENTS: dict[str, dict[str, object]] = {'dining_room': {'dining_table': {'xy': (0.0, 0.0), 'rot_z': 0.0}, 'chair': 'around_table', 'rug': {'xy': (0.0, 0.0), 'rot_z': 0.0}, 'lamp': {'xy': (2.1, 2.1), 'rot_z': 0.0}, 'window': None, 'table_top': {'xy': (-2.1, 1.8), 'rot_z': 0.785}, 'vase': {'xy': (-2.1, 1.8), 'rot_z': 0.0, 'z_offset': 0.62}}, 'living_room': {'sofa': {'xy': (0.0, -1.9), 'rot_z': 0.0}, 'rug': {'xy': (0.0, -0.3), 'rot_z': 0.0}, 'lamp': {'xy': (2.0, -1.9), 'rot_z': 0.0}, 'table_top': {'xy': (0.0, -0.3), 'rot_z': 0.0}, 'window': None, 'vase': {'xy': (0.15, -0.3), 'rot_z': 0.0, 'z_offset': 0.62}}, 'bedroom': {'lamp': {'xy': (1.5, 1.5), 'rot_z': 0.0}, 'rug': {'xy': (0.0, 0.0), 'rot_z': 0.0}, 'chair': {'xy': (-1.5, 1.0), 'rot_z': -0.785}, 'table_top': {'xy': (1.5, 0.5), 'rot_z': 0.0}, 'window': None, 'vase': {'xy': (1.5, 0.5), 'rot_z': 0.0, 'z_offset': 0.62}}}
-CHAIR_ORBIT_RADIUS = 0.87
-
-def _chair_positions(count: int) -> list[dict]:
-    positions = []
-    for i in range(count):
-        angle = 2 * math.pi * i / count
-        x = CHAIR_ORBIT_RADIUS * math.sin(angle)
-        y = -CHAIR_ORBIT_RADIUS * math.cos(angle)
-        rot_z = angle
-        positions.append({'xy': (x, y), 'rot_z': rot_z})
-    return positions
 
 def build_room(room_size: float=8.0) -> None:
     bpy.ops.mesh.primitive_plane_add(size=room_size, location=(0, 0, 0))
@@ -40,10 +29,8 @@ def build_room(room_size: float=8.0) -> None:
 
 def spawn_assets(scene_program: dict, args) -> None:
     import llm_doc.library as lib
-    room_type = scene_program.get('room_type', 'dining_room')
-    placement_table = PLACEMENTS.get(room_type, {})
     assets = scene_program.get('assets', [])
-    chair_count = sum((spec.get('count', 1) for spec in assets if spec['asset_type'] == 'chair'))
+    anchors = preview_anchor_map(scene_program)
     asset_instance_idx = 0
     for spec in assets:
         asset_type = spec.get('asset_type', '')
@@ -51,21 +38,18 @@ def spawn_assets(scene_program: dict, args) -> None:
         if asset_type not in lib.LIB_MAP:
             print(f"[build_scene] Warning: '{asset_type}' not in LIB_MAP, skipping.")
             continue
-        placement = placement_table.get(asset_type)
-        if placement is None:
+        positions = resolve_asset_positions(scene_program, spec, anchors)
+        if not positions:
             print(f'[build_scene] Skipping wall/unsupported asset: {asset_type}')
             continue
         FI = lib.LIB_MAP[asset_type]
-        if placement == 'around_table':
-            positions = _chair_positions(chair_count)[:count]
-        else:
-            positions = [placement] * count
+        if len(positions) < count:
+            positions.extend(positions[-1:] * (count - len(positions)))
+        params = resolve_factory_params(asset_type, scene_program, spec, FI.PARAM_OPTS)
         for i, pos_spec in enumerate(positions):
-            seed = args.seed + asset_instance_idx & 65535
+            seed = (args.seed + asset_instance_idx) & 65535
             asset_instance_idx += 1
             with FixedSeed(seed):
-                param_mode = list(FI.PARAM_OPTS.keys())[0]
-                params = dict(FI.PARAM_OPTS[param_mode])
                 fac = FI.CLS(params)
                 asset = fac.spawn_asset(seed)
                 fac.finalize_assets(asset)
@@ -76,6 +60,7 @@ def spawn_assets(scene_program: dict, args) -> None:
             asset.location = (float(xy[0]), float(xy[1]), float(z_off))
             asset.rotation_euler[2] = float(rot_z)
             print(f'[build_scene] Placed {asset_type}[{i}] at {xy} z_off={z_off:.2f}')
+        anchors.setdefault(asset_type, positions[0])
     set_displacement_mode()
 
 def _aim_camera(camera, position: tuple, target: tuple=(0.0, 0.0, 1.0)) -> None:
