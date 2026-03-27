@@ -2,9 +2,9 @@
   "room_types": ["dining_room", "living_room", "bedroom"],
   "generator": {
     "provider": "bedrock",
-    "model_id": "qwen.qwen3-next-80b-a3b",
+    "model_id": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     "region_name": "us-east-1",
-    "max_tokens": 1200,
+    "max_tokens": 1400,
     "temperature": 0.0
   },
   "critic": {
@@ -23,19 +23,19 @@
     "save_blend": false
   },
   "training": {
-    "num_init_examples_per_room": 2,
-    "init_hypotheses_per_room": 3,
+    "num_init_examples_per_room": 3,
+    "init_hypotheses_per_room": 4,
     "top_k": 2,
     "alpha": 0.5,
-    "max_num_hypotheses_per_room": 8,
+    "max_num_hypotheses_per_room": 10,
     "num_wrong_scale": 0.8,
     "update_batch_size": 2,
-    "num_hypotheses_to_update": 1,
+    "num_hypotheses_to_update": 2,
     "update_hypotheses_per_batch": 2,
     "only_best_hypothesis": false,
     "num_epochs": 3,
-    "success_threshold": 0.65,
-    "save_every_n_examples": 5,
+    "success_threshold": 0.7,
+    "save_every_n_examples": 10,
     "selection_strategy": "ucb",
     "use_repair": true,
     "baseline_mode": null,
