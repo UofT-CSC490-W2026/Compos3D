@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from compos3d.app_config import AppConfig
-from compos3d.storage.local import LocalStore
+from src.compos3d.app_config import AppConfig
+from src.compos3d.storage.local import LocalStore
 
 
 @pytest.fixture(scope="session")

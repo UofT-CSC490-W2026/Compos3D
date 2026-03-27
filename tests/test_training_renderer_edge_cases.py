@@ -32,16 +32,17 @@ def test_make_training_renderer_returns_none_when_disabled() -> None:
 
 
 def test_make_training_renderer_writes_scene_program_and_filters_missing_paths(
-    monkeypatch,
+    monkeypatch, tmp_path: Path
 ) -> None:
     captured = {}
     written = {}
     state = {"temp_root_exists": True, "cleaned": None}
+    virtual_temp_root = tmp_path / "renderer_test_virtual"
 
     monkeypatch.setattr(
         tempfile,
         "mkdtemp",
-        lambda prefix, dir: ".pytest_tmp\\renderer_test_virtual",
+        lambda prefix, dir: str(virtual_temp_root),
     )
     monkeypatch.setattr(os, "makedirs", lambda path, exist_ok=False: None)
 
@@ -53,15 +54,14 @@ def test_make_training_renderer_writes_scene_program_and_filters_missing_paths(
     real_exists = os.path.exists
 
     def _fake_os_path_exists(path) -> bool:
-        if str(path) == ".pytest_tmp\\renderer_test_virtual":
+        if str(path) == str(virtual_temp_root):
             return bool(state["temp_root_exists"])
         return real_exists(path)
 
     monkeypatch.setattr(shutil, "rmtree", _fake_rmtree)
     monkeypatch.setattr(os.path, "exists", _fake_os_path_exists)
 
-    os.makedirs(".pytest_tmp", exist_ok=True)
-    temp_root = tempfile.mkdtemp(prefix="renderer_test_", dir=".pytest_tmp")
+    temp_root = tempfile.mkdtemp(prefix="renderer_test_", dir=str(tmp_path))
 
     def _fake_build_scene(request):
         captured["request"] = request
