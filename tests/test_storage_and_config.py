@@ -11,7 +11,6 @@ Primarily happy-path checks are also included for local read/write and defaults.
 from __future__ import annotations
 
 import json
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -58,11 +57,10 @@ class TestAppConfig:
         assert cfg.s3_bucket_bronze == "compos3d-prod-bronze"
         assert cfg.ec2_spot is False  # prod uses on-demand
 
-    def test_get_store_local(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            cfg = AppConfig(env="local", storage_backend="local", local_lake_root=tmp)
-            store = get_store(cfg)
-            assert isinstance(store, LocalStore)
+    def test_get_store_local(self, tmp_path: Path) -> None:
+        cfg = AppConfig(env="local", storage_backend="local", local_lake_root=str(tmp_path))
+        store = get_store(cfg)
+        assert isinstance(store, LocalStore)
 
     def test_get_store_s3_missing_buckets_raises(self) -> None:
         cfg = AppConfig(env="dev", storage_backend="s3")
@@ -71,49 +69,44 @@ class TestAppConfig:
 
 
 class TestLocalStore:
-    def test_put_and_read_json(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            store = LocalStore(root=tmp)
-            obj = {"key": "value", "num": 42}
-            uri = store.put_json("bronze/test/data.json", obj)
-            assert Path(uri).exists()
-            assert store.read_json("bronze/test/data.json") == obj
+    def test_put_and_read_json(self, tmp_path: Path) -> None:
+        store = LocalStore(root=tmp_path)
+        obj = {"key": "value", "num": 42}
+        uri = store.put_json("bronze/test/data.json", obj)
+        assert Path(uri).exists()
+        assert store.read_json("bronze/test/data.json") == obj
 
-    def test_put_and_read_bytes(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            store = LocalStore(root=tmp)
-            data = b"hello bytes"
-            uri = store.put_bytes("silver/blobs/file.bin", data)
-            assert Path(uri).read_bytes() == data
+    def test_put_and_read_bytes(self, tmp_path: Path) -> None:
+        store = LocalStore(root=tmp_path)
+        data = b"hello bytes"
+        uri = store.put_bytes("silver/blobs/file.bin", data)
+        assert Path(uri).read_bytes() == data
 
-    def test_list_prefix(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            store = LocalStore(root=tmp)
-            store.put_json("bronze/run1/a.json", {"a": 1})
-            store.put_json("bronze/run1/b.json", {"b": 2})
-            store.put_json("silver/run1/c.json", {"c": 3})
+    def test_list_prefix(self, tmp_path: Path) -> None:
+        store = LocalStore(root=tmp_path)
+        store.put_json("bronze/run1/a.json", {"a": 1})
+        store.put_json("bronze/run1/b.json", {"b": 2})
+        store.put_json("silver/run1/c.json", {"c": 3})
 
-            bronze_files = store.list_prefix("bronze/run1")
-            assert len(bronze_files) == 2
-            assert all("bronze/run1" in f for f in bronze_files)
+        bronze_files = store.list_prefix("bronze/run1")
+        assert len(bronze_files) == 2
+        assert all("bronze/run1" in f for f in bronze_files)
 
-    def test_exists(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            store = LocalStore(root=tmp)
-            assert not store.exists("bronze/x.json")
-            store.put_json("bronze/x.json", {})
-            assert store.exists("bronze/x.json")
+    def test_exists(self, tmp_path: Path) -> None:
+        store = LocalStore(root=tmp_path)
+        assert not store.exists("bronze/x.json")
+        store.put_json("bronze/x.json", {})
+        assert store.exists("bronze/x.json")
 
-    def test_bronze_silver_gold_dirs_are_separate(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            store = LocalStore(root=tmp)
-            store.put_json("bronze/run/data.json", {"layer": "bronze"})
-            store.put_json("silver/run/data.json", {"layer": "silver"})
-            store.put_json("gold/run/data.json", {"layer": "gold"})
+    def test_bronze_silver_gold_dirs_are_separate(self, tmp_path: Path) -> None:
+        store = LocalStore(root=tmp_path)
+        store.put_json("bronze/run/data.json", {"layer": "bronze"})
+        store.put_json("silver/run/data.json", {"layer": "silver"})
+        store.put_json("gold/run/data.json", {"layer": "gold"})
 
-            assert store.read_json("bronze/run/data.json")["layer"] == "bronze"
-            assert store.read_json("silver/run/data.json")["layer"] == "silver"
-            assert store.read_json("gold/run/data.json")["layer"] == "gold"
+        assert store.read_json("bronze/run/data.json")["layer"] == "bronze"
+        assert store.read_json("silver/run/data.json")["layer"] == "silver"
+        assert store.read_json("gold/run/data.json")["layer"] == "gold"
 
 
 class TestLakePaths:

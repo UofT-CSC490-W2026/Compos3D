@@ -42,7 +42,7 @@ class LocalStore:
         if prefix_path.is_dir():
             for p in prefix_path.rglob("*"):
                 if p.is_file():
-                    out.append(str(p.relative_to(self.root)))
+                    out.append(p.relative_to(self.root).as_posix())
         return sorted(out)
 
     def exists(self, rel_path: str) -> bool:
