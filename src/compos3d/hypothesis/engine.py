@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import json
-from heapq import nlargest
+from collections import defaultdict
 from datetime import datetime, timezone
+from heapq import nlargest
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from compos3d.catalog import assets_mentioned_in_prompt, infer_room_type
 from compos3d.config import (
@@ -21,7 +22,13 @@ from compos3d.evaluation.critic import (
 )
 from compos3d.hypothesis.loop import HypothesisLoopConfig, SceneHypothesisLoop
 from compos3d.llm.scene_llm import build_scene_llm
-from compos3d.models import HypothesisRecord, PredictionRecord
+from compos3d.models import (
+    AssetSpec,
+    ConstraintSpec,
+    HypothesisRecord,
+    PredictionRecord,
+    SceneProgram,
+)
 from compos3d.procedural.service import (
     BuildSceneRequest,
     build_scene,
@@ -39,6 +46,8 @@ from compos3d.storage.paths import (
 
 if TYPE_CHECKING:
     from compos3d.storage import AnyStore
+
+InferenceStrategy = Literal["joint_top_k", "filter_and_weight"]
 
 
 def _write_json(path: Path, payload: dict | list) -> None:
@@ -243,6 +252,255 @@ def _select_hypotheses_for_inference(
             record.mean_score,
         ),
     )
+
+
+def _normalize_text(text: str) -> str:
+    return " ".join(text.lower().split())
+
+
+def _normalize_inference_strategy(strategy: str) -> InferenceStrategy:
+    normalized = strategy.strip().lower()
+    if normalized not in {"joint_top_k", "filter_and_weight"}:
+        raise ValueError(
+            "inference_strategy must be one of 'joint_top_k' or 'filter_and_weight'"
+        )
+    return normalized  # type: ignore[return-value]
+
+
+def _best_accuracy_hypothesis(records: list[HypothesisRecord]) -> HypothesisRecord | None:
+    if not records:
+        return None
+    return max(
+        records,
+        key=lambda record: (
+            record.accuracy,
+            record.reward,
+            record.mean_score,
+            len(record.support_example_ids),
+        ),
+    )
+
+
+def _heuristic_filter_hypotheses_for_prompt(
+    records: list[HypothesisRecord], *, prompt: str, room_type: str
+) -> list[HypothesisRecord]:
+    prompt_assets = assets_mentioned_in_prompt(prompt, room_type)
+    filtered: list[HypothesisRecord] = []
+    for record in records:
+        lower_text = record.text.lower()
+        overlap = any(
+            asset in lower_text or asset.replace("_", " ") in lower_text
+            for asset in prompt_assets
+        )
+        if overlap or room_type.replace("_", " ") in lower_text:
+            filtered.append(record)
+    return filtered
+
+
+def _filter_hypotheses_for_inference(
+    llm,
+    records: list[HypothesisRecord],
+    *,
+    prompt: str,
+    room_type: str,
+) -> list[HypothesisRecord]:
+    if not records:
+        return []
+
+    candidate_texts = [record.text for record in records]
+    relevant_texts: list[str] | None = None
+    if hasattr(llm, "filter_relevant_hypotheses"):
+        try:
+            relevant_texts = llm.filter_relevant_hypotheses(
+                prompt=prompt,
+                room_type=room_type,
+                candidate_hypotheses=candidate_texts,
+            )
+        except Exception:  # noqa: BLE001
+            relevant_texts = None
+
+    if relevant_texts is None:
+        return _heuristic_filter_hypotheses_for_prompt(
+            records,
+            prompt=prompt,
+            room_type=room_type,
+        )
+
+    record_by_text = {_normalize_text(record.text): record for record in records}
+    filtered: list[HypothesisRecord] = []
+    for text in relevant_texts:
+        record = record_by_text.get(_normalize_text(text))
+        if record is not None:
+            filtered.append(record)
+    return filtered
+
+
+def _hypothesis_vote_weight(record: HypothesisRecord) -> float:
+    if record.accuracy > 0:
+        return record.accuracy
+    if record.mean_score > 0:
+        return record.mean_score
+    if record.reward > 0:
+        return record.reward
+    return 1.0
+
+
+def _fallback_asset_spec(asset_type: str) -> AssetSpec:
+    placement = (
+        "center of room" if asset_type in {"dining_table", "sofa"} else "near wall or support surface"
+    )
+    return AssetSpec(
+        asset_type=asset_type,
+        count=1,
+        placement=placement,
+        rationale="Added from weighted filter-and-weight inference.",
+    )
+
+
+def _weighted_vote_scene_program(
+    *,
+    prompt: str,
+    room_type: str,
+    records: list[HypothesisRecord],
+    candidate_programs: list[SceneProgram],
+) -> SceneProgram:
+    style_votes: dict[str, float] = defaultdict(float)
+    asset_votes: dict[str, float] = defaultdict(float)
+    asset_weighted_counts: dict[str, float] = defaultdict(float)
+    asset_weight_totals: dict[str, float] = defaultdict(float)
+    best_asset_spec: dict[str, tuple[float, AssetSpec]] = {}
+
+    weights = [_hypothesis_vote_weight(record) for record in records]
+    total_weight = sum(weights) or float(len(weights) or 1)
+
+    for record, program in zip(records, candidate_programs):
+        weight = _hypothesis_vote_weight(record)
+        if program.style:
+            style_votes[program.style] += weight
+        for asset in program.assets:
+            asset_votes[asset.asset_type] += weight
+            asset_weighted_counts[asset.asset_type] += weight * asset.count
+            asset_weight_totals[asset.asset_type] += weight
+            best = best_asset_spec.get(asset.asset_type)
+            if best is None or weight > best[0]:
+                best_asset_spec[asset.asset_type] = (weight, asset)
+
+    prompt_assets = list(dict.fromkeys(assets_mentioned_in_prompt(prompt, room_type)))
+    selected_asset_types: list[str] = []
+    for asset_type in prompt_assets:
+        if asset_type not in selected_asset_types:
+            selected_asset_types.append(asset_type)
+
+    ranked_assets = sorted(
+        asset_votes,
+        key=lambda asset_type: (
+            asset_type in prompt_assets,
+            asset_votes[asset_type],
+            asset_weighted_counts[asset_type],
+            asset_type,
+        ),
+        reverse=True,
+    )
+    for asset_type in ranked_assets:
+        if asset_type in selected_asset_types:
+            continue
+        if asset_votes[asset_type] >= total_weight / 2:
+            selected_asset_types.append(asset_type)
+
+    target_assets = min(4, max(len(prompt_assets), 3))
+    for asset_type in ranked_assets:
+        if len(selected_asset_types) >= target_assets:
+            break
+        if asset_type not in selected_asset_types:
+            selected_asset_types.append(asset_type)
+
+    if not selected_asset_types and ranked_assets:
+        selected_asset_types.append(ranked_assets[0])
+
+    assets: list[AssetSpec] = []
+    for asset_type in selected_asset_types[:6]:
+        if asset_type in best_asset_spec:
+            _, reference_spec = best_asset_spec[asset_type]
+            count = max(
+                1,
+                int(
+                    round(
+                        asset_weighted_counts[asset_type]
+                        / max(asset_weight_totals[asset_type], 1e-6)
+                    )
+                ),
+            )
+            assets.append(
+                AssetSpec(
+                    asset_type=asset_type,
+                    count=count,
+                    placement=reference_spec.placement,
+                    rationale=reference_spec.rationale,
+                )
+            )
+        else:
+            assets.append(_fallback_asset_spec(asset_type))
+
+    style = max(style_votes, key=style_votes.get) if style_votes else None
+    selected_hypotheses = [record.text for record in records]
+    constraints = [ConstraintSpec(text=record.text) for record in records]
+    return SceneProgram(
+        prompt=prompt,
+        room_type=room_type,
+        style=style,
+        hypotheses=selected_hypotheses,
+        assets=assets,
+        constraints=constraints,
+    )
+
+
+def _run_filter_and_weight_inference(
+    *,
+    llm,
+    records: list[HypothesisRecord],
+    prompt: str,
+    room_type: str,
+) -> tuple[list[HypothesisRecord], SceneProgram]:
+    filtered_records = _filter_hypotheses_for_inference(
+        llm,
+        records,
+        prompt=prompt,
+        room_type=room_type,
+    )
+    if not filtered_records:
+        fallback = _best_accuracy_hypothesis(records)
+        filtered_records = [fallback] if fallback is not None else []
+
+    candidate_programs: list[SceneProgram] = []
+    active_records: list[HypothesisRecord] = []
+    for record in filtered_records:
+        try:
+            candidate_programs.append(
+                llm.generate_scene_program(
+                    prompt=prompt,
+                    room_type=room_type,
+                    selected_hypotheses=[record.text],
+                )
+            )
+            active_records.append(record)
+        except Exception:  # noqa: BLE001
+            continue
+
+    if candidate_programs:
+        return active_records, _weighted_vote_scene_program(
+            prompt=prompt,
+            room_type=room_type,
+            records=active_records,
+            candidate_programs=candidate_programs,
+        )
+
+    selected_hypotheses = [record.text for record in filtered_records]
+    scene_program = llm.generate_scene_program(
+        prompt=prompt,
+        room_type=room_type,
+        selected_hypotheses=selected_hypotheses,
+    )
+    return filtered_records, scene_program
 
 
 def _training_config_from_args(
@@ -493,6 +751,7 @@ def run_vertical_inference(
     llm_provider: str = "mock",
     config_path: Path | None = None,
     top_k: int = 2,
+    inference_strategy: str = "joint_top_k",
     render_scene: bool = False,
     render_resolution: str = "512x512",
     render_view_samples: int = 48,
@@ -503,6 +762,7 @@ def run_vertical_inference(
     instance_type: str | None = None,
 ) -> dict:
     bank = _load_bank(bank_path)
+    resolved_inference_strategy = _normalize_inference_strategy(inference_strategy)
     experiment_config = (
         load_experiment_config(config_path)
         if config_path is not None
@@ -514,13 +774,23 @@ def run_vertical_inference(
     llm = build_scene_llm(experiment_config.generator)
     critic = build_scene_critic(experiment_config.critic)
     room_type = infer_room_type(prompt)
-    selected = _select_hypotheses_for_inference(
+    candidates = _select_hypotheses_for_inference(
         bank, room_type, prompt=prompt, top_k=experiment_config.training.top_k
     )
+    if resolved_inference_strategy == "filter_and_weight":
+        selected, scene_program = _run_filter_and_weight_inference(
+            llm=llm,
+            records=candidates,
+            prompt=prompt,
+            room_type=room_type,
+        )
+    else:
+        selected = candidates
+        selected_text = [item.text for item in selected]
+        scene_program = llm.generate_scene_program(
+            prompt=prompt, room_type=room_type, selected_hypotheses=selected_text
+        )
     selected_text = [item.text for item in selected]
-    scene_program = llm.generate_scene_program(
-        prompt=prompt, room_type=room_type, selected_hypotheses=selected_text
-    )
 
     output_dir.mkdir(parents=True, exist_ok=True)
     sp_path = output_dir / "scene_program.json"
@@ -575,8 +845,11 @@ def run_vertical_inference(
         "prompt": prompt,
         "room_type": room_type,
         "llm_provider": experiment_config.generator.provider,
+        "inference_strategy": resolved_inference_strategy,
         "config_path": str(config_path) if config_path is not None else None,
         "experiment_config": experiment_config.model_dump(),
+        "candidate_hypothesis_ids": [item.hypothesis_id for item in candidates],
+        "candidate_hypotheses": [item.text for item in candidates],
         "selected_hypothesis_ids": [item.hypothesis_id for item in selected],
         "selected_hypotheses": selected_text,
         "scene_program_path": str(sp_path),

@@ -44,6 +44,7 @@ class InferenceRequest:
     llm_provider: str = "mock"
     config_path: Path | None = None
     top_k: int = 2
+    inference_strategy: str = "joint_top_k"
     # --- Render options ---
     render_scene: bool = False
     render_resolution: str = "512x512"
@@ -90,6 +91,7 @@ def run_frozen_inference(request: InferenceRequest) -> dict:
         llm_provider=request.llm_provider,
         config_path=request.config_path,
         top_k=request.top_k,
+        inference_strategy=request.inference_strategy,
         render_scene=request.render_scene,
         render_resolution=request.render_resolution,
         render_view_samples=request.render_view_samples,

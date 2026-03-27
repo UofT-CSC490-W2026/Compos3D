@@ -74,6 +74,28 @@ def _normalize_hypotheses(raw_hypotheses: object) -> list[str]:
     return normalized
 
 
+def _normalize_relevant_hypotheses(
+    raw_hypotheses: object, candidate_hypotheses: list[str]
+) -> list[str]:
+    if not isinstance(raw_hypotheses, list):
+        raise StructuredOutputError(
+            "Hypothesis filter response must include a relevant_hypotheses list."
+        )
+
+    candidate_lookup = {
+        " ".join(text.lower().split()): text for text in candidate_hypotheses
+    }
+    normalized: list[str] = []
+    for item in raw_hypotheses:
+        text = str(item).strip()
+        if not text:
+            continue
+        matched = candidate_lookup.get(" ".join(text.lower().split()))
+        if matched:
+            normalized.append(matched)
+    return _dedupe_keep_order(normalized)
+
+
 def _normalize_constraints(raw_constraints: object) -> list[dict[str, str]]:
     if not isinstance(raw_constraints, list):
         raise StructuredOutputError(
@@ -287,6 +309,25 @@ class MockSceneLLM:
             constraints=constraints,
         )
 
+    def filter_relevant_hypotheses(
+        self,
+        *,
+        prompt: str,
+        room_type: str,
+        candidate_hypotheses: list[str],
+    ) -> list[str]:
+        prompt_assets = set(assets_mentioned_in_prompt(prompt, room_type))
+        relevant: list[str] = []
+        for hypothesis in candidate_hypotheses:
+            lower_hypothesis = hypothesis.lower()
+            overlap = any(
+                asset in lower_hypothesis or asset.replace("_", " ") in lower_hypothesis
+                for asset in prompt_assets
+            )
+            if overlap or room_type.replace("_", " ") in lower_hypothesis:
+                relevant.append(hypothesis)
+        return _dedupe_keep_order(relevant)
+
 
 class BedrockSceneLLM:
     provider_name = "bedrock"
@@ -400,6 +441,30 @@ class BedrockSceneLLM:
             room_type=resolved_room_type,
         )
         return SceneProgram.model_validate(normalized_payload)
+
+    def filter_relevant_hypotheses(
+        self,
+        *,
+        prompt: str,
+        room_type: str,
+        candidate_hypotheses: list[str],
+    ) -> list[str]:
+        request = (
+            "You are selecting which abstract scene-design hypotheses are relevant to a target prompt. "
+            'Return strictly valid JSON with the shape {"relevant_hypotheses": [string, ...]}. '
+            "Only return items copied exactly from the candidate list. "
+            "Keep a hypothesis only if it would materially help generate a more accurate scene for the prompt. "
+            "Drop hypotheses that are generic, redundant, or unrelated to the requested room semantics and assets. "
+            f"room_type={room_type}\n"
+            f"Prompt: {prompt}\n"
+            "Candidate hypotheses:\n"
+            + "\n".join(f"- {hypothesis}" for hypothesis in candidate_hypotheses)
+        )
+        payload = self._run_json_prompt(request)
+        return _normalize_relevant_hypotheses(
+            payload.get("relevant_hypotheses"),
+            candidate_hypotheses,
+        )
 
 
 def build_scene_llm(provider_or_config: str | GeneratorConfig):

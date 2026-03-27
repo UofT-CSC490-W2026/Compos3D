@@ -220,6 +220,10 @@ def run_inference_cmd(
     config_path: Path | None = typer.Option(
         None, exists=False, help="Experiment JSON config for generator and critic"
     ),
+    inference_strategy: str = typer.Option(
+        "joint_top_k",
+        help="Inference strategy: joint_top_k or filter_and_weight",
+    ),
     render_scene: bool = typer.Option(
         False,
         "--render-scene",
@@ -267,6 +271,7 @@ def run_inference_cmd(
                 output_dir=output_dir,
                 llm_provider=llm_provider,
                 config_path=config_path,
+                inference_strategy=inference_strategy,
                 render_scene=render_scene,
                 render_resolution=render_resolution,
                 render_view_samples=render_view_samples,
