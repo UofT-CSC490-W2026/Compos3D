@@ -16,6 +16,7 @@ dependencies = [
     "typer>=0.23.1",
     "pillow>=10.0.0",
     "imageio[ffmpeg]>=2.34.0",
+    "wandb>=0.22.0",
 ]
 
 [project.scripts]
