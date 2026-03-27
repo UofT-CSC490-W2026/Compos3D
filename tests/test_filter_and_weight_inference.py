@@ -125,6 +125,104 @@ def test_weighted_vote_scene_program_aggregates_assets_and_style() -> None:
     assert chair.count == 4
 
 
+def test_engine_filter_and_weight_helper_branches() -> None:
+    assert (
+        engine._normalize_inference_strategy(" Filter_And_Weight ")
+        == "filter_and_weight"
+    )  # noqa: SLF001
+    assert engine._best_accuracy_hypothesis([]) is None  # noqa: SLF001
+    assert (
+        engine._hypothesis_vote_weight(  # noqa: SLF001
+            _make_record("h0", "fallback", accuracy=0.0, mean_score=0.0, reward=0.0)
+        )
+        == 1.0
+    )
+
+    fallback_asset = engine._fallback_asset_spec("window")  # noqa: SLF001
+    assert fallback_asset.placement == "near wall or support surface"
+
+    try:
+        engine._normalize_inference_strategy("bad")  # noqa: SLF001
+    except ValueError as exc:
+        assert "inference_strategy" in str(exc)
+    else:  # pragma: no cover - defensive
+        raise AssertionError("expected ValueError")
+
+
+def test_filter_hypotheses_for_inference_uses_heuristic_fallback_on_errors() -> None:
+    class _LLM:
+        def filter_relevant_hypotheses(self, **_kwargs):
+            raise RuntimeError("boom")
+
+    records = [
+        _make_record("h1", "chairs should surround the dining_table"),
+        _make_record("h2", "windows are nice"),
+    ]
+
+    filtered = engine._filter_hypotheses_for_inference(  # noqa: SLF001
+        _LLM(),
+        records,
+        prompt="a dining room with a table and chairs",
+        room_type="dining_room",
+    )
+
+    assert [record.hypothesis_id for record in filtered] == ["h1"]
+
+
+def test_weighted_vote_scene_program_uses_fallback_asset_and_majority_threshold() -> (
+    None
+):
+    records = [
+        _make_record("h1", "chairs matter", accuracy=0.0, mean_score=0.8, reward=0.1),
+        _make_record("h2", "rug matters", accuracy=0.0, mean_score=0.0, reward=0.6),
+    ]
+    candidate_programs = [
+        SceneProgram(
+            prompt="p",
+            room_type="dining_room",
+            hypotheses=["h1"],
+            assets=[
+                AssetSpec(
+                    asset_type="dining_table",
+                    count=1,
+                    placement="center",
+                    rationale="anchor",
+                )
+            ],
+        ),
+        SceneProgram(
+            prompt="p",
+            room_type="dining_room",
+            hypotheses=["h2"],
+            assets=[
+                AssetSpec(
+                    asset_type="dining_table",
+                    count=1,
+                    placement="center",
+                    rationale="anchor",
+                ),
+                AssetSpec(
+                    asset_type="rug",
+                    count=1,
+                    placement="under table",
+                    rationale="ground",
+                ),
+            ],
+        ),
+    ]
+
+    program = engine._weighted_vote_scene_program(  # noqa: SLF001
+        prompt="a dining room with a chair",
+        room_type="dining_room",
+        records=records,
+        candidate_programs=candidate_programs,
+    )
+
+    chair = next(asset for asset in program.assets if asset.asset_type == "chair")
+    assert chair.placement == "near wall or support surface"
+    assert any(asset.asset_type == "rug" for asset in program.assets)
+
+
 def test_filter_and_weight_falls_back_to_best_accuracy_when_filter_empty() -> None:
     class _LLM:
         def filter_relevant_hypotheses(self, **_kwargs):
@@ -164,6 +262,44 @@ def test_filter_and_weight_falls_back_to_best_accuracy_when_filter_empty() -> No
 
     assert [record.hypothesis_id for record in chosen] == ["h1"]
     assert any(asset.asset_type == "chair" for asset in program.assets)
+
+
+def test_filter_and_weight_skips_failed_candidates_and_falls_back_to_joint_generation() -> (
+    None
+):
+    class _LLM:
+        def filter_relevant_hypotheses(self, **_kwargs):
+            return ["chair rule", "lamp rule"]
+
+        def generate_scene_program(self, *, prompt, room_type, selected_hypotheses):
+            if len(selected_hypotheses) == 1:
+                raise RuntimeError("single hypothesis failed")
+            return SceneProgram(
+                prompt=prompt,
+                room_type=room_type,
+                hypotheses=selected_hypotheses,
+                assets=[
+                    AssetSpec(
+                        asset_type="dining_table",
+                        count=1,
+                        placement="center of room",
+                        rationale="anchor",
+                    )
+                ],
+            )
+
+    chosen, program = engine._run_filter_and_weight_inference(  # noqa: SLF001
+        llm=_LLM(),
+        records=[
+            _make_record("h1", "chair rule", accuracy=0.9),
+            _make_record("h2", "lamp rule", accuracy=0.5),
+        ],
+        prompt="a dining room",
+        room_type="dining_room",
+    )
+
+    assert [record.hypothesis_id for record in chosen] == ["h1", "h2"]
+    assert program.hypotheses == ["chair rule", "lamp rule"]
 
 
 def test_run_vertical_inference_filter_and_weight_end_to_end(

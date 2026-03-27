@@ -18,6 +18,8 @@ Expected outcomes:
 
 from __future__ import annotations
 
+import types
+
 import pytest
 
 from compos3d.config import GeneratorConfig
@@ -117,3 +119,24 @@ def test_determinism_controls_forwarded_inference_config() -> None:
     )
     assert captured["inference_config"]["temperature"] == 0.0
     assert captured["inference_config"]["maxTokens"] == 321
+
+
+def test_normalize_relevant_hypotheses_and_mock_scene_program_branches() -> None:
+    normalized = scene_llm._normalize_relevant_hypotheses(  # noqa: SLF001
+        ["  chairs around dining table  ", "", "missing"],
+        ["chairs around dining table", "rug under table"],
+    )
+    assert normalized == ["chairs around dining table"]
+
+    with pytest.raises(StructuredOutputError, match="relevant_hypotheses list"):
+        scene_llm._normalize_relevant_hypotheses("bad", ["h1"])  # noqa: SLF001
+
+    llm = scene_llm.MockSceneLLM()
+    program = llm.generate_scene_program(
+        prompt="a calm living room with a sofa",
+        room_type=None,
+        selected_hypotheses=["A sofa should anchor the space."],
+    )
+    assert isinstance(types.SimpleNamespace(), types.SimpleNamespace)
+    assert program.room_type == "living_room"
+    assert program.style == "calm"

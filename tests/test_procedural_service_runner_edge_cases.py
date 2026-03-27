@@ -85,3 +85,37 @@ def test_runner_run_script_capture_output_success(monkeypatch, tmp_path) -> None
     result = runner.run_script(tmp_path / "script.py", ["--x"], capture_output=True)
     assert result["exit_code"] == 0
     assert result["stdout"] == "ok"
+
+
+def test_runner_find_gin_root_and_non_capture_mode(monkeypatch, tmp_path) -> None:
+    project_root = tmp_path / "project"
+    project_root.mkdir()
+    sibling = tmp_path / "alt_infinigen"
+    (sibling / "infinigen_examples" / "configs_indoor").mkdir(parents=True)
+    (sibling / "infinigen_examples" / "configs_indoor" / "singleroom.gin").write_text("")
+    monkeypatch.setattr(runner, "PROJECT_ROOT", project_root)
+
+    found = runner._find_gin_config_root()  # noqa: SLF001
+    assert found == sibling
+
+    class _Completed:
+        returncode = 0
+
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: _Completed())
+    result = runner.run_script(
+        tmp_path / "script.py",
+        [],
+        capture_output=False,
+        extra_pythonpath=[tmp_path / "extras"],
+        cwd=tmp_path,
+    )
+    assert result["exit_code"] == 0
+    assert "stdout" not in result
+
+
+def test_runner_find_gin_root_missing_raises(monkeypatch, tmp_path) -> None:
+    empty_root = tmp_path / "root"
+    empty_root.mkdir()
+    monkeypatch.setattr(runner, "PROJECT_ROOT", empty_root)
+    with pytest.raises(FileNotFoundError, match="singleroom.gin"):
+        runner._find_gin_config_root()  # noqa: SLF001

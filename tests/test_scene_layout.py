@@ -4,6 +4,7 @@ import os
 
 from compos3d.procedural.layout import (
     CHAIR_ORBIT_RADIUS,
+    _chair_positions,
     preview_anchor_map,
     resolve_asset_positions,
     resolve_factory_params,
@@ -114,3 +115,138 @@ def test_runner_env_includes_src_tree_for_procedural_subprocesses() -> None:
     env = _build_env()
     pythonpath = env["PYTHONPATH"].split(os.pathsep)
     assert str(PROJECT_ROOT / "src") in pythonpath
+
+
+def test_layout_additional_relationship_branches() -> None:
+    scene_program = {
+        "prompt": "A cozy living room with a floating sofa, a rug in front of the sofa, and a lamp near the sofa",
+        "room_type": "living_room",
+        "assets": [
+            {
+                "asset_type": "sofa",
+                "count": 1,
+                "placement": "floating in the middle of the room",
+            },
+            {"asset_type": "rug", "count": 1, "placement": "in front of the sofa"},
+            {"asset_type": "lamp", "count": 1, "placement": "adjacent to the sofa"},
+            {"asset_type": "vase", "count": 1, "placement": "on the side table"},
+        ],
+    }
+
+    anchors = preview_anchor_map(scene_program)
+    rug_positions = resolve_asset_positions(
+        scene_program, scene_program["assets"][1], anchors
+    )
+    lamp_positions = resolve_asset_positions(
+        scene_program, scene_program["assets"][2], anchors
+    )
+    vase_positions = resolve_asset_positions(
+        scene_program, scene_program["assets"][3], anchors
+    )
+    unknown_positions = resolve_asset_positions(
+        {"room_type": "dining_room", "assets": []},
+        {"asset_type": "window", "count": 1, "placement": "near wall"},
+        {},
+    )
+
+    assert anchors["sofa"]["xy"] == (0.0, 0.0)
+    assert rug_positions == [{"xy": (0.0, 1.45), "rot_z": 0.0}]
+    assert lamp_positions == [{"xy": (1.6, 0.15), "rot_z": 0.0}]
+    assert vase_positions == [{"xy": (0.15, -0.3), "rot_z": 0.0, "z_offset": 0.62}]
+    assert unknown_positions == [{"xy": (0.0, 0.0), "rot_z": 0.0}]
+
+
+def test_resolve_factory_params_additional_branches() -> None:
+    dining_scene = {
+        "prompt": "A dining room with a rectangular dining table and a rug under the dining table",
+        "room_type": "dining_room",
+        "hypotheses": [],
+        "constraints": [],
+    }
+    living_scene = {
+        "prompt": "A cozy living room with a sofa and rug under sofa",
+        "room_type": "living_room",
+        "hypotheses": ["keep a cozy sofa"],
+        "constraints": [{"text": "Rug goes under sofa"}],
+    }
+
+    rug_opts = {
+        "a": {"width": 2.0, "length": 3.0, "rug_shape": "rectangle"},
+        "b": {"width": 2.5, "length": 2.5, "rug_shape": "circle"},
+        "c": {
+            "width": 2.0,
+            "length": 3.5,
+            "rug_shape": "rounded",
+            "rounded_buffer": 0.5,
+        },
+    }
+    chair_opts = {"a": {"legs": 3}, "b": {"legs": 4}}
+    sofa_opts = {"a": {"variant": "default"}, "b": {"variant": "cozy"}}
+
+    dining_rug = resolve_factory_params(
+        "rug",
+        dining_scene,
+        {
+            "asset_type": "rug",
+            "placement": "under the dining table",
+            "rationale": "anchor",
+        },
+        rug_opts,
+    )
+    living_rug = resolve_factory_params(
+        "rug",
+        living_scene,
+        {"asset_type": "rug", "placement": "under sofa", "rationale": "anchor"},
+        rug_opts,
+    )
+    dining_chair = resolve_factory_params(
+        "chair",
+        dining_scene,
+        {"asset_type": "chair", "placement": "around table", "rationale": "seat"},
+        chair_opts,
+    )
+    cozy_sofa = resolve_factory_params(
+        "sofa",
+        living_scene,
+        {"asset_type": "sofa", "placement": "center", "rationale": "anchor"},
+        sofa_opts,
+    )
+
+    assert dining_rug["rug_shape"] == "rounded"
+    assert dining_rug["rounded_buffer"] == 0.35
+    assert living_rug["rug_shape"] == "rectangle"
+    assert dining_chair == {"legs": 4}
+    assert cozy_sofa == {"variant": "cozy"}
+
+
+def test_layout_edge_fallback_helpers() -> None:
+    scene_program = {
+        "prompt": "A dining room with a lamp near the dining table",
+        "room_type": "dining_room",
+        "assets": [
+            {"asset_type": "dining_table", "count": 1, "placement": "centered in the room"},
+            {"asset_type": "dining_table", "count": 1, "placement": "duplicate anchor"},
+            {"asset_type": "lamp", "count": 1, "placement": "near the dining table", "rationale": "light"},
+        ],
+    }
+
+    anchors = preview_anchor_map(scene_program)
+    lamp_positions = resolve_asset_positions(scene_program, scene_program["assets"][2], anchors)
+    no_chairs = _chair_positions({"xy": (0.0, 0.0), "rot_z": 0.0}, 0)
+    no_room_positions = resolve_asset_positions(
+        {"room_type": "garage", "prompt": "", "assets": []},
+        {"asset_type": "lamp", "count": 1, "placement": "corner"},
+        {},
+    )
+    passthrough_params = resolve_factory_params(
+        "lamp",
+        {"prompt": "", "room_type": "dining_room", "hypotheses": [], "constraints": []},
+        {"asset_type": "lamp", "placement": "corner", "rationale": "light"},
+        {"a": {"kind": "default"}},
+    )
+
+    assert list(anchors) == ["dining_table", "lamp"]
+    assert lamp_positions == [{"xy": (1.8, 1.0), "rot_z": 0.0}]
+    assert no_chairs == []
+    assert no_room_positions == [{"xy": (0.0, 0.0), "rot_z": 0.0}]
+    assert passthrough_params == {"kind": "default"}
