@@ -267,7 +267,9 @@ def _normalize_inference_strategy(strategy: str) -> InferenceStrategy:
     return normalized  # type: ignore[return-value]
 
 
-def _best_accuracy_hypothesis(records: list[HypothesisRecord]) -> HypothesisRecord | None:
+def _best_accuracy_hypothesis(
+    records: list[HypothesisRecord],
+) -> HypothesisRecord | None:
     if not records:
         return None
     return max(
@@ -347,7 +349,9 @@ def _hypothesis_vote_weight(record: HypothesisRecord) -> float:
 
 def _fallback_asset_spec(asset_type: str) -> AssetSpec:
     placement = (
-        "center of room" if asset_type in {"dining_table", "sofa"} else "near wall or support surface"
+        "center of room"
+        if asset_type in {"dining_table", "sofa"}
+        else "near wall or support surface"
     )
     return AssetSpec(
         asset_type=asset_type,

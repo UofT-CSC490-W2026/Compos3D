@@ -104,7 +104,9 @@ def parse_layout_asset_counts(layout_text: str) -> Counter[str]:
     return asset_counts
 
 
-def select_required_assets(room_type: str, asset_counts: Counter[str]) -> list[str] | None:
+def select_required_assets(
+    room_type: str, asset_counts: Counter[str]
+) -> list[str] | None:
     required: list[str] = []
     available_assets = {
         asset for asset in ASSET_PRIORITY[room_type] if asset_counts.get(asset, 0) > 0
@@ -221,7 +223,8 @@ def extract_sample_id(row: dict) -> str | None:
 def candidate_sort_key(candidate: SpatialLMCandidate) -> tuple[int, int, int, str]:
     asset_count = len(candidate.required_assets)
     total_mentions = sum(
-        candidate.asset_counts.get(asset_type, 0) for asset_type in candidate.required_assets
+        candidate.asset_counts.get(asset_type, 0)
+        for asset_type in candidate.required_assets
     )
     window_bonus = 1 if "window" in candidate.required_assets else 0
     return (-asset_count, -total_mentions, -window_bonus, candidate.room_id)
@@ -317,7 +320,9 @@ def build_training_dataset_payload(
     }
 
 
-def write_training_dataset_payload(payload: dict[str, object], output_path: Path) -> None:
+def write_training_dataset_payload(
+    payload: dict[str, object], output_path: Path
+) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
