@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from compos3d.procedural.layout import (
     CHAIR_ORBIT_RADIUS,
     preview_anchor_map,
@@ -110,5 +112,5 @@ def test_resolve_factory_params_adds_round_table_and_rug_hints() -> None:
 
 def test_runner_env_includes_src_tree_for_procedural_subprocesses() -> None:
     env = _build_env()
-    pythonpath = env["PYTHONPATH"].split(":")
+    pythonpath = env["PYTHONPATH"].split(os.pathsep)
     assert str(PROJECT_ROOT / "src") in pythonpath

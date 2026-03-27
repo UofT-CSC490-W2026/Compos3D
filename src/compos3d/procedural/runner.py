@@ -89,7 +89,7 @@ def _build_env(extra_pythonpath: list[Path] | None = None) -> dict[str, str]:
     existing = env.get("PYTHONPATH", "")
     if existing:
         dirs.append(existing)
-    env["PYTHONPATH"] = ":".join(dirs)
+    env["PYTHONPATH"] = os.pathsep.join(dirs)
     return env
 
 
