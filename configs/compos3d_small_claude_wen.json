@@ -1,0 +1,44 @@
+{
+  "room_types": ["dining_room", "living_room"],
+  "generator": {
+    "provider": "bedrock",
+    "model_id": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+    "region_name": "us-east-1",
+    "max_tokens": 1200,
+    "temperature": 0.0
+  },
+  "critic": {
+    "mode": "vlm",
+    "provider": "bedrock",
+    "model_id": "qwen.qwen3-vl-235b-a22b",
+    "region_name": "us-east-1",
+    "max_tokens": 800,
+    "temperature": 0.0
+  },
+  "render": {
+    "enabled": true,
+    "resolution": "256x256",
+    "view_samples": 8,
+    "no_video": true,
+    "save_blend": false
+  },
+  "training": {
+    "num_init_examples_per_room": 1,
+    "init_hypotheses_per_room": 2,
+    "top_k": 2,
+    "alpha": 0.5,
+    "max_num_hypotheses_per_room": 6,
+    "num_wrong_scale": 0.8,
+    "update_batch_size": 1,
+    "num_hypotheses_to_update": 1,
+    "update_hypotheses_per_batch": 2,
+    "only_best_hypothesis": false,
+    "num_epochs": 1,
+    "success_threshold": 0.65,
+    "save_every_n_examples": 1,
+    "selection_strategy": "ucb",
+    "use_repair": true,
+    "baseline_mode": null,
+    "seed": 42
+  }
+}
