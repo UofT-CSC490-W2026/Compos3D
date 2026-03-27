@@ -1,114 +1,137 @@
-# Compos3D: Hypothesis-Guided Controllable Procedural 3D Scene Generation
+# Compos3D: Your Reasoning LLM is Secretly a 3D Scene generator
 
-This repository provides the implementation of **Compos3D**, a system that uses LLMs to induce explicit design hypotheses from scene examples and applies them to generate structured 3D scenes via procedural rendering. Rather than generating raw code or direct geometry, Compos3D produces a `SceneProgram`, a structured JSON representation of furniture layout and constraints, which is then rendered into a full 3D scene with multiple camera views and an orbital video using Blender and Infinigen asset factories.
-
-The hypothesis loop is a UCB-style multi-armed bandit that maintains a bank of scene design hypotheses, evaluates them by generating and rendering scenes, scores them with either a heuristic or VLM critic, and iteratively repairs low-performing hypotheses. This gives the system an explicit, inspectable inductive bias that is updated from experience.
-
+This repository provides the implementation of Compos3D, a system that uses LLMs to induce explicit design hypotheses from scene examples and applies them to generate structured 3D scenes via procedural rendering. Rather than generating raw code or direct geometry, Compos3D produces a SceneProgram, a structured JSON representation of furniture layout and constraints, which is then rendered into a full 3D scene with multiple camera views and an orbital video using Blender and Infinigen asset factories.
 
 ## Contents
 
+- [✨ What the Project Does](#-what-the-project-does)
+- [🗂️ Repository Layout](#-repository-layout)
 - [🔧 Installation](#-installation)
-- [📖 Codebase Overview](#-codebase-overview)
-- [📚 Dataset Format](#-dataset-format)
-- [💻 Training the Hypothesis Bank](#-training-the-hypothesis-bank)
-- [🎬 Inference and Scene Generation](#-inference-and-scene-generation)
-- [🖼️ Rendering a Scene](#-rendering-a-scene)
-- [☁️ Running on AWS EC2](#-running-on-aws-ec2)
+- [📚 Dataset](#-dataset)
+- [🏋️ Training](#-training)
+- [🎬 Inference](#-inference)
+- [🖼️ Rendering](#-rendering)
 - [⚙️ Configuration](#-configuration)
-- [🧪 Running Tests](#-running-tests)
-- [🤗 Credits](#-credits)
+- [☁️ AWS](#-aws)
+- [🧪 Testing](#-testing)
+- [🤝 Credits](#-credits)
 
+## ✨ What the Project Does
 
+Compos3D turns a text prompt like:
+
+`a cozy dining room with a round table, four chairs, a rug, and a lamp`
+
+into:
+
+1. A `SceneProgram` JSON with room type, style, assets, placements, and constraints.
+2. A rendered 3D scene with four canonical views.
+3. Optionally, an orbital video.
+4. A critic score from either a heuristic scorer or a Bedrock VLM critic.
+
+The main CLI commands are:
+
+- `train-hypotheses`
+- `run-inference`
+- `build-scene`
+- `evaluate`
+- `backend-smoke`
+- `reference-generate`
+- `launch-aws`
+
+## 🗂️ Repository Layout
+
+```text
+src/compos3d/
+  cli.py                     CLI entrypoints
+  config.py                  Generator / critic / render / training config models
+  models.py                  SceneProgram, CriticScore, HypothesisRecord, dataset models
+  catalog.py                 Supported room types and asset catalog
+  data/
+    dataset.py               Training dataset loader
+    spatiallm.py             SpatialLM -> Compos3D dataset conversion
+  hypothesis/
+    loop.py                  Hypothesis training loop
+    engine.py                Training / inference orchestration
+    service.py               Request objects for CLI services
+  llm/
+    scene_llm.py             Mock + Bedrock scene generation and hypothesis filtering
+    bedrock.py               Bedrock client helpers
+  evaluation/
+    critic.py                Heuristic and VLM critics
+    service.py               Evaluation service
+  procedural/
+    runner.py                Blender subprocess runner
+    service.py               Procedural backend entrypoints
+
+procedural/
+  scripts/build_scene.py     SceneProgram -> Blender scene -> renders/video
+  scripts/asset_smoke.py     Asset smoke tests
+  scripts/generate_room.py   Infinigen room generation
+  furniture/                 Furniture factories and placement helpers
+
+scripts/
+  build_spatiallm_dataset.py Download and convert SpatialLM into training data
+
+configs/
+  compos3d.json              Full recommended training config
+  compos3d_small_claude_wen.json
+                             Small 1-epoch Bedrock smoke config
+
+examples/
+  dummy_fast.json            Tiny 4-example smoke dataset
+  vertical_slice_dataset.json
+                             Converted dataset derived from SpatialLM
+
+data/external/spatiallm/
+  split.csv
+  spatiallm_train.json
+
+infinigen/
+  Princeton Infinigen submodule
+```
 
 ## 🔧 Installation
 
-Requires Python 3.11 and a working Blender-compatible environment. The project uses [uv](https://github.com/astral-sh/uv) for dependency management.
+Requirements:
+
+- Python `3.11`
+- Blender-compatible environment
+- The `infinigen` submodule checked out
+- AWS credentials
+
+Clone and install:
 
 ```bash
-git clone --recursive https://github.com/your-org/Compos3D.git
+git clone --recursive <your-repo-url>
 cd Compos3D
 
-# Create and activate the virtual environment
 uv venv .venv --python 3.11
 source .venv/bin/activate
-
-# Install the project and its dependencies
 uv pip install -e .
 ```
 
-The `--recursive` flag is required to also clone the `infinigen` submodule, which provides the procedural asset factories (dining tables, chairs, sofas, lamps, etc.) used at render time.
+If you will build the public dataset from Hugging Face, also install:
 
-For real LLM and VLM calls (training with Bedrock), load your AWS credentials:
+```bash
+uv pip install huggingface_hub
+```
+
+For Bedrock runs, load credentials before the command:
 
 ```bash
 source api_key
 ```
 
-## 📖 Codebase Overview
-
-```
-src/compos3d/
-  cli.py                 , CLI entrypoints (train-hypotheses, run-inference, build-scene, ...)
-  config.py              , Pydantic config models (GeneratorConfig, CriticConfig, TrainingConfig, RenderConfig)
-  catalog.py             , Supported room types and asset catalogs
-  models.py              , Core data contracts (SceneProgram, HypothesisRecord, CriticScore, ...)
-  hypothesis/
-    loop.py              , UCB hypothesis training loop
-    engine.py            , Orchestration: wires LLM, critic, renderer, and loop
-    service.py           , Request/response types for training and inference
-  llm/
-    scene_llm.py         , SceneProgram generator interface and mock implementation
-    bedrock.py           , AWS Bedrock LLM client
-  evaluation/
-    critic.py            , Heuristic and VLM critic implementations
-    service.py           , Evaluation service
-  data/
-    dataset.py           , Training dataset loader
-    spatiallm.py         , SpatialLM → Compos3D dataset conversion logic
-  procedural/
-    runner.py            , Subprocess runner for Blender scripts (sets PYTHONPATH for infinigen + furniture)
-    service.py           , Procedural backend service (backend-smoke, reference-generate)
-
-scripts/
-  build_spatiallm_dataset.py, Downloads SpatialLM and builds examples/vertical_slice_dataset.json
-  run_pipeline_on_anyscale.py, Remote execution helper
-
-procedural/
-  scripts/
-    build_scene.py       , Blender script: SceneProgram JSON → 3D scene → renders → video
-    asset_smoke.py       , Smoke test a single asset factory
-    generate_room.py     , Full Infinigen room generation (uses gin configs from submodule)
-  furniture/             , Furniture factory
-  llm_doc/               , Asset documentation (factory params, descriptions) used by the LLM
-
-configs/
-  compos3d.json          , Production config (LLM + VLM critic + rendering)
-
-examples/
-  dummy_fast.json        , Small dataset for smoke testing without API calls
-  vertical_slice_dataset.json, Balanced real dataset derived from SpatialLM
-
-infinigen/               , Princeton Infinigen submodule (asset factories, gin configs, bpy utilities)
-
-data/
-  external/spatiallm/    , Downloaded raw SpatialLM files (split.csv, spatiallm_train.json)
-```
-
-
-
-## 📚 Dataset Format
-
-The dataset is built from the public [SpatialLM dataset](https://huggingface.co/datasets/manycore-research/SpatialLM-Dataset). The conversion keeps room types that map cleanly onto Compos3D (`dining_room`, `living_room`, `bedroom`), remaps SpatialLM object labels into the local asset catalog, and writes the result to `examples/vertical_slice_dataset.json`.
-
-Build or rebuild it with:
+You can confirm the CLI is available with:
 
 ```bash
-python scripts/build_spatiallm_dataset.py --max-per-room 60
+./.venv/bin/compos3d --help
 ```
 
-By default this downloads `split.csv` and `spatiallm_train.json` into `data/external/spatiallm/` and produces a balanced dataset with 60 examples per room type. SpatialLM is licensed `CC-BY-NC-4.0`, so it is appropriate for research and non-commercial use.
+## 📚 Dataset
 
-Training examples are JSON files with the following structure:
+Compos3D trains on JSON datasets of the form:
 
 ```json
 {
@@ -125,271 +148,226 @@ Training examples are JSON files with the following structure:
 }
 ```
 
-Supported room types are `dining_room`, `living_room`, and `bedroom`. The `required_assets` field specifies which assets must appear in a valid scene for this example. Valid asset types per room:
+Supported room types:
+
+- `dining_room`
+- `living_room`
+- `bedroom`
+
+Supported assets by room:
 
 | Room | Assets |
-|||
+|---|---|
 | `dining_room` | `dining_table`, `chair`, `lamp`, `rug`, `window`, `vase` |
 | `living_room` | `sofa`, `lamp`, `rug`, `window`, `table_top`, `vase` |
 | `bedroom` | `lamp`, `rug`, `window`, `chair`, `table_top` |
 
+The dataset in this repo is derived from the public [SpatialLM dataset](https://huggingface.co/datasets/manycore-research/SpatialLM-Dataset). The converter remaps SpatialLM object labels into the Compos3D asset catalog and writes a balanced training set.
 
+Build or rebuild it with:
 
-## 💻 Training the Hypothesis Bank
+```bash
+./.venv/bin/python scripts/build_spatiallm_dataset.py --max-per-room 60
+```
 
-Training runs the UCB hypothesis loop over your dataset. Each epoch selects hypotheses using UCB1, generates a `SceneProgram` conditioned on the selected hypothesis, scores it with the critic, and updates the bank. Failed examples accumulate into a repair pool that triggers hypothesis regeneration.
+This produces:
 
-The current recommended configuration is:
+- raw source files in `data/external/spatiallm/`
+- converted dataset at `examples/vertical_slice_dataset.json`
 
-- Generator: `us.anthropic.claude-sonnet-4-5-20250929-v1:0`
-- Critic: `qwen.qwen3-vl-235b-a22b`
-- Training renders: `256x256`, `16` samples
-- Selection strategy: `ucb`
-- Repair enabled: `true`
+If you already have the raw files locally and do not want to redownload:
+
+```bash
+./.venv/bin/python scripts/build_spatiallm_dataset.py \
+  --skip-download \
+  --raw-dir data/external/spatiallm \
+  --output-path examples/vertical_slice_dataset.json \
+  --max-per-room 60
+```
+
+## 🏋️ Training
+
+Training runs the hypothesis loop over the dataset:
+
+1. Seed hypotheses from initial examples.
+2. Select top hypotheses with UCB-style reward.
+3. Generate a `SceneProgram`.
+4. Render and score it.
+5. Update rewards.
+6. Collect failures and repair / regenerate hypotheses when needed.
+
+The recommended training run uses `configs/compos3d.json`:
 
 ```bash
 source api_key
-
-compos3d train-hypotheses \
+./.venv/bin/compos3d train-hypotheses \
   --dataset-path examples/vertical_slice_dataset.json \
   --output-dir artifacts/training \
-  --experiment-name dining_vlm \
+  --experiment-name claude_qwen \
   --config-path configs/compos3d.json
 ```
 
-Training artifacts are written to `artifacts/training/<experiment-name>/`:
+The current full config uses:
 
-| File | Description |
-|||
-| `hypothesis_bank.json` | Final trained hypothesis bank |
-| `bank_snapshots/` | Bank state saved every N examples |
-| `predictions.jsonl` | All ScenePrograms generated during training |
-| `training_trace.jsonl` | Per-example scores and hypothesis selections |
-| `failed_scene_bank.jsonl` | Failed ScenePrograms that triggered repair |
-| `experiment_config.json` | Saved config for reproducibility |
-| `metrics.json` | Aggregate validity, adherence, and recall scores |
+- Generator: `us.anthropic.claude-sonnet-4-5-20250929-v1:0`
+- Critic: `qwen.qwen3-vl-235b-a22b`
+- Room types: `dining_room`, `living_room`, `bedroom`
+- Training renders: `256x256`
+- Training samples: `16`
+- `num_epochs=3`
+- `selection_strategy="ucb"`
+- `use_repair=true`
 
-Key training hyperparameters (set via `configs/compos3d.json`):
+Training artifacts go under:
 
-| Parameter | Description |
-|||
+`artifacts/training/<experiment-name>/`
+
+Important files:
+
+- `hypothesis_bank.json`: final hypothesis bank
+- `metrics.json`: aggregate training metrics
+- `predictions.jsonl`: training-time generated scene programs
+- `training_trace.jsonl`: per-example hypothesis selection and scores
+- `failed_scene_bank.jsonl`: failed examples captured for repair
+- `bank_snapshots/`: periodic bank checkpoints
+- `experiment_config.json`: frozen config for reproducibility
+- `renders/`: rendered views for training predictions when render is enabled
+
+| Field | Meaning |
+|---|---|
 | `training.num_epochs` | Number of passes over the dataset |
-| `training.selection_strategy` | `ucb` (default), `greedy`, or `random` |
-| `training.use_repair` | Whether failed hypotheses trigger repair regeneration |
-| `training.baseline_mode` | `null` (full system), `no_hypotheses`, or `fixed_hypotheses` |
-| `render.enabled` | Render each SceneProgram during training for VLM scoring |
-| `render.resolution` | Render resolution, e.g. `256x256` for training, `512x512` for evaluation |
+| `training.top_k` | How many hypotheses are used per example during training |
+| `training.selection_strategy` | `ucb`, `greedy`, or `random` |
+| `training.use_repair` | Whether failure-driven repair/regeneration is enabled |
+| `training.success_threshold` | Score threshold for success |
+| `training.max_num_hypotheses_per_room` | Cap on bank size per room type |
+| `render.enabled` | Whether to render during training |
+| `render.resolution` | Training render resolution |
+| `render.view_samples` | Cycles samples per training render |
+| `critic.mode` | `heuristic` or `vlm` |
 
+## 🎬 Inference
 
-
-## 🎬 Inference and Scene Generation
-
-Given a trained bank and a text prompt, inference selects the top-k hypotheses by UCB score, conditions the LLM on them, and generates a `SceneProgram`:
-
-```bash
-compos3d run-inference \
-  --bank-path artifacts/training/dining_vlm/hypothesis_bank.json \
-  --prompt "a minimalist dining room with a glass table and two chairs" \
-  --output-dir artifacts/inference \
-  --config-path configs/compos3d.json
-```
-
-The `SceneProgram` JSON is written to `artifacts/inference/scene_program.json` and looks like:
-
-```json
-{
-  "room_type": "dining_room",
-  "style": "minimalist",
-  "hypotheses": ["In a dining_room, anchor the composition around dining_table, chair."],
-  "assets": [
-    {"asset_type": "dining_table", "count": 1, "placement": "center of room"},
-    {"asset_type": "chair", "count": 2, "placement": "near table"}
-  ],
-  "constraints": [{"text": "chairs should face the table"}]
-}
-```
-
-
-
-## 🖼️ Rendering a Scene
-
-`build-scene` takes a `SceneProgram` JSON and produces renders using Blender (via `bpy`) and the Infinigen furniture factories. It outputs 4 canonical views and a 90-frame orbital turntable video.
+Run frozen inference from a trained bank:
 
 ```bash
-compos3d build-scene \
-  --scene-program artifacts/inference/scene_program.json \
-  --output-dir artifacts/scene \
+source api_key
+./.venv/bin/compos3d run-inference \
+  --bank-path artifacts/training/claude_qwen/hypothesis_bank.json \
+  --prompt "a bright living room with a sofa, rug, lamp, and coffee table" \
+  --output-dir artifacts/inference/living_room \
+  --config-path configs/compos3d.json \
+  --inference-strategy filter_and_weight \
+  --render-scene
+```
+
+Available inference strategies:
+
+- `joint_top_k`
+  The top hypotheses are passed together to the generator.
+- `filter_and_weight`
+  Top hypotheses are filtered for relevance, candidate scene programs are generated per hypothesis, and the final scene is assembled by a weighted vote using hypothesis quality.
+
+If you do not want rendering/video during frozen inference, omit `--render-scene`.
+
+`artifacts/inference/<run-name>/`
+
+- `scene_program.json`
+- `critic_score.json`
+- `scene_features.json`
+- `experiment_config.json`
+- `inference_manifest.json`
+- `scene/` if `--render-scene` was used
+
+## 🖼️ Rendering
+
+If you already have a `SceneProgram`, render it directly:
+
+```bash
+./.venv/bin/compos3d build-scene \
+  --scene-program artifacts/inference/living_room/scene_program.json \
+  --output-dir artifacts/scenes/living_room \
   --resolution 512x512 \
   --view-samples 48 \
   --video-frames 90
 ```
 
-Expected outputs:
-
-```
-artifacts/scene/
-  views/
-    view_overhead.png
-    view_front.png
-    view_left.png
-    view_right.png
-  video_frames/       , individual PNG frames
-  video.mp4           , compiled orbital video
-  build_manifest.json , render metadata and paths
-```
-
-Typical render time is **5–10 seconds** for 4 views at 512×512 with 48 samples, plus another ~2 seconds for the 90-frame video.
-
-To skip the video and only render the 4 views (faster, useful during training):
+To skip the video:
 
 ```bash
-compos3d build-scene \
-  --scene-program artifacts/inference/scene_program.json \
-  --output-dir artifacts/scene \
+./.venv/bin/compos3d build-scene \
+  --scene-program artifacts/inference/living_room/scene_program.json \
+  --output-dir artifacts/scenes/living_room_fast \
   --resolution 256x256 \
   --view-samples 16 \
   --no-video
 ```
 
+Typical outputs:
 
-
-## ☁️ Running on AWS EC2
-
-Every command that runs locally can also be submitted to an EC2 spot instance with a single `launch-aws` call.  All outputs are written directly to S3 (bronze/silver/gold buckets) via the standard `--env` flag, and job logs stream to CloudWatch.
-
-### Data lake layout
-
-When you pass `--env dev` (or `staging` / `prod`) to any command, outputs are mirrored to S3 in three layers:
-
-| Layer | Bucket | Contents |
-|---|---|---|
-| Bronze | `compos3d-<env>-bronze` | Raw ScenePrograms, bank snapshots, training traces |
-| Silver | `compos3d-<env>-silver` | Validated hypothesis banks, metrics, critic scores, rendered images |
-| Gold | `compos3d-<env>-gold` | Final hypothesis bank (`latest.json`), training summaries, scene features |
-
-Bucket names and other infra settings live in `config/env.<env>.yaml`.
-
-### Writing to S3 from a local run
-
-Add `--env dev` (or `staging`/`prod`) to any command to also mirror outputs to S3:
-
-```bash
-compos3d train-hypotheses \
-  --dataset-path examples/vertical_slice_dataset.json \
-  --output-dir artifacts/training \
-  --experiment-name my_experiment \
-  --config-path configs/compos3d.json \
-  --env dev
+```text
+artifacts/scenes/<name>/
+  views/
+    view_overhead.png
+    view_front.png
+    view_left.png
+    view_right.png
+  video_frames/
+  video.mp4
+  build_manifest.json
 ```
 
-```bash
-compos3d run-inference \
-  --bank-path artifacts/training/my_experiment/hypothesis_bank.json \
-  --prompt "a bright dining room with four chairs" \
-  --output-dir artifacts/inference \
-  --config-path configs/compos3d.json \
-  --env dev
-```
+## ⚙️ Configuration
 
-### Provisioning AWS infrastructure
+The two most important config files are:
 
-The `terraform/` directory manages S3 buckets, IAM roles, and the CloudWatch log group.  To also provision the EC2 instance profile and security group, uncomment the `ec2_compute` module in `terraform/main.tf`:
+- `configs/compos3d.json`
+  Full recommended Bedrock training config.
+- `configs/compos3d_small_claude_wen.json`
+  Small 1-epoch smoke config.
 
-```hcl
-module "ec2_compute" {
-  source = "./modules/ec2_compute"
+Example `configs/compos3d.json` choices:
 
-  project_name  = var.project_name
-  environment   = var.environment
-  bronze_bucket = local.bronze_bucket
-  silver_bucket = local.silver_bucket
-  gold_bucket   = local.gold_bucket
-}
-```
+- generator provider/model
+- critic provider/mode/model
+- room type filtering
+- render resolution and sample count
+- training hyperparameters
 
-Then apply:
+If you change the config, keep these constraints in mind:
 
-```bash
-cd terraform
-terraform init
-terraform apply -var-file=environments/dev.tfvars
-```
+- `critic.mode="vlm"` requires `critic.provider="bedrock"`
+- `render.enabled=true` is strongly recommended for VLM-backed training
+- `256x256` and `8-16` samples are a good training-time speed/quality tradeoff
+- `512x512` and `48+` samples are better for polished renders than for training
 
-Copy the `ec2_instance_profile_name` and `ec2_security_group_id` outputs into `config/env.dev.yaml`.
+## ☁️ AWS
 
-### Submitting a job to EC2
-
-Use `launch-aws` to spin up a spot instance that bootstraps itself and runs a `compos3d` command:
+Run the full training job on AWS infrastructure with:
 
 ```bash
-compos3d launch-aws train-hypotheses \
-  --cli-args '--dataset-path examples/vertical_slice_dataset.json --config-path configs/compos3d.json --env dev' \
+./.venv/bin/compos3d launch-aws train-hypotheses \
+  --cli-args '--dataset-path examples/vertical_slice_dataset.json --output-dir artifacts/training --experiment-name claude_qwen --config-path configs/compos3d.json --env dev' \
   --env dev \
   --git-ref main \
   --wait
 ```
 
-The instance:
-1. Clones the repo and checks out `--git-ref`
-2. Installs dependencies (`pip install -e .`)
-3. Runs the `compos3d` command
-4. Writes outputs to S3 via `--env dev`
-5. Self-terminates on completion
+## 🧪 Testing
 
-Follow logs live:
-
-```bash
-aws logs tail /compos3d/jobs --follow
-```
-
-Override the instance type (defaults to `g5.xlarge` for dev):
-
-```bash
-compos3d launch-aws train-hypotheses \
-  --cli-args '...' \
-  --env prod \
-  --instance-type g5.2xlarge
-```
-
-The `ec2_spot` flag in `config/env.prod.yaml` is `false` by default for production (on-demand).
-
-
-
-## ⚙️ Configuration
-
-The single production config is `configs/compos3d.json`. It controls the generator, critic, rendering, and training loop in one place. To run ablations, edit `configs/compos3d.json` directly:
-
-| Field | Values | Effect |
-||||
-| `training.selection_strategy` | `ucb`, `greedy`, `random` | Hypothesis selection policy |
-| `training.use_repair` | `true`, `false` | Enable/disable repair on failures |
-| `training.baseline_mode` | `null`, `no_hypotheses`, `fixed_hypotheses` | Baseline conditioning modes |
-| `training.seed` | integer | Random seed for reproducibility |
-| `render.enabled` | `true`, `false` | Render scenes during training (required for VLM critic) |
-| `critic.mode` | `heuristic`, `vlm` | Scoring method (`vlm` requires Bedrock credentials) |
-
-
-
-## 🧪 Running Tests
+Run the test suite with:
 
 ```bash
 source .venv/bin/activate
-
 pytest -q --cov=compos3d --cov-report=term-missing --cov-report=xml --basetemp .pytest_tmp_fresh -p no:cacheprovider
 ```
 
-All tests use mock providers and run without any API credentials or Blender.
+The automated tests use mocks; they do not require Bedrock credentials.
 
+## 🤝 Credits
 
-
-## 🤗 Credits
-
----
-
-![tests](https://github.com/UofT-CSC490-W2026/Compos3D/actions/workflows/tests.yml/badge.svg)
-![coverage](https://codecov.io/gh/UofT-CSC490-W2026/Compos3D/branch/main/graph/badge.svg)
-
-This codebase builds on:
+This project builds on:
 
 - [Infinigen](https://github.com/princeton-vl/infinigen)
-- [HypoGenic](https://github.com/ChicagoHAI/hypothesis_generation)
+- [HypoGeniC / hypothesis_generation](https://github.com/ChicagoHAI/hypothesis_generation)
+- [SpatialLM dataset](https://huggingface.co/datasets/manycore-research/SpatialLM-Dataset)
