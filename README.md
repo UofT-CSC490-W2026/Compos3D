@@ -419,6 +419,7 @@ All tests use mock providers and run without any API credentials or Blender.
 ---
 
 ![tests](https://github.com/UofT-CSC490-W2026/Compos3D/actions/workflows/tests.yml/badge.svg)
+![coverage](https://codecov.io/gh/UofT-CSC490-W2026/Compos3D/branch/main/graph/badge.svg)
 
 This codebase builds on:
 
