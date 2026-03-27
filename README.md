@@ -1,5 +1,7 @@
 # Compos3D: Your Reasoning LLM is Secretly a 3D Scene generator
 
+[![codecov](https://codecov.io/github/UofT-CSC490-W2026/Compos3D/branch/main/graph/badge.svg)](https://app.codecov.io/github/UofT-CSC490-W2026/Compos3D)
+
 This repository provides the implementation of Compos3D, a system that uses LLMs to induce explicit design hypotheses from scene examples and applies them to generate structured 3D scenes via procedural rendering. Rather than generating raw code or direct geometry, Compos3D produces a SceneProgram, a structured JSON representation of furniture layout and constraints, which is then rendered into a full 3D scene with multiple camera views and an orbital video using Blender and Infinigen asset factories.
 
 ## Contents
@@ -107,7 +109,10 @@ git clone --recursive <your-repo-url>
 cd Compos3D
 
 uv venv .venv --python 3.11
-source .venv/bin/activate
+source .venv/bin/activate 
+
+# If on Windows:
+# ./.venv/Scripts/activate.ps1
 uv pip install -e .
 ```
 
@@ -358,7 +363,6 @@ Run the full training job on AWS infrastructure with:
 Run the test suite with:
 
 ```bash
-source .venv/bin/activate
 pytest -q --cov=compos3d --cov-report=term-missing --cov-report=xml --basetemp .pytest_tmp_fresh -p no:cacheprovider
 ```
 
