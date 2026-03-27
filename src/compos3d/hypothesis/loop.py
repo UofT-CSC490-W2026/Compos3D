@@ -47,13 +47,22 @@ class HypothesisLoopConfig:
     seed: int = 42
 
 
+_CREATED_JSON_DIRS: set[Path] = set()
+
+
 def _write_json(path: Path, payload: dict | list) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2))
+    parent = path.parent
+    if parent not in _CREATED_JSON_DIRS or not parent.exists():
+        parent.mkdir(parents=True, exist_ok=True)
+        _CREATED_JSON_DIRS.add(parent)
+    path.write_text(json.dumps(payload, separators=(",", ":")))
 
 
 def _write_jsonl(path: Path, rows: list[dict]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
+    parent = path.parent
+    if parent not in _CREATED_JSON_DIRS or not parent.exists():
+        parent.mkdir(parents=True, exist_ok=True)
+        _CREATED_JSON_DIRS.add(parent)
     path.write_text("".join(json.dumps(row) + "\n" for row in rows))
 
 

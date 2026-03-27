@@ -112,15 +112,29 @@ def test_score_handles_critic_unavailable(monkeypatch) -> None:
     assert "CriticUnavailable" in score.notes[0]
 
 
-def test_write_jsonl_creates_parent_and_tracks_cached_directory(tmp_path: Path) -> None:
-    loop_mod._CREATED_JSON_DIRS.clear()
-    out_path = tmp_path / "nested" / "rows.jsonl"
+def test_write_jsonl_creates_parent_and_reuses_cached_directory(
+    tmp_path: Path, monkeypatch
+) -> None:
+    mkdir_calls: list[Path] = []
+    real_mkdir = Path.mkdir
 
-    loop_mod._write_jsonl(out_path, [{"a": 1}, {"b": 2}])
+    def _counting_mkdir(self: Path, parents: bool = False, exist_ok: bool = False) -> None:
+        mkdir_calls.append(self)
+        real_mkdir(self, parents=parents, exist_ok=exist_ok)
 
-    assert out_path.exists()
-    assert out_path.read_text() == '{"a": 1}\n{"b": 2}\n'
-    assert out_path.parent in loop_mod._CREATED_JSON_DIRS
+    monkeypatch.setattr(Path, "mkdir", _counting_mkdir)
+
+    out_a = tmp_path / "nested" / "rows_a.jsonl"
+    out_b = tmp_path / "nested" / "rows_b.jsonl"
+
+    loop_mod._write_jsonl(out_a, [{"a": 1}, {"b": 2}])
+    loop_mod._write_jsonl(out_b, [{"c": 3}])
+
+    assert out_a.exists()
+    assert out_a.read_text() == '{"a": 1}\n{"b": 2}\n'
+    assert out_b.exists()
+    assert out_b.read_text() == '{"c": 3}\n'
+    assert mkdir_calls.count(out_a.parent) == 1
 
 
 def test_baseline_mode_no_hypotheses_branch() -> None:

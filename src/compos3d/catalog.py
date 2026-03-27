@@ -31,6 +31,14 @@ DEFAULT_ASSETS_BY_ROOM: dict[str, tuple[str, ...]] = {
     "bedroom": ("lamp", "rug", "window"),
 }
 
+ALL_SUPPORTED_ASSETS: tuple[str, ...] = tuple(
+    sorted({asset for assets in SUPPORTED_ASSETS_BY_ROOM.values() for asset in assets})
+)
+SUPPORTED_ASSET_SETS_BY_ROOM: dict[str, frozenset[str]] = {
+    room_type: frozenset(assets)
+    for room_type, assets in SUPPORTED_ASSETS_BY_ROOM.items()
+}
+
 
 def supported_room_types() -> tuple[str, ...]:
     return tuple(SUPPORTED_ASSETS_BY_ROOM.keys())
@@ -41,10 +49,7 @@ def supported_assets_for_room(room_type: str) -> tuple[str, ...]:
 
 
 def all_supported_assets() -> tuple[str, ...]:
-    values: set[str] = set()
-    for assets in SUPPORTED_ASSETS_BY_ROOM.values():
-        values.update(assets)
-    return tuple(sorted(values))
+    return ALL_SUPPORTED_ASSETS
 
 
 def infer_room_type(prompt: str) -> str:
@@ -61,9 +66,7 @@ def infer_room_type(prompt: str) -> str:
 
 def assets_mentioned_in_prompt(prompt: str, room_type: str | None = None) -> list[str]:
     text = prompt.lower()
-    supported = set(all_supported_assets())
-    if room_type is not None:
-        supported &= set(supported_assets_for_room(room_type))
+    supported = SUPPORTED_ASSET_SETS_BY_ROOM.get(room_type, ALL_SUPPORTED_ASSETS)
 
     mentioned: list[str] = []
     for asset_type, keywords in ASSET_KEYWORDS.items():

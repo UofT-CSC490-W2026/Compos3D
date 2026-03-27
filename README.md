@@ -406,7 +406,8 @@ The single production config is `configs/compos3d.json`. It controls the generat
 
 ```bash
 source .venv/bin/activate
-pytest tests/ -v
+
+pytest -q --cov=compos3d --cov-report=term-missing --cov-report=xml --basetemp .pytest_tmp_fresh -p no:cacheprovider
 ```
 
 All tests use mock providers and run without any API credentials or Blender.

@@ -252,10 +252,11 @@ class MockSceneLLM:
     ) -> SceneProgram:
         resolved_room_type = room_type or infer_room_type(prompt)
         prompt_assets = assets_mentioned_in_prompt(prompt, resolved_room_type)
+        supported_assets = supported_assets_for_room(resolved_room_type)
         hypothesis_assets: list[str] = []
         for hypothesis in selected_hypotheses:
             lower_hypothesis = hypothesis.lower()
-            for asset in supported_assets_for_room(resolved_room_type):
+            for asset in supported_assets:
                 if (
                     asset.replace("_", " ") in lower_hypothesis
                     or asset in lower_hypothesis

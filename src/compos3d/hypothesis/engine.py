@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from heapq import nlargest
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -213,8 +214,7 @@ def _load_bank(bank_path: Path) -> list[HypothesisRecord]:
     return [HypothesisRecord.model_validate(item) for item in data]
 
 
-def _text_overlap_score(record: HypothesisRecord, prompt: str, room_type: str) -> int:
-    prompt_assets = assets_mentioned_in_prompt(prompt, room_type)
+def _text_overlap_score(record: HypothesisRecord, prompt_assets: list[str]) -> int:
     lower_text = record.text.lower()
     return sum(
         1
@@ -230,18 +230,19 @@ def _select_hypotheses_for_inference(
     prompt: str,
     top_k: int,
 ) -> list[HypothesisRecord]:
-    candidates = [record for record in records if record.room_type == room_type]
-    candidates.sort(
+    prompt_assets = assets_mentioned_in_prompt(prompt, room_type)
+    candidates = (record for record in records if record.room_type == room_type)
+    return nlargest(
+        top_k,
+        candidates,
         key=lambda record: (
             record.reward,
-            _text_overlap_score(record, prompt, room_type),
+            _text_overlap_score(record, prompt_assets),
             record.accuracy,
             len(record.support_example_ids),
             record.mean_score,
         ),
-        reverse=True,
     )
-    return candidates[:top_k]
 
 
 def _training_config_from_args(
