@@ -114,7 +114,7 @@ def test_render_exception_path_returns_empty() -> None:
     loop = _make_loop()
     loop.renderer = lambda *_a, **_k: (_ for _ in ()).throw(RuntimeError("boom"))
     out = loop._render(SceneProgram(prompt="p", room_type="bedroom"), "tag")  # noqa: SLF001
-    assert out == []
+    assert out.image_paths == []
 
 
 def test_score_handles_critic_unavailable(monkeypatch) -> None:
@@ -125,7 +125,9 @@ def test_score_handles_critic_unavailable(monkeypatch) -> None:
 
     monkeypatch.setattr(loop_mod, "evaluate_scene_program", _raise)
     score = loop._score(
-        SceneProgram(prompt="p", room_type="bedroom"), loop.dataset.examples[0], []
+        SceneProgram(prompt="p", room_type="bedroom"),
+        loop.dataset.examples[0],
+        loop_mod.RenderArtifacts(render_dir=None, image_paths=[]),
     )  # noqa: SLF001
     assert score.overall == 0.0
     assert score.critic_mode == "unavailable"
@@ -177,7 +179,9 @@ def test_baseline_mode_no_hypotheses_branch() -> None:
         room_match=1.0,
         overall=1.0,
     )
-    loop._render = lambda *_a, **_k: []  # noqa: SLF001
+    loop._render = lambda *_a, **_k: loop_mod.RenderArtifacts(  # noqa: SLF001
+        render_dir=None, image_paths=[]
+    )
     loop._evaluate_hypothesis("use bed", loop.dataset.examples[0])  # noqa: SLF001
     pred = loop._build_prediction(loop.dataset.examples[0], ["h1", "h2"])  # noqa: SLF001
     assert captured["selected_hypotheses"] == []
