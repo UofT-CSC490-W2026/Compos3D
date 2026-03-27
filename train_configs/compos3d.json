@@ -1,5 +1,5 @@
 {
-  "room_types": ["dining_room", "living_room", "bedroom"],
+  "room_types": ["dining_room"],
   "generator": {
     "provider": "bedrock",
     "model_id": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",

@@ -7,10 +7,7 @@ import sys
 import boto3
 from botocore.exceptions import NoCredentialsError, ProfileNotFound
 
-# Set environment variables
-os.environ["ANYSCALE_API_KEY"] = (
-    "aph0_CkgwRgIhAIH7xFfVKXoG5qH2lNV_Sv8RJXh9sw_N0bPjk_G5MXbFAiEAjf9t6BcesXnNbCP4oqo2hM3dkSMDgQEAo4Ep2jtkocUSYxIgmwJv70L0PTrLJgzNHOM86DNGYs6sfu-zPfHGpCO6UAYASIedXNyXzM3YXRlMndzd2UxZ2NoMTZ3aGNqMWx1anoyOgwI4uHjzQYQ6PvI4AJCDAi2xcXMBhDo-8jgAvIBAA"
-)
+
 profile_name = "myisb_IsbUsersPS-136268833180"
 
 print("=== Submitting Compos3D Pipeline to Anyscale Cloud ===")
