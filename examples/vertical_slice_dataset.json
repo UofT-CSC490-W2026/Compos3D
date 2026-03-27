@@ -1,0 +1,2165 @@
+{
+  "dataset_id": "spatiallm_balanced_60_per_room",
+  "examples": [
+    {
+      "example_id": "dr_scene_000446_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with two dining tables, two chairs, several lamps, and two rugs",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_007373_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, several lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_004242_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, several lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_005266_01",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, several lamps, and two rugs",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_004407_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, several lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_004916_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, several lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_000572_03",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, several lamps, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_000712_03",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, four lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_006446_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_007469_03",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, four lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_005362_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with two dining tables, two chairs, several lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_002068_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, three lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_004439_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, two lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_007932_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, two lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_010690_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, four lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_006481_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with two dining tables, several chairs, two lamps, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_009887_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a rug, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_003234_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_003436_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, three lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_004303_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_004894_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, two lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_006081_04",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, two lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_006192_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, two lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_006465_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, four lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_010369_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, two lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_010807_01",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_010886_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, three lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_010979_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, three lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_004118_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, two lamps, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_008108_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, two lamps, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_009896_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, two lamps, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_010731_04",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_011171_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, four lamps, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_000370_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, three lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_000463_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, three lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_002230_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, two lamps, and three rugs",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_003493_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, two lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_006747_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, two lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_009859_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, two lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_011222_01",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, two lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_000835_01",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_000876_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_001219_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, three lamps, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_001504_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_003136_03",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_003848_01",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_004013_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_004023_03",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_004385_03",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, three lamps, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_005041_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, two lamps, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_005110_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, two lamps, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_005776_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_006813_04",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_007860_03",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_008010_04",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_008689_01",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_009340_01",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_009680_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_009970_04",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "dr_scene_010230_01",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_004328_00",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_005475_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, three side tables, several lamps, and two rugs",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_000514_00",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_008600_00",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, several lamps, several rugs, and a window",
+      "required_assets": [
+        "sofa",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_010633_00",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, several lamps, and a window",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_010984_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, two side tables, several lamps, and a window",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_000428_00",
+      "room_type": "living_room",
+      "prompt": "A living room with three sofas, three side tables, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_001178_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, three side tables, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_003255_04",
+      "room_type": "living_room",
+      "prompt": "A living room with several sofas, a side table, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_005901_00",
+      "room_type": "living_room",
+      "prompt": "A living room with three sofas, three side tables, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_000738_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, four side tables, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_002084_00",
+      "room_type": "living_room",
+      "prompt": "A living room with four sofas, a side table, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_003522_00",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_002814_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, two side tables, several lamps, and two rugs",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_005899_05",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, two side tables, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_007086_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, three side tables, several lamps, and two rugs",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_004791_00",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, several lamps, and a window",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_004974_00",
+      "room_type": "living_room",
+      "prompt": "A living room with three sofas, several side tables, several lamps, and a window",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_006952_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, several side tables, several lamps, and a window",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_000700_00",
+      "room_type": "living_room",
+      "prompt": "A living room with three sofas, several side tables, several lamps, and two rugs",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_001641_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, two side tables, several lamps, and two rugs",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_011226_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, a side table, several lamps, and a window",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_001536_00",
+      "room_type": "living_room",
+      "prompt": "A living room with several sofas, several side tables, four lamps, and three rugs",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_001956_00",
+      "room_type": "living_room",
+      "prompt": "A living room with three sofas, a side table, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_002206_00",
+      "room_type": "living_room",
+      "prompt": "A living room with several sofas, several side tables, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_002729_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, a side table, several lamps, and two rugs",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_003332_00",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_004568_01",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, a side table, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_009471_00",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_009882_00",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, two side tables, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_000068_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, two side tables, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_000870_00",
+      "room_type": "living_room",
+      "prompt": "A living room with three sofas, a side table, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_001123_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, several side tables, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_001157_00",
+      "room_type": "living_room",
+      "prompt": "A living room with three sofas, four side tables, several lamps, and two rugs",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_002666_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, two side tables, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_003145_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, two side tables, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_003547_00",
+      "room_type": "living_room",
+      "prompt": "A living room with four sofas, three side tables, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_003867_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, two side tables, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_004495_00",
+      "room_type": "living_room",
+      "prompt": "A living room with three sofas, four side tables, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_004751_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, two side tables, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_007597_00",
+      "room_type": "living_room",
+      "prompt": "A living room with three sofas, a side table, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_008087_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, three side tables, several lamps, and two rugs",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_011127_03",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, a side table, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_004261_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, several lamps, a rug, and a window",
+      "required_assets": [
+        "sofa",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_001089_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, four side tables, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_001718_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, two side tables, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_001764_00",
+      "room_type": "living_room",
+      "prompt": "A living room with three sofas, two side tables, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_001809_00",
+      "room_type": "living_room",
+      "prompt": "A living room with several sofas, a side table, four lamps, and two rugs",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_002296_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, two side tables, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_003485_06",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, three side tables, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_003895_00",
+      "room_type": "living_room",
+      "prompt": "A living room with several sofas, three side tables, two lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_004471_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, two side tables, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_004584_00",
+      "room_type": "living_room",
+      "prompt": "A living room with three sofas, two side tables, several lamps, and two rugs",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_007908_01",
+      "room_type": "living_room",
+      "prompt": "A living room with three sofas, three side tables, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_010511_00",
+      "room_type": "living_room",
+      "prompt": "A living room with several sofas, several side tables, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_010654_00",
+      "room_type": "living_room",
+      "prompt": "A living room with several sofas, three side tables, several lamps, and two rugs",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_010889_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, a side table, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_011094_03",
+      "room_type": "living_room",
+      "prompt": "A living room with several sofas, several side tables, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_011295_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, a side table, several lamps, and a rug",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "lr_scene_007275_00",
+      "room_type": "living_room",
+      "prompt": "A living room with two sofas, a side table, several lamps, and a window",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_003853_00",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with several nightstands, several lamps, three rugs, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_010607_02",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with two nightstands, several lamps, three rugs, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_000732_02",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with several lamps, a rug, a window, and two chairs",
+      "required_assets": [
+        "lamp",
+        "rug",
+        "window",
+        "chair"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_008059_02",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with three nightstands, several lamps, two rugs, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_005362_02",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with a nightstand, several lamps, a rug, and a chair",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "chair"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_004739_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with two nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_009898_05",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with two nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_000738_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with three nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_002716_00",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with two nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_006865_00",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with two nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_009898_04",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with a nightstand, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_002716_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with two nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_002981_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with three nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_002981_03",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with several nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_004696_03",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with three nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_006865_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with two nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_006920_00",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with four nightstands, several lamps, two rugs, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_007413_03",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with several nightstands, four lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_009630_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with a nightstand, several lamps, two rugs, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_002814_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with three nightstands, several lamps, a rug, and a chair",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "chair"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_002981_04",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with two nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_005901_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with a nightstand, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_007094_00",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with three nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_009971_00",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with three nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_010694_04",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with two nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_009471_02",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with a nightstand, several lamps, a rug, and two chairs",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "chair"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_000125_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with three nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_001111_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with three nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_002097_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with four nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_002309_02",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with two nightstands, several lamps, a window, and a chair",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "window",
+        "chair"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_003308_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with several nightstands, two lamps, a window, and a chair",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "window",
+        "chair"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_003547_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with four nightstands, four lamps, a window, and two chairs",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "window",
+        "chair"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_003729_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with three nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_004495_02",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with two nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_005790_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with three nightstands, four lamps, a window, and three chairs",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "window",
+        "chair"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_006569_02",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with several nightstands, four lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_006661_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with four nightstands, three lamps, a window, and three chairs",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "window",
+        "chair"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_006703_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with four nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_006852_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with several nightstands, three lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_006966_02",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with two nightstands, several lamps, a window, and a chair",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "window",
+        "chair"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_007404_03",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with four nightstands, four lamps, a window, and two chairs",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "window",
+        "chair"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_007448_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with two nightstands, several lamps, a window, and a chair",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "window",
+        "chair"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_010379_03",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with three nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_010550_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with two nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_011040_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with four nightstands, two lamps, a window, and four chairs",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "window",
+        "chair"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_000228_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with two nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_000726_02",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with four nightstands, three lamps, two rugs, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_000782_04",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with two nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_001166_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with two nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_001262_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with two nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_001323_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with three nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_001846_04",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with three nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_001959_02",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with four nightstands, four lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_002075_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with three nightstands, three lamps, three rugs, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_002152_04",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with three nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_002162_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with two nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_002615_05",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with four nightstands, four lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_003432_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with two nightstands, several lamps, a rug, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_003733_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with four nightstands, three lamps, two rugs, and a window",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm"
+    },
+    {
+      "example_id": "br_scene_004326_01",
+      "room_type": "bedroom",
+      "prompt": "A bedroom with three nightstands, several lamps, a window, and a chair",
+      "required_assets": [
+        "table_top",
+        "lamp",
+        "window",
+        "chair"
+      ],
+      "style": "spatiallm"
+    }
+  ]
+}
