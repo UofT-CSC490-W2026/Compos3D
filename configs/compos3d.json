@@ -22,6 +22,15 @@
     "no_video": true,
     "save_blend": false
   },
+  "logging": {
+    "enable_wandb": true,
+    "wandb_project": "compos3d",
+    "wandb_mode": "online",
+    "wandb_tags": ["final-training"],
+    "log_every_n_examples": 1,
+    "log_bank_table_every_n_examples": 10,
+    "upload_artifact_at_end": true
+  },
   "training": {
     "num_init_examples_per_room": 3,
     "init_hypotheses_per_room": 4,
