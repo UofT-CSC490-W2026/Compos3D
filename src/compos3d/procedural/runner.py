@@ -81,8 +81,9 @@ except FileNotFoundError:
 def _build_env(extra_pythonpath: list[Path] | None = None) -> dict[str, str]:
     env = os.environ.copy()
     # PROCEDURAL_DIR → llm_doc importable
+    # PROJECT_ROOT/src → local compos3d package importable in subprocesses
     # INFINIGEN_SUBMODULE → `import infinigen` / `import infinigen_examples`
-    dirs = [str(PROCEDURAL_DIR), str(INFINIGEN_SUBMODULE)]
+    dirs = [str(PROCEDURAL_DIR), str(PROJECT_ROOT / "src"), str(INFINIGEN_SUBMODULE)]
     for p in extra_pythonpath or []:
         dirs.append(str(p))
     existing = env.get("PYTHONPATH", "")
