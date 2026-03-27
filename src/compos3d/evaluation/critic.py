@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterable, Sequence
+from functools import lru_cache
 from pathlib import Path
 
 from compos3d.catalog import (
@@ -70,17 +71,30 @@ def _clamp_unit(value: object) -> float:
     return numeric
 
 
+@lru_cache(maxsize=64)
+def _supported_assets_set(room_type: str) -> frozenset[str]:
+    return frozenset(supported_assets_for_room(room_type))
+
+
+@lru_cache(maxsize=1024)
+def _mentioned_assets_set(prompt: str, room_type: str) -> frozenset[str]:
+    return frozenset(assets_mentioned_in_prompt(prompt, room_type))
+
+
 def _build_heuristic_score(
     scene_program: SceneProgram, reference_example: TrainingExample | None = None
 ) -> CriticScore:
     notes: list[str] = []
-    supported_assets = set(supported_assets_for_room(scene_program.room_type))
+    # supported_assets = set(supported_assets_for_room(scene_program.room_type))
+    supported_assets = _supported_assets_set(
+        scene_program.room_type
+    )  # performance improvement: cache room asset sets across repeated scoring calls
     predicted_assets = _predicted_asset_set(scene_program)
 
-    unsupported_assets = sorted(predicted_assets - supported_assets)
+    unsupported_assets = predicted_assets - supported_assets
     if unsupported_assets:
         notes.append(
-            f"Unsupported assets for room type: {', '.join(unsupported_assets)}"
+            f"Unsupported assets for room type: {', '.join(sorted(unsupported_assets))}"
         )
 
     validity = 1.0
@@ -102,9 +116,12 @@ def _build_heuristic_score(
             1.0 if scene_program.room_type == reference_example.room_type else 0.0
         )
     else:
-        mentioned_assets = set(
-            assets_mentioned_in_prompt(scene_program.prompt, scene_program.room_type)
-        )
+        # mentioned_assets = set(
+        #     assets_mentioned_in_prompt(scene_program.prompt, scene_program.room_type)
+        # )
+        mentioned_assets = _mentioned_assets_set(
+            scene_program.prompt, scene_program.room_type
+        )  # performance improvement: cache prompt asset sets across repeated scoring calls
         overlap = predicted_assets & mentioned_assets
         asset_precision = _safe_ratio(len(overlap), len(predicted_assets))
         asset_recall = _safe_ratio(len(overlap), len(mentioned_assets))

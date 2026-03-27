@@ -1,0 +1,56 @@
+         621301 function calls (522299 primitive calls) in 0.981 seconds
+
+   Ordered by: cumulative time
+   List reduced from 136 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.981    0.981 profile:0(<function main.<locals>.run_vertical_inference_many at 0x0000026CCF812840>)
+        1    0.007    0.007    0.981    0.981 profile_important_functions.py:258(run_vertical_inference_many)
+      150    0.010    0.000    0.970    0.006 engine.py:488(run_vertical_inference)
+      750    0.007    0.000    0.742    0.001 engine.py:44(_write_json)
+      750    0.004    0.000    0.396    0.001 pathlib.py:1039(write_text)
+      900    0.001    0.000    0.288    0.000 pathlib.py:1005(open)
+      900    0.279    0.000    0.287    0.000 :0(open)
+      750    0.004    0.000    0.195    0.000 __init__.py:183(dumps)
+      750    0.025    0.000    0.190    0.000 encoder.py:183(encode)
+    88350    0.036    0.000    0.154    0.000 encoder.py:414(_iterencode)
+  902/900    0.002    0.000    0.151    0.000 pathlib.py:1306(mkdir)
+      902    0.123    0.000    0.132    0.000 :0(mkdir)
+172950/88350    0.082    0.000    0.117    0.000 encoder.py:334(_iterencode_dict)
+      900    0.109    0.000    0.109    0.000 :0(__exit__)
+     1953    0.004    0.000    0.052    0.000 pathlib.py:551(drive)
+     1201    0.004    0.000    0.049    0.000 pathlib.py:407(_load_parts)
+      752    0.002    0.000    0.043    0.000 pathlib.py:731(parent)
+      150    0.000    0.000    0.043    0.000 main.py:384(model_copy)
+  750/150    0.004    0.000    0.042    0.000 main.py:974(__deepcopy__)
+13200/300    0.017    0.000    0.041    0.000 copy.py:118(deepcopy)
+
+
+         621301 function calls (522299 primitive calls) in 0.981 seconds
+
+   Ordered by: internal time
+   List reduced from 136 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+      900    0.279    0.000    0.287    0.000 :0(open)
+      902    0.123    0.000    0.132    0.000 :0(mkdir)
+      900    0.109    0.000    0.109    0.000 :0(__exit__)
+172950/88350    0.082    0.000    0.117    0.000 encoder.py:334(_iterencode_dict)
+    88350    0.036    0.000    0.154    0.000 encoder.py:414(_iterencode)
+      750    0.025    0.000    0.190    0.000 encoder.py:183(encode)
+    85961    0.020    0.000    0.020    0.000 :0(isinstance)
+13200/300    0.017    0.000    0.041    0.000 copy.py:118(deepcopy)
+      600    0.013    0.000    0.013    0.000 :0(to_python)
+      750    0.013    0.000    0.014    0.000 :0(stat)
+2050/1900    0.012    0.000    0.013    0.000 :0(validate_python)
+     9453    0.012    0.000    0.018    0.000 <frozen ntpath>:180(splitroot)
+      150    0.010    0.000    0.970    0.006 engine.py:488(run_vertical_inference)
+     1201    0.009    0.000    0.025    0.000 <frozen ntpath>:108(join)
+     1201    0.008    0.000    0.019    0.000 pathlib.py:387(_parse_path)
+    14150    0.008    0.000    0.018    0.000 encoder.py:278(_iterencode_list)
+    26450    0.008    0.000    0.008    0.000 :0(encode_basestring_ascii)
+    28954    0.008    0.000    0.008    0.000 :0(get)
+      750    0.007    0.000    0.742    0.001 engine.py:44(_write_json)
+     3154    0.007    0.000    0.028    0.000 pathlib.py:437(__str__)
+
+

@@ -1,0 +1,56 @@
+         87422 function calls (86033 primitive calls) in 0.260 seconds
+
+   Ordered by: cumulative time
+   List reduced from 173 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.260    0.260 profile:0(<function main.<locals>.run_train_vertical_slice at 0x0000026CCF8128E0>)
+        1    0.001    0.001    0.260    0.260 profile_important_functions.py:248(run_train_vertical_slice)
+        1    0.000    0.000    0.259    0.259 engine.py:363(train_vertical_slice)
+        1    0.006    0.006    0.257    0.257 loop.py:112(train)
+      164    0.002    0.000    0.142    0.001 loop.py:53(_write_json)
+      167    0.001    0.000    0.109    0.001 pathlib.py:1039(write_text)
+      168    0.000    0.000    0.074    0.000 pathlib.py:1005(open)
+      168    0.072    0.000    0.073    0.000 :0(open)
+      322    0.001    0.000    0.042    0.000 loop.py:369(_evaluate_hypothesis)
+      480    0.009    0.000    0.042    0.000 scene_llm.py:250(generate_scene_program)
+      168    0.030    0.000    0.030    0.000 :0(__exit__)
+      169    0.000    0.000    0.029    0.000 pathlib.py:731(parent)
+      341    0.001    0.000    0.027    0.000 pathlib.py:551(drive)
+      172    0.001    0.000    0.026    0.000 pathlib.py:407(_load_parts)
+      172    0.002    0.000    0.021    0.000 <frozen ntpath>:108(join)
+      158    0.001    0.000    0.020    0.000 loop.py:384(_build_prediction)
+     1535    0.018    0.000    0.020    0.000 <frozen ntpath>:180(splitroot)
+        3    0.000    0.000    0.019    0.006 loop.py:61(_write_jsonl)
+      480    0.001    0.000    0.017    0.000 loop.py:343(_score)
+      480    0.001    0.000    0.017    0.000 critic.py:305(evaluate_scene_program)
+
+
+         87422 function calls (86033 primitive calls) in 0.260 seconds
+
+   Ordered by: internal time
+   List reduced from 173 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+      168    0.072    0.000    0.073    0.000 :0(open)
+      168    0.030    0.000    0.030    0.000 :0(__exit__)
+     1535    0.018    0.000    0.020    0.000 <frozen ntpath>:180(splitroot)
+3899/3419    0.014    0.000    0.014    0.000 :0(validate_python)
+      480    0.009    0.000    0.042    0.000 scene_llm.py:250(generate_scene_program)
+      480    0.008    0.000    0.008    0.000 encoder.py:205(iterencode)
+        1    0.006    0.006    0.257    0.257 loop.py:112(train)
+      495    0.006    0.000    0.006    0.000 :0(to_python)
+      166    0.006    0.000    0.006    0.000 :0(stat)
+      480    0.005    0.000    0.014    0.000 critic.py:73(_build_heuristic_score)
+      480    0.005    0.000    0.013    0.000 catalog.py:67(assets_mentioned_in_prompt)
+     3852    0.004    0.000    0.004    0.000 :0(round)
+     7800    0.003    0.000    0.003    0.000 catalog.py:75(<genexpr>)
+     2880    0.003    0.000    0.005    0.000 :0(any)
+3898/3418    0.003    0.000    0.017    0.000 main.py:240(__init__)
+      167    0.003    0.000    0.003    0.000 :0(charmap_encode)
+      316    0.002    0.000    0.008    0.000 loop.py:407(_update_record)
+     2062    0.002    0.000    0.005    0.000 main.py:1028(__setattr__)
+     5535    0.002    0.000    0.002    0.000 :0(replace)
+      164    0.002    0.000    0.142    0.001 loop.py:53(_write_json)
+
+

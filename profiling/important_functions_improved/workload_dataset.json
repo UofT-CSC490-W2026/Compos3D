@@ -1,0 +1,885 @@
+{
+  "dataset_id": "dummy_fast_x20",
+  "examples": [
+    {
+      "example_id": "dr_001_r000",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a wooden dining table, four chairs, and a floor lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "dr_002_r000",
+      "room_type": "dining_room",
+      "prompt": "A cozy dining room with a round table, chairs, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "rug"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "lr_001_r000",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, and a floor lamp",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "lr_002_r000",
+      "room_type": "living_room",
+      "prompt": "A cozy living room with a sofa, a rug, and a lamp",
+      "required_assets": [
+        "sofa",
+        "rug",
+        "lamp"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "dr_001_r001",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a wooden dining table, four chairs, and a floor lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "dr_002_r001",
+      "room_type": "dining_room",
+      "prompt": "A cozy dining room with a round table, chairs, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "rug"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "lr_001_r001",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, and a floor lamp",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "lr_002_r001",
+      "room_type": "living_room",
+      "prompt": "A cozy living room with a sofa, a rug, and a lamp",
+      "required_assets": [
+        "sofa",
+        "rug",
+        "lamp"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "dr_001_r002",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a wooden dining table, four chairs, and a floor lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "dr_002_r002",
+      "room_type": "dining_room",
+      "prompt": "A cozy dining room with a round table, chairs, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "rug"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "lr_001_r002",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, and a floor lamp",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "lr_002_r002",
+      "room_type": "living_room",
+      "prompt": "A cozy living room with a sofa, a rug, and a lamp",
+      "required_assets": [
+        "sofa",
+        "rug",
+        "lamp"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "dr_001_r003",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a wooden dining table, four chairs, and a floor lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "dr_002_r003",
+      "room_type": "dining_room",
+      "prompt": "A cozy dining room with a round table, chairs, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "rug"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "lr_001_r003",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, and a floor lamp",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "lr_002_r003",
+      "room_type": "living_room",
+      "prompt": "A cozy living room with a sofa, a rug, and a lamp",
+      "required_assets": [
+        "sofa",
+        "rug",
+        "lamp"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "dr_001_r004",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a wooden dining table, four chairs, and a floor lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "dr_002_r004",
+      "room_type": "dining_room",
+      "prompt": "A cozy dining room with a round table, chairs, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "rug"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "lr_001_r004",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, and a floor lamp",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "lr_002_r004",
+      "room_type": "living_room",
+      "prompt": "A cozy living room with a sofa, a rug, and a lamp",
+      "required_assets": [
+        "sofa",
+        "rug",
+        "lamp"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "dr_001_r005",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a wooden dining table, four chairs, and a floor lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "dr_002_r005",
+      "room_type": "dining_room",
+      "prompt": "A cozy dining room with a round table, chairs, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "rug"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "lr_001_r005",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, and a floor lamp",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "lr_002_r005",
+      "room_type": "living_room",
+      "prompt": "A cozy living room with a sofa, a rug, and a lamp",
+      "required_assets": [
+        "sofa",
+        "rug",
+        "lamp"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "dr_001_r006",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a wooden dining table, four chairs, and a floor lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "dr_002_r006",
+      "room_type": "dining_room",
+      "prompt": "A cozy dining room with a round table, chairs, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "rug"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "lr_001_r006",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, and a floor lamp",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "lr_002_r006",
+      "room_type": "living_room",
+      "prompt": "A cozy living room with a sofa, a rug, and a lamp",
+      "required_assets": [
+        "sofa",
+        "rug",
+        "lamp"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "dr_001_r007",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a wooden dining table, four chairs, and a floor lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "dr_002_r007",
+      "room_type": "dining_room",
+      "prompt": "A cozy dining room with a round table, chairs, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "rug"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "lr_001_r007",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, and a floor lamp",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "lr_002_r007",
+      "room_type": "living_room",
+      "prompt": "A cozy living room with a sofa, a rug, and a lamp",
+      "required_assets": [
+        "sofa",
+        "rug",
+        "lamp"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "dr_001_r008",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a wooden dining table, four chairs, and a floor lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "dr_002_r008",
+      "room_type": "dining_room",
+      "prompt": "A cozy dining room with a round table, chairs, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "rug"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "lr_001_r008",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, and a floor lamp",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "lr_002_r008",
+      "room_type": "living_room",
+      "prompt": "A cozy living room with a sofa, a rug, and a lamp",
+      "required_assets": [
+        "sofa",
+        "rug",
+        "lamp"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "dr_001_r009",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a wooden dining table, four chairs, and a floor lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "dr_002_r009",
+      "room_type": "dining_room",
+      "prompt": "A cozy dining room with a round table, chairs, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "rug"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "lr_001_r009",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, and a floor lamp",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "lr_002_r009",
+      "room_type": "living_room",
+      "prompt": "A cozy living room with a sofa, a rug, and a lamp",
+      "required_assets": [
+        "sofa",
+        "rug",
+        "lamp"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "dr_001_r010",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a wooden dining table, four chairs, and a floor lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "dr_002_r010",
+      "room_type": "dining_room",
+      "prompt": "A cozy dining room with a round table, chairs, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "rug"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "lr_001_r010",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, and a floor lamp",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "lr_002_r010",
+      "room_type": "living_room",
+      "prompt": "A cozy living room with a sofa, a rug, and a lamp",
+      "required_assets": [
+        "sofa",
+        "rug",
+        "lamp"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "dr_001_r011",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a wooden dining table, four chairs, and a floor lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "dr_002_r011",
+      "room_type": "dining_room",
+      "prompt": "A cozy dining room with a round table, chairs, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "rug"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "lr_001_r011",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, and a floor lamp",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "lr_002_r011",
+      "room_type": "living_room",
+      "prompt": "A cozy living room with a sofa, a rug, and a lamp",
+      "required_assets": [
+        "sofa",
+        "rug",
+        "lamp"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "dr_001_r012",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a wooden dining table, four chairs, and a floor lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "dr_002_r012",
+      "room_type": "dining_room",
+      "prompt": "A cozy dining room with a round table, chairs, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "rug"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "lr_001_r012",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, and a floor lamp",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "lr_002_r012",
+      "room_type": "living_room",
+      "prompt": "A cozy living room with a sofa, a rug, and a lamp",
+      "required_assets": [
+        "sofa",
+        "rug",
+        "lamp"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "dr_001_r013",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a wooden dining table, four chairs, and a floor lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "dr_002_r013",
+      "room_type": "dining_room",
+      "prompt": "A cozy dining room with a round table, chairs, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "rug"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "lr_001_r013",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, and a floor lamp",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "lr_002_r013",
+      "room_type": "living_room",
+      "prompt": "A cozy living room with a sofa, a rug, and a lamp",
+      "required_assets": [
+        "sofa",
+        "rug",
+        "lamp"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "dr_001_r014",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a wooden dining table, four chairs, and a floor lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "dr_002_r014",
+      "room_type": "dining_room",
+      "prompt": "A cozy dining room with a round table, chairs, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "rug"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "lr_001_r014",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, and a floor lamp",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "lr_002_r014",
+      "room_type": "living_room",
+      "prompt": "A cozy living room with a sofa, a rug, and a lamp",
+      "required_assets": [
+        "sofa",
+        "rug",
+        "lamp"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "dr_001_r015",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a wooden dining table, four chairs, and a floor lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "dr_002_r015",
+      "room_type": "dining_room",
+      "prompt": "A cozy dining room with a round table, chairs, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "rug"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "lr_001_r015",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, and a floor lamp",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "lr_002_r015",
+      "room_type": "living_room",
+      "prompt": "A cozy living room with a sofa, a rug, and a lamp",
+      "required_assets": [
+        "sofa",
+        "rug",
+        "lamp"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "dr_001_r016",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a wooden dining table, four chairs, and a floor lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "dr_002_r016",
+      "room_type": "dining_room",
+      "prompt": "A cozy dining room with a round table, chairs, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "rug"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "lr_001_r016",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, and a floor lamp",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "lr_002_r016",
+      "room_type": "living_room",
+      "prompt": "A cozy living room with a sofa, a rug, and a lamp",
+      "required_assets": [
+        "sofa",
+        "rug",
+        "lamp"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "dr_001_r017",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a wooden dining table, four chairs, and a floor lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "dr_002_r017",
+      "room_type": "dining_room",
+      "prompt": "A cozy dining room with a round table, chairs, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "rug"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "lr_001_r017",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, and a floor lamp",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "lr_002_r017",
+      "room_type": "living_room",
+      "prompt": "A cozy living room with a sofa, a rug, and a lamp",
+      "required_assets": [
+        "sofa",
+        "rug",
+        "lamp"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "dr_001_r018",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a wooden dining table, four chairs, and a floor lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "dr_002_r018",
+      "room_type": "dining_room",
+      "prompt": "A cozy dining room with a round table, chairs, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "rug"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "lr_001_r018",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, and a floor lamp",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "lr_002_r018",
+      "room_type": "living_room",
+      "prompt": "A cozy living room with a sofa, a rug, and a lamp",
+      "required_assets": [
+        "sofa",
+        "rug",
+        "lamp"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "dr_001_r019",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a wooden dining table, four chairs, and a floor lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "dr_002_r019",
+      "room_type": "dining_room",
+      "prompt": "A cozy dining room with a round table, chairs, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "rug"
+      ],
+      "style": "cozy"
+    },
+    {
+      "example_id": "lr_001_r019",
+      "room_type": "living_room",
+      "prompt": "A living room with a sofa, a side table, and a floor lamp",
+      "required_assets": [
+        "sofa",
+        "table_top",
+        "lamp"
+      ],
+      "style": "modern"
+    },
+    {
+      "example_id": "lr_002_r019",
+      "room_type": "living_room",
+      "prompt": "A cozy living room with a sofa, a rug, and a lamp",
+      "required_assets": [
+        "sofa",
+        "rug",
+        "lamp"
+      ],
+      "style": "cozy"
+    }
+  ]
+}

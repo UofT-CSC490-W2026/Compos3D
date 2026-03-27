@@ -117,6 +117,10 @@ class SceneHypothesisLoop:
         self._initialize_bank()
 
         since_snapshot = 0
+        buffered_programs: list[tuple[Path, dict[str, Any]]] = []
+        prediction_rows: list[dict[str, Any]] = []
+        training_trace_rows: list[dict[str, Any]] = []
+        failure_rows: list[dict[str, Any]] = []
         for epoch in range(self.config.num_epochs):
             self._current_epoch = epoch
             for position_in_epoch, example in enumerate(self.dataset.examples, start=1):
@@ -147,17 +151,29 @@ class SceneHypothesisLoop:
 
                 combined_prediction = self._build_prediction(example, selected_texts)
                 self.predictions.append(combined_prediction)
-                _write_json(
-                    self.run_dir
-                    / "programs"
-                    / f"{example.example_id}_epoch_{epoch}.json",
-                    combined_prediction.model_dump(),
-                )
+                combined_prediction_payload = combined_prediction.model_dump()
+                # _write_json(
+                #     self.run_dir
+                #     / "programs"
+                #     / f"{example.example_id}_epoch_{epoch}.json",
+                #     combined_prediction.model_dump(),
+                # )
+                buffered_programs.append(
+                    (
+                        self.run_dir
+                        / "programs"
+                        / f"{example.example_id}_epoch_{epoch}.json",
+                        combined_prediction_payload,
+                    )
+                )  # performance improvement: defer per-program writes until after the hot loop
+                prediction_rows.append(
+                    combined_prediction_payload
+                )  # performance improvement: reuse serialized predictions for jsonl output
 
                 wrong_threshold = self._wrong_threshold(len(selected), current_sample)
                 triggered_regeneration = False
                 if len(selected) == 0 or num_wrong_hypotheses >= wrong_threshold:
-                    self._record_failure(
+                    failure_record = self._record_failure(
                         example=example,
                         current_sample=current_sample,
                         selected_ids=selected_ids,
@@ -168,26 +184,31 @@ class SceneHypothesisLoop:
                         combined_score=combined_prediction.critic_score.overall,
                         critic_notes=combined_prediction.critic_score.notes,
                     )
+                    failure_rows.append(
+                        failure_record.model_dump()
+                    )  # performance improvement: reuse serialized failures for jsonl output
                     triggered_regeneration = self._maybe_regenerate(
                         example.room_type, current_sample, epoch
                     )
 
-                self.training_trace.append(
-                    TrainingTraceRecord(
-                        epoch=epoch,
-                        current_sample=current_sample,
-                        example_id=example.example_id,
-                        room_type=example.room_type,
-                        selected_hypothesis_ids=selected_ids,
-                        selected_hypotheses=selected_texts,
-                        individual_scores=individual_scores,
-                        combined_score=combined_prediction.critic_score.overall,
-                        triggered_regeneration=triggered_regeneration,
-                        failure_buffer_size=len(
-                            self.pending_failure_examples.get(example.room_type, [])
-                        ),
-                    )
+                trace_record = TrainingTraceRecord(
+                    epoch=epoch,
+                    current_sample=current_sample,
+                    example_id=example.example_id,
+                    room_type=example.room_type,
+                    selected_hypothesis_ids=selected_ids,
+                    selected_hypotheses=selected_texts,
+                    individual_scores=individual_scores,
+                    combined_score=combined_prediction.critic_score.overall,
+                    triggered_regeneration=triggered_regeneration,
+                    failure_buffer_size=len(
+                        self.pending_failure_examples.get(example.room_type, [])
+                    ),
                 )
+                self.training_trace.append(trace_record)
+                training_trace_rows.append(
+                    trace_record.model_dump()
+                )  # performance improvement: reuse serialized traces for jsonl output
 
                 since_snapshot += 1
                 if since_snapshot >= self.config.save_every_n_examples:
@@ -195,20 +216,31 @@ class SceneHypothesisLoop:
                     since_snapshot = 0
 
         summary = aggregate_prediction_scores(self.predictions)
-        _write_json(self.run_dir / "metrics.json", summary.model_dump())
-        _write_json(self.run_dir / "hypothesis_bank.json", self._bank_payload())
-        _write_jsonl(
-            self.run_dir / "predictions.jsonl",
-            [prediction.model_dump() for prediction in self.predictions],
-        )
-        _write_jsonl(
-            self.run_dir / "training_trace.jsonl",
-            [trace.model_dump() for trace in self.training_trace],
-        )
-        _write_jsonl(
-            self.run_dir / "failed_scene_bank.jsonl",
-            [failure.model_dump() for failure in self.failed_scene_bank],
-        )
+        for program_path, program_payload in buffered_programs:
+            _write_json(
+                program_path, program_payload
+            )  # performance improvement: batch deferred program writes after training work
+        summary_payload = summary.model_dump()
+        bank_payload = self._bank_payload()
+        # _write_json(self.run_dir / "metrics.json", summary.model_dump())
+        _write_json(self.run_dir / "metrics.json", summary_payload)  # performance improvement: reuse serialized metrics payload
+        # _write_json(self.run_dir / "hypothesis_bank.json", self._bank_payload())
+        _write_json(self.run_dir / "hypothesis_bank.json", bank_payload)  # performance improvement: reuse serialized bank payload
+        # _write_jsonl(
+        #     self.run_dir / "predictions.jsonl",
+        #     [prediction.model_dump() for prediction in self.predictions],
+        # )
+        _write_jsonl(self.run_dir / "predictions.jsonl", prediction_rows)  # performance improvement: avoid re-serializing predictions
+        # _write_jsonl(
+        #     self.run_dir / "training_trace.jsonl",
+        #     [trace.model_dump() for trace in self.training_trace],
+        # )
+        _write_jsonl(self.run_dir / "training_trace.jsonl", training_trace_rows)  # performance improvement: avoid re-serializing traces
+        # _write_jsonl(
+        #     self.run_dir / "failed_scene_bank.jsonl",
+        #     [failure.model_dump() for failure in self.failed_scene_bank],
+        # )
+        _write_jsonl(self.run_dir / "failed_scene_bank.jsonl", failure_rows)  # performance improvement: avoid re-serializing failures
         _write_json(
             self.run_dir / "manifest.json",
             {
@@ -222,7 +254,7 @@ class SceneHypothesisLoop:
                 "training_trace_path": str(self.run_dir / "training_trace.jsonl"),
                 "failed_scene_bank_path": str(self.run_dir / "failed_scene_bank.jsonl"),
                 "num_hypotheses": len(self.bank),
-                "num_predictions": len(self.predictions),
+                "num_predictions": len(prediction_rows),
                 "num_regeneration_events": self.regeneration_events,
             },
         )
@@ -230,9 +262,10 @@ class SceneHypothesisLoop:
 
         return {
             "run_dir": str(self.run_dir),
-            "metrics": summary.model_dump(),
+            # "metrics": summary.model_dump(),
+            "metrics": summary_payload,  # performance improvement: reuse serialized metrics payload
             "num_hypotheses": len(self.bank),
-            "num_predictions": len(self.predictions),
+            "num_predictions": len(prediction_rows),
             "num_regeneration_events": self.regeneration_events,
         }
 
@@ -449,7 +482,7 @@ class SceneHypothesisLoop:
         individual_scores: dict[str, float],
         combined_score: float,
         critic_notes: list[str],
-    ) -> None:
+    ) -> FailureRecord:
         failure_record = FailureRecord(
             example_id=example.example_id,
             room_type=example.room_type,
@@ -465,6 +498,7 @@ class SceneHypothesisLoop:
         )
         self.failed_scene_bank.append(failure_record)
         self.pending_failure_examples.setdefault(example.room_type, []).append(example)
+        return failure_record
 
     def _maybe_regenerate(
         self, room_type: str, current_sample: int, epoch: int

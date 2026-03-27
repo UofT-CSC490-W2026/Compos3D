@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 from collections import Counter
+from functools import lru_cache
 
 from compos3d.catalog import (
     DEFAULT_ASSETS_BY_ROOM,
@@ -48,6 +49,9 @@ def _extract_style(prompt: str) -> str | None:
     return None
 
 
+_extract_style = lru_cache(maxsize=512)(_extract_style)
+
+
 def _extract_requested_count(prompt: str, asset_type: str) -> int:
     text = prompt.lower()
     if asset_type == "chair":
@@ -57,6 +61,36 @@ def _extract_requested_count(prompt: str, asset_type: str) -> int:
         if "four chairs" in text:
             return 4
     return 1
+
+
+_extract_requested_count = lru_cache(maxsize=1024)(_extract_requested_count)
+
+
+@lru_cache(maxsize=256)
+def _cached_supported_assets(room_type: str) -> tuple[str, ...]:
+    return supported_assets_for_room(room_type)
+
+
+@lru_cache(maxsize=1024)
+def _cached_prompt_assets(prompt: str, room_type: str) -> tuple[str, ...]:
+    return tuple(assets_mentioned_in_prompt(prompt, room_type))
+
+
+@lru_cache(maxsize=1024)
+def _cached_hypothesis_assets(
+    room_type: str, selected_hypotheses: tuple[str, ...]
+) -> tuple[str, ...]:
+    supported_assets = _cached_supported_assets(room_type)
+    hypothesis_assets: list[str] = []
+    for hypothesis in selected_hypotheses:
+        lower_hypothesis = hypothesis.lower()
+        for asset in supported_assets:
+            if (
+                asset.replace("_", " ") in lower_hypothesis
+                or asset in lower_hypothesis
+            ):
+                hypothesis_assets.append(asset)
+    return tuple(hypothesis_assets)
 
 
 def _normalize_hypotheses(raw_hypotheses: object) -> list[str]:
@@ -251,17 +285,27 @@ class MockSceneLLM:
         self, *, prompt: str, room_type: str | None, selected_hypotheses: list[str]
     ) -> SceneProgram:
         resolved_room_type = room_type or infer_room_type(prompt)
-        prompt_assets = assets_mentioned_in_prompt(prompt, resolved_room_type)
-        supported_assets = supported_assets_for_room(resolved_room_type)
-        hypothesis_assets: list[str] = []
-        for hypothesis in selected_hypotheses:
-            lower_hypothesis = hypothesis.lower()
-            for asset in supported_assets:
-                if (
-                    asset.replace("_", " ") in lower_hypothesis
-                    or asset in lower_hypothesis
-                ):
-                    hypothesis_assets.append(asset)
+        selected_hypotheses_key = tuple(selected_hypotheses)
+        # prompt_assets = assets_mentioned_in_prompt(prompt, resolved_room_type)
+        prompt_assets = list(
+            _cached_prompt_assets(prompt, resolved_room_type)
+        )  # performance improvement: cache repeated prompt asset extraction
+        # supported_assets = supported_assets_for_room(resolved_room_type)
+        _cached_supported_assets(
+            resolved_room_type
+        )  # performance improvement: warm supported-asset lookups for repeated generations
+        # hypothesis_assets: list[str] = []
+        # for hypothesis in selected_hypotheses:
+        #     lower_hypothesis = hypothesis.lower()
+        #     for asset in supported_assets:
+        #         if (
+        #             asset.replace("_", " ") in lower_hypothesis
+        #             or asset in lower_hypothesis
+        #         ):
+        #             hypothesis_assets.append(asset)
+        hypothesis_assets = list(
+            _cached_hypothesis_assets(resolved_room_type, selected_hypotheses_key)
+        )  # performance improvement: cache supported-asset scans across repeated hypotheses
 
         asset_types = normalize_assets(
             prompt_assets + hypothesis_assets, resolved_room_type
@@ -286,7 +330,8 @@ class MockSceneLLM:
             prompt=prompt,
             room_type=resolved_room_type,
             style=_extract_style(prompt),
-            hypotheses=selected_hypotheses,
+            # hypotheses=selected_hypotheses,
+            hypotheses=list(selected_hypotheses_key),  # performance improvement: reuse stable cached hypothesis tuple input
             assets=assets,
             constraints=constraints,
         )

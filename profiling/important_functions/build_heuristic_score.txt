@@ -1,0 +1,42 @@
+         105003 function calls in 0.066 seconds
+
+   Ordered by: cumulative time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.066    0.066 profile:0(<function main.<locals>.run_build_heuristic_score_many at 0x0000026CCF860540>)
+        1    0.005    0.005    0.066    0.066 profile_important_functions.py:284(run_build_heuristic_score_many)
+     5000    0.025    0.000    0.059    0.000 critic.py:73(_build_heuristic_score)
+    30000    0.014    0.000    0.014    0.000 :0(round)
+     5000    0.002    0.000    0.009    0.000 main.py:240(__init__)
+     5000    0.007    0.000    0.007    0.000 :0(validate_python)
+    30000    0.005    0.000    0.005    0.000 :0(len)
+     5000    0.002    0.000    0.003    0.000 catalog.py:47(supported_assets_for_room)
+    10000    0.002    0.000    0.002    0.000 critic.py:31(_safe_ratio)
+     5000    0.002    0.000    0.002    0.000 critic.py:37(_predicted_asset_set)
+     5000    0.001    0.000    0.001    0.000 :0(sorted)
+     5000    0.001    0.000    0.001    0.000 :0(get)
+        1    0.000    0.000    0.000    0.000 :0(setprofile)
+        0    0.000             0.000          profile:0(profiler)
+
+
+         105003 function calls in 0.066 seconds
+
+   Ordered by: internal time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+     5000    0.025    0.000    0.059    0.000 critic.py:73(_build_heuristic_score)
+    30000    0.014    0.000    0.014    0.000 :0(round)
+     5000    0.007    0.000    0.007    0.000 :0(validate_python)
+    30000    0.005    0.000    0.005    0.000 :0(len)
+        1    0.005    0.005    0.066    0.066 profile_important_functions.py:284(run_build_heuristic_score_many)
+     5000    0.002    0.000    0.009    0.000 main.py:240(__init__)
+    10000    0.002    0.000    0.002    0.000 critic.py:31(_safe_ratio)
+     5000    0.002    0.000    0.003    0.000 catalog.py:47(supported_assets_for_room)
+     5000    0.002    0.000    0.002    0.000 critic.py:37(_predicted_asset_set)
+     5000    0.001    0.000    0.001    0.000 :0(sorted)
+     5000    0.001    0.000    0.001    0.000 :0(get)
+        1    0.000    0.000    0.066    0.066 profile:0(<function main.<locals>.run_build_heuristic_score_many at 0x0000026CCF860540>)
+        1    0.000    0.000    0.000    0.000 :0(setprofile)
+        0    0.000             0.000          profile:0(profiler)
+
+

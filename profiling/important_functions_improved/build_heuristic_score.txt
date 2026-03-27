@@ -1,0 +1,36 @@
+         90003 function calls in 0.066 seconds
+
+   Ordered by: cumulative time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.066    0.066 profile:0(<function main.<locals>.run_build_heuristic_score_many at 0x0000017E96F609A0>)
+        1    0.006    0.006    0.066    0.066 profile_important_functions.py:284(run_build_heuristic_score_many)
+     5000    0.024    0.000    0.059    0.000 critic.py:84(_build_heuristic_score)
+    30000    0.016    0.000    0.016    0.000 :0(round)
+     5000    0.002    0.000    0.010    0.000 main.py:240(__init__)
+     5000    0.008    0.000    0.008    0.000 :0(validate_python)
+    30000    0.006    0.000    0.006    0.000 :0(len)
+     5000    0.002    0.000    0.002    0.000 critic.py:38(_predicted_asset_set)
+    10000    0.002    0.000    0.002    0.000 critic.py:32(_safe_ratio)
+        1    0.000    0.000    0.000    0.000 :0(setprofile)
+        0    0.000             0.000          profile:0(profiler)
+
+
+         90003 function calls in 0.066 seconds
+
+   Ordered by: internal time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+     5000    0.024    0.000    0.059    0.000 critic.py:84(_build_heuristic_score)
+    30000    0.016    0.000    0.016    0.000 :0(round)
+     5000    0.008    0.000    0.008    0.000 :0(validate_python)
+    30000    0.006    0.000    0.006    0.000 :0(len)
+        1    0.006    0.006    0.066    0.066 profile_important_functions.py:284(run_build_heuristic_score_many)
+     5000    0.002    0.000    0.010    0.000 main.py:240(__init__)
+     5000    0.002    0.000    0.002    0.000 critic.py:38(_predicted_asset_set)
+    10000    0.002    0.000    0.002    0.000 critic.py:32(_safe_ratio)
+        1    0.000    0.000    0.066    0.066 profile:0(<function main.<locals>.run_build_heuristic_score_many at 0x0000017E96F609A0>)
+        1    0.000    0.000    0.000    0.000 :0(setprofile)
+        0    0.000             0.000          profile:0(profiler)
+
+

@@ -41,9 +41,17 @@ if TYPE_CHECKING:
     from compos3d.storage import AnyStore
 
 
+_CREATED_JSON_DIRS: set[Path] = set()
+
+
 def _write_json(path: Path, payload: dict | list) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2))
+    parent = path.parent
+    # path.parent.mkdir(parents=True, exist_ok=True)
+    if parent not in _CREATED_JSON_DIRS or not parent.exists():
+        parent.mkdir(parents=True, exist_ok=True)  # performance improvement: avoid repeated mkdir calls
+        _CREATED_JSON_DIRS.add(parent)
+    # path.write_text(json.dumps(payload, indent=2))
+    path.write_text(json.dumps(payload, separators=(",", ":")))  # performance improvement: write smaller JSON payloads
 
 
 def _run_id(experiment_name: str) -> str:
@@ -420,6 +428,7 @@ def train_vertical_slice(
             }
         )
 
+    experiment_config_payload = experiment_config.model_dump()
     llm = build_scene_llm(experiment_config.generator)
     critic = build_scene_critic(experiment_config.critic)
     renderer = make_training_renderer(experiment_config.render)
@@ -440,7 +449,8 @@ def train_vertical_slice(
         run_dir=run_dir,
         llm_provider=experiment_config.generator.provider,
         config=config,
-        experiment_config=experiment_config.model_dump(),
+        # experiment_config=experiment_config.model_dump(),
+        experiment_config=experiment_config_payload,  # performance improvement: reuse serialized config payload
         config_path=str(config_path) if config_path is not None else None,
         renderer=renderer,
     )
@@ -451,7 +461,8 @@ def train_vertical_slice(
         manifest = create_manifest(
             run_id=run_id,
             run_type="training",
-            config_snapshot=experiment_config.model_dump(),
+            # config_snapshot=experiment_config.model_dump(),
+            config_snapshot=experiment_config_payload,  # performance improvement: reuse serialized config payload
             compute_platform=compute_platform,  # type: ignore[arg-type]
             instance_type=instance_type,
             generator_model=experiment_config.generator.model_id,
@@ -465,7 +476,8 @@ def train_vertical_slice(
                 run_dir=run_dir,
                 experiment_name=experiment_name,
                 training_result=result,
-                experiment_config=experiment_config.model_dump(),
+                # experiment_config=experiment_config.model_dump(),
+                experiment_config=experiment_config_payload,  # performance improvement: reuse serialized config payload
             )
             manifest = finalize_manifest(manifest, status="success", output_uris=uris)
         except Exception as exc:
@@ -511,6 +523,7 @@ def run_vertical_inference(
     if config_path is None:
         experiment_config.generator.provider = llm_provider
         experiment_config.training.top_k = top_k
+    experiment_config_payload = experiment_config.model_dump()
     llm = build_scene_llm(experiment_config.generator)
     critic = build_scene_critic(experiment_config.critic)
     room_type = infer_room_type(prompt)
@@ -521,10 +534,13 @@ def run_vertical_inference(
     scene_program = llm.generate_scene_program(
         prompt=prompt, room_type=room_type, selected_hypotheses=selected_text
     )
+    selected_hypothesis_ids = [item.hypothesis_id for item in selected]
+    scene_program_payload = scene_program.model_dump()
 
     output_dir.mkdir(parents=True, exist_ok=True)
     sp_path = output_dir / "scene_program.json"
-    _write_json(sp_path, scene_program.model_dump())
+    # _write_json(sp_path, scene_program.model_dump())
+    _write_json(sp_path, scene_program_payload)  # performance improvement: reuse serialized scene payload
 
     # --- Optional: render the scene and score with VLM images ---
     render_manifest: dict = {}
@@ -554,17 +570,21 @@ def run_vertical_inference(
     critic_score = evaluate_scene_program(
         scene_program, critic=critic, image_paths=image_paths or None
     )
-    _write_json(output_dir / "critic_score.json", critic_score.model_dump())
-    _write_json(output_dir / "experiment_config.json", experiment_config.model_dump())
+    critic_score_payload = critic_score.model_dump()
+    # _write_json(output_dir / "critic_score.json", critic_score.model_dump())
+    _write_json(output_dir / "critic_score.json", critic_score_payload)  # performance improvement: reuse serialized critic payload
+    # _write_json(output_dir / "experiment_config.json", experiment_config.model_dump())
+    _write_json(output_dir / "experiment_config.json", experiment_config_payload)  # performance improvement: reuse serialized config payload
 
     # --- Scene features: lightweight structured metadata from the SceneProgram ---
+    rendered_views = render_manifest.get("rendered_views")
     scene_features = {
         "room_type": room_type,
         "asset_counts": {
             asset.asset_type: asset.count for asset in scene_program.assets
         },
         "total_assets": sum(asset.count for asset in scene_program.assets),
-        "rendered_views": render_manifest.get("rendered_views"),
+        "rendered_views": rendered_views,
         "video_path": render_manifest.get("video_path"),
         "render_elapsed_seconds": render_manifest.get("elapsed_seconds"),
     }
@@ -576,8 +596,10 @@ def run_vertical_inference(
         "room_type": room_type,
         "llm_provider": experiment_config.generator.provider,
         "config_path": str(config_path) if config_path is not None else None,
-        "experiment_config": experiment_config.model_dump(),
-        "selected_hypothesis_ids": [item.hypothesis_id for item in selected],
+        # "experiment_config": experiment_config.model_dump(),
+        "experiment_config": experiment_config_payload,  # performance improvement: reuse serialized config payload
+        # "selected_hypothesis_ids": [item.hypothesis_id for item in selected],
+        "selected_hypothesis_ids": selected_hypothesis_ids,  # performance improvement: reuse selected ids
         "selected_hypotheses": selected_text,
         "scene_program_path": str(sp_path),
         "critic_score_path": str(output_dir / "critic_score.json"),
@@ -592,7 +614,8 @@ def run_vertical_inference(
         run_manifest = create_manifest(
             run_id=inf_run_id,
             run_type="inference",
-            config_snapshot=experiment_config.model_dump(),
+            # config_snapshot=experiment_config.model_dump(),
+            config_snapshot=experiment_config_payload,  # performance improvement: reuse serialized config payload
             compute_platform=compute_platform,  # type: ignore[arg-type]
             instance_type=instance_type,
             generator_model=experiment_config.generator.model_id,

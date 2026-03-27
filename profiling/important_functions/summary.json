@@ -1,0 +1,80 @@
+{
+  "method": {
+    "module": "profile",
+    "api": [
+      "profile.Profile.runcall",
+      "pstats.Stats.sort_stats"
+    ],
+    "notes": [
+      "These numbers include the overhead of the pure-Python profile module.",
+      "The target functions were run on mock/heuristic local workloads to avoid AWS and Blender dependencies."
+    ]
+  },
+  "results": [
+    {
+      "label": "run_vertical_inference",
+      "function": "compos3d.hypothesis.engine.run_vertical_inference",
+      "file": "C:\\Users\\minhc\\workspace\\csc490\\Compos3D\\src\\compos3d\\hypothesis\\engine.py",
+      "line": 488,
+      "function_name": "run_vertical_inference",
+      "calls": 150,
+      "primitive_calls": 150,
+      "total_time_seconds": 0.00968,
+      "cumulative_time_seconds": 0.970212,
+      "profile_dump": "C:\\Users\\minhc\\workspace\\csc490\\Compos3D\\profiling\\important_functions\\run_vertical_inference.prof",
+      "text_report": "C:\\Users\\minhc\\workspace\\csc490\\Compos3D\\profiling\\important_functions\\run_vertical_inference.txt"
+    },
+    {
+      "label": "train_vertical_slice",
+      "function": "compos3d.hypothesis.engine.train_vertical_slice",
+      "file": "C:\\Users\\minhc\\workspace\\csc490\\Compos3D\\src\\compos3d\\hypothesis\\engine.py",
+      "line": 363,
+      "function_name": "train_vertical_slice",
+      "calls": 1,
+      "primitive_calls": 1,
+      "total_time_seconds": 4.9e-05,
+      "cumulative_time_seconds": 0.258973,
+      "profile_dump": "C:\\Users\\minhc\\workspace\\csc490\\Compos3D\\profiling\\important_functions\\train_vertical_slice.prof",
+      "text_report": "C:\\Users\\minhc\\workspace\\csc490\\Compos3D\\profiling\\important_functions\\train_vertical_slice.txt"
+    },
+    {
+      "label": "scene_hypothesis_loop_train",
+      "function": "compos3d.hypothesis.loop.SceneHypothesisLoop.train",
+      "file": "C:\\Users\\minhc\\workspace\\csc490\\Compos3D\\src\\compos3d\\hypothesis\\loop.py",
+      "line": 112,
+      "function_name": "train",
+      "calls": 1,
+      "primitive_calls": 1,
+      "total_time_seconds": 0.004125,
+      "cumulative_time_seconds": 0.184729,
+      "profile_dump": "C:\\Users\\minhc\\workspace\\csc490\\Compos3D\\profiling\\important_functions\\scene_hypothesis_loop_train.prof",
+      "text_report": "C:\\Users\\minhc\\workspace\\csc490\\Compos3D\\profiling\\important_functions\\scene_hypothesis_loop_train.txt"
+    },
+    {
+      "label": "mock_scene_llm_generate_scene_program",
+      "function": "compos3d.llm.scene_llm.MockSceneLLM.generate_scene_program",
+      "file": "C:\\Users\\minhc\\workspace\\csc490\\Compos3D\\src\\compos3d\\llm\\scene_llm.py",
+      "line": 250,
+      "function_name": "generate_scene_program",
+      "calls": 2500,
+      "primitive_calls": 2500,
+      "total_time_seconds": 0.031871,
+      "cumulative_time_seconds": 0.130528,
+      "profile_dump": "C:\\Users\\minhc\\workspace\\csc490\\Compos3D\\profiling\\important_functions\\mock_scene_llm_generate_scene_program.prof",
+      "text_report": "C:\\Users\\minhc\\workspace\\csc490\\Compos3D\\profiling\\important_functions\\mock_scene_llm_generate_scene_program.txt"
+    },
+    {
+      "label": "build_heuristic_score",
+      "function": "compos3d.evaluation.critic._build_heuristic_score",
+      "file": "C:\\Users\\minhc\\workspace\\csc490\\Compos3D\\src\\compos3d\\evaluation\\critic.py",
+      "line": 73,
+      "function_name": "_build_heuristic_score",
+      "calls": 5000,
+      "primitive_calls": 5000,
+      "total_time_seconds": 0.024567,
+      "cumulative_time_seconds": 0.059346,
+      "profile_dump": "C:\\Users\\minhc\\workspace\\csc490\\Compos3D\\profiling\\important_functions\\build_heuristic_score.prof",
+      "text_report": "C:\\Users\\minhc\\workspace\\csc490\\Compos3D\\profiling\\important_functions\\build_heuristic_score.txt"
+    }
+  ]
+}

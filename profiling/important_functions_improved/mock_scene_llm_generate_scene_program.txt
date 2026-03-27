@@ -1,0 +1,38 @@
+         54169 function calls (49169 primitive calls) in 0.050 seconds
+
+   Ordered by: cumulative time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.050    0.050 profile:0(<function main.<locals>.run_generate_scene_program_many at 0x0000017E96F60900>)
+        1    0.003    0.003    0.050    0.050 profile_important_functions.py:273(run_generate_scene_program_many)
+     2500    0.016    0.000    0.046    0.000 scene_llm.py:284(generate_scene_program)
+18333/15833    0.008    0.000    0.025    0.000 main.py:240(__init__)
+18333/15833    0.017    0.000    0.018    0.000 :0(validate_python)
+     2500    0.003    0.000    0.005    0.000 catalog.py:83(normalize_assets)
+     2500    0.001    0.000    0.002    0.000 catalog.py:47(supported_assets_for_room)
+     5000    0.001    0.000    0.001    0.000 :0(len)
+     2500    0.001    0.000    0.001    0.000 :0(fromkeys)
+     2500    0.001    0.000    0.001    0.000 :0(get)
+        1    0.000    0.000    0.000    0.000 :0(setprofile)
+        0    0.000             0.000          profile:0(profiler)
+
+
+         54169 function calls (49169 primitive calls) in 0.050 seconds
+
+   Ordered by: internal time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+18333/15833    0.017    0.000    0.018    0.000 :0(validate_python)
+     2500    0.016    0.000    0.046    0.000 scene_llm.py:284(generate_scene_program)
+18333/15833    0.008    0.000    0.025    0.000 main.py:240(__init__)
+        1    0.003    0.003    0.050    0.050 profile_important_functions.py:273(run_generate_scene_program_many)
+     2500    0.003    0.000    0.005    0.000 catalog.py:83(normalize_assets)
+     2500    0.001    0.000    0.002    0.000 catalog.py:47(supported_assets_for_room)
+     5000    0.001    0.000    0.001    0.000 :0(len)
+     2500    0.001    0.000    0.001    0.000 :0(fromkeys)
+     2500    0.001    0.000    0.001    0.000 :0(get)
+        1    0.000    0.000    0.050    0.050 profile:0(<function main.<locals>.run_generate_scene_program_many at 0x0000017E96F60900>)
+        1    0.000    0.000    0.000    0.000 :0(setprofile)
+        0    0.000             0.000          profile:0(profiler)
+
+
