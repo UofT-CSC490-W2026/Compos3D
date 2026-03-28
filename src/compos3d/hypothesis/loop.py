@@ -535,6 +535,7 @@ class SceneHypothesisLoop:
             ),
             "failed_scene_bank_path": str(self.run_dir / "failed_scene_bank.jsonl"),
             "resume_state_path": str(self._state_file()),
+            "runtime_context_path": str(self.run_dir / "runtime_context.json"),
             "num_hypotheses": len(self.bank),
             "num_predictions": len(self.predictions),
             "num_regeneration_events": self.regeneration_events,

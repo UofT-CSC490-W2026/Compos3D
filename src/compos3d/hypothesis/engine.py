@@ -113,6 +113,14 @@ def _mirror_training_to_lake(
     uri = store.put_json(f"{bronze_pfx}/experiment_config.json", experiment_config)
     written.append(uri)
 
+    runtime_context_file = run_dir / "runtime_context.json"
+    if runtime_context_file.exists():
+        uri = store.put_json(
+            f"{bronze_pfx}/runtime_context.json",
+            json.loads(runtime_context_file.read_text()),
+        )
+        written.append(uri)
+
     # Silver: validated metrics + final bank.
     metrics_file = run_dir / "metrics.json"
     if metrics_file.exists():
@@ -187,6 +195,14 @@ def _mirror_inference_to_lake(
         if p.exists():
             uri = store.put_json(f"{silver_pfx}/{fname}", json.loads(p.read_text()))
             written.append(uri)
+
+    runtime_context_file = output_dir / "runtime_context.json"
+    if runtime_context_file.exists():
+        uri = store.put_json(
+            f"{bronze_pfx}/runtime_context.json",
+            json.loads(runtime_context_file.read_text()),
+        )
+        written.append(uri)
 
     # Silver: rendered views as bytes, if present.
     for img_path in output_dir.rglob("view_*.png"):
@@ -899,6 +915,7 @@ def run_vertical_inference(
         "scene_program_path": str(sp_path),
         "critic_score_path": str(output_dir / "critic_score.json"),
         "scene_features_path": str(output_dir / "scene_features.json"),
+        "runtime_context_path": str(output_dir / "runtime_context.json"),
         "render_scene": render_scene,
         "render_manifest": render_manifest if render_scene else None,
     }

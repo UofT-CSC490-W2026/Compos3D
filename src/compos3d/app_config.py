@@ -46,6 +46,11 @@ class AppConfig(BaseSettings):
     s3_bucket_gold: Optional[str] = None
     s3_prefix: str = "compos3d"
     aws_region: str = "us-east-1"
+    ecr_repository_url: Optional[str] = None
+    container_image_tag: str = "latest"
+    aws_secret_env_map: dict[str, str] = Field(default_factory=dict)
+    terraform_state_bucket: Optional[str] = None
+    terraform_lock_table: Optional[str] = None
 
     # EC2 compute options (used by launch-aws command).
     ec2_instance_type: str = "g5.xlarge"
@@ -53,11 +58,13 @@ class AppConfig(BaseSettings):
         None  # defaults to latest Deep Learning AMI at launch time
     )
     ec2_key_name: Optional[str] = None  # EC2 key pair name for SSH fallback
-    ec2_subnet_id: Optional[str] = None  # VPC subnet (uses default VPC if None)
+    ec2_subnet_id: Optional[str] = None  # auto-discovers managed job subnet if None
     ec2_security_group_id: Optional[str] = None
     ec2_iam_instance_profile: str = (
         "compos3d-ec2-job"  # instance profile with S3 + CW access
     )
+    ec2_root_volume_size_gb: int = 300
+    ec2_log_group: str = "/compos3d/jobs"
     ec2_spot: bool = True  # use spot instances by default
     ec2_spot_max_price: Optional[str] = None  # None → on-demand price cap
 

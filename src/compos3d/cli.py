@@ -1,4 +1,5 @@
 from pathlib import Path
+import shlex
 from typing import Optional
 
 import typer
@@ -204,6 +205,16 @@ def train_hypotheses_cmd(
         help="Infrastructure environment: local (default), dev, staging, or prod. "
         "dev/staging/prod route outputs to S3 bronze/silver/gold buckets.",
     ),
+    compute_platform: str = typer.Option(
+        "local",
+        "--compute-platform",
+        hidden=True,
+    ),
+    instance_type: str | None = typer.Option(
+        None,
+        "--instance-type",
+        hidden=True,
+    ),
 ):
     """Train a hypothesis bank on a labelled scene dataset."""
     store = None
@@ -234,7 +245,8 @@ def train_hypotheses_cmd(
                     item.strip() for item in wandb_tags.split(",") if item.strip()
                 ),
                 store=store,
-                compute_platform="local",
+                compute_platform=compute_platform,
+                instance_type=instance_type,
             )
         )
     )
@@ -278,6 +290,16 @@ def run_inference_cmd(
         "--env",
         help="Infrastructure environment: local (default), dev, staging, or prod.",
     ),
+    compute_platform: str = typer.Option(
+        "local",
+        "--compute-platform",
+        hidden=True,
+    ),
+    instance_type: str | None = typer.Option(
+        None,
+        "--instance-type",
+        hidden=True,
+    ),
 ):
     """
     Generate a SceneProgram from a frozen hypothesis bank.
@@ -311,7 +333,8 @@ def run_inference_cmd(
                 render_video_frames=render_video_frames,
                 render_video_samples=render_video_samples,
                 store=store,
-                compute_platform="local",
+                compute_platform=compute_platform,
+                instance_type=instance_type,
             )
         )
     )
@@ -343,7 +366,7 @@ def launch_aws_cmd(
         None,
         "--cli-args",
         help="Additional CLI arguments as a single quoted string, "
-        "e.g. '--dataset-path s3://... --config-path configs/compos3d.json --env dev'",
+        "e.g. '--dataset-path s3://... --config-path train_configs/compos3d.json --env dev'",
     ),
     env: str = typer.Option(
         "dev", "--env", help="Target environment: dev, staging, prod"
@@ -353,25 +376,34 @@ def launch_aws_cmd(
     ),
     repo_url: str = typer.Option(
         "https://github.com/yourorg/Compos3D.git",
-        help="Git remote to clone on the EC2 instance",
+        help="Git remote metadata to record with the submitted job",
     ),
-    git_ref: str = typer.Option("main", help="Branch or commit to check out"),
+    git_ref: str = typer.Option("main", help="Git ref metadata to record with the job"),
+    image_tag: str | None = typer.Option(
+        None,
+        "--image-tag",
+        help="Override the container image tag from env config",
+    ),
     wait: bool = typer.Option(
         False, "--wait", help="Block until the EC2 job completes"
     ),
-    log_group: str = typer.Option("/compos3d/jobs", help="CloudWatch Logs log group"),
+    log_group: str | None = typer.Option(
+        None,
+        help="Override the CloudWatch Logs group from env config",
+    ),
 ):
     """
     Launch a compos3d job on AWS EC2 (spot by default).
 
-    The instance bootstraps itself: clones the repo, installs dependencies,
-    runs the compos3d command, writes outputs to S3, then self-terminates.
+    The instance bootstraps Docker, pulls the Compos3D runtime image from ECR,
+    runs the requested compos3d command inside the container, writes outputs to
+    S3, then self-terminates.
 
     Example — submit a training run to the dev environment:
 
     \\b
         compos3d launch-aws train-hypotheses \\
-            --cli-args '--dataset-path s3://compos3d-dev-bronze/datasets/vs.json --config-path configs/compos3d.json --env dev' \\
+            --cli-args '--dataset-path s3://compos3d-dev-bronze/datasets/vs.json --config-path train_configs/compos3d.json --env dev' \\
             --env dev --wait
     """
     from compos3d.app_config import load_app_config
@@ -381,14 +413,17 @@ def launch_aws_cmd(
     if instance_type:
         app_cfg = app_cfg.model_copy(update={"ec2_instance_type": instance_type})
 
-    args_list = cli_args.split() if cli_args else []
+    args_list = shlex.split(cli_args) if cli_args else []
+    if "--env" not in args_list:
+        args_list.extend(["--env", env])
 
     spec = EC2JobSpec(
         command=command,
         cli_args=args_list,
         repo_url=repo_url,
         git_ref=git_ref,
-        log_group=log_group,
+        log_group=log_group or app_cfg.ec2_log_group,
+        image_tag=image_tag or app_cfg.container_image_tag,
     )
 
     def _launch():

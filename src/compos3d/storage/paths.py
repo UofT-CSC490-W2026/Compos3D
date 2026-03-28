@@ -34,6 +34,10 @@ def training_gold_prefix(experiment_name: str) -> str:
     return f"gold/hypothesis_banks/{experiment_name}"
 
 
+def training_checkpoint_prefix(experiment_name: str) -> str:
+    return f"bronze/checkpoints/training/{experiment_name}/latest"
+
+
 def inference_bronze_prefix(run_id: str) -> str:
     return f"bronze/inference/{run_id}"
 
