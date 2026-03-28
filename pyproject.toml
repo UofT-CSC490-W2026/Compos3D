@@ -21,6 +21,7 @@ dependencies = [
 
 [project.scripts]
 compos3d = "compos3d.cli:app"
+compos3d-aws-runtime = "compos3d.aws_runtime:main"
 
 [build-system]
 requires = ["hatchling"]

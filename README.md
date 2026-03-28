@@ -74,6 +74,9 @@ procedural/
 
 scripts/
   build_spatiallm_dataset.py Download and convert SpatialLM into training data
+  build_and_push_runtime_image.sh
+                            Build and push the AWS runtime image to ECR
+  put_secret_value.sh       Populate Secrets Manager values outside Terraform state
 
 train_configs/
   compos3d.json              Full recommended training config
@@ -91,6 +94,11 @@ data/external/spatiallm/
 
 infinigen/
   Princeton Infinigen submodule
+
+terraform/
+  main.tf                    Main Compos3D infra stack
+  backends/*.hcl             Remote-state backend configs per environment
+  bootstrap/                 One-time Terraform state bucket + lock table stack
 ```
 
 ## 🔧 Installation
@@ -348,15 +356,101 @@ If you change the config, keep these constraints in mind:
 
 ## ☁️ AWS
 
-Run the full training job on AWS infrastructure with:
+Compos3D now supports an AWS-native execution path that keeps local workflows unchanged:
+
+- local commands still run directly from your checkout
+- `launch-aws` runs the same inner `compos3d` command inside an ECR-backed container on an ephemeral EC2 instance
+- secrets come from Secrets Manager at runtime
+- CloudWatch captures container logs
+- training checkpoints sync to a mutable Bronze checkpoint prefix for resume
+- final artifacts still mirror into Bronze, Silver, and Gold through the existing Python engine
+
+### 1. Bootstrap Terraform remote state
+
+Run this once:
+
+```bash
+terraform -chdir=terraform/bootstrap init
+terraform -chdir=terraform/bootstrap apply
+```
+
+Then initialize the main stack for `dev`:
+
+```bash
+terraform -chdir=terraform init -backend-config=backends/dev.hcl
+```
+
+For `staging` and `prod`, swap in `backends/staging.hcl` or `backends/prod.hcl`.
+
+### 2. Apply the dev infrastructure
+
+```bash
+terraform -chdir=terraform plan -var-file=environments/dev.tfvars
+terraform -chdir=terraform apply -var-file=environments/dev.tfvars
+```
+
+Important outputs:
+
+- `bronze_bucket`, `silver_bucket`, `gold_bucket`
+- `ecr_repository_url`
+- `ec2_instance_profile_name`
+- `ec2_security_group_id`
+- `ec2_log_group_name`
+- `wandb_secret_name`
+
+### 3. Populate secret values outside Terraform state
+
+Example:
+
+```bash
+./scripts/put_secret_value.sh compos3d-dev-wandb-key "$WANDB_API_KEY"
+```
+
+Repeat for any other secret names you need, such as:
+
+- `compos3d-dev-openai-key`
+- `compos3d-dev-anthropic-key`
+- `compos3d-dev-anyscale-key`
+
+### 4. Build and push the runtime image
+
+```bash
+./scripts/build_and_push_runtime_image.sh <ecr_repository_url> latest us-east-1
+```
+
+### 5. Launch a dev smoke run
+
+This uses the same CLI command shape as local training, but wraps it in the AWS runtime:
 
 ```bash
 ./.venv/bin/compos3d launch-aws train-hypotheses \
-  --cli-args '--dataset-path examples/vertical_slice_dataset.json --output-dir artifacts/training --experiment-name claude_qwen --config-path train_configs/compos3d.json --env dev' \
+  --cli-args '--dataset-path examples/dummy_fast.json --output-dir artifacts/training --experiment-name aws_smoke --config-path train_configs/compos3d_small_claude_wen.json' \
   --env dev \
-  --git-ref main \
+  --image-tag latest \
   --wait
 ```
+
+### 6. Resume an interrupted training run
+
+The AWS runtime syncs training state to:
+
+`s3://<bronze-bucket>/<s3_prefix>/bronze/checkpoints/training/<experiment-name>/latest/`
+
+Resume with the same command plus `--resume` inside `--cli-args`:
+
+```bash
+./.venv/bin/compos3d launch-aws train-hypotheses \
+  --cli-args '--dataset-path examples/dummy_fast.json --output-dir artifacts/training --experiment-name aws_smoke --config-path train_configs/compos3d_small_claude_wen.json --resume' \
+  --env dev \
+  --image-tag latest \
+  --wait
+```
+
+### Environment Policy
+
+- `dev`: apply and smoke-test here first
+- `staging`: keep configuration ready, but do not run jobs until dev is clean
+- `prod`: same as staging, with a separate backend key, secrets, buckets, and log group
 
 ## 🧪 Testing
 
