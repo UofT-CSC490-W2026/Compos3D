@@ -210,7 +210,9 @@ def test_runtime_main_hydrates_s3_inputs_and_writes_runtime_context(
 
     monkeypatch.setattr("compos3d.aws_runtime.boto3.client", _fake_boto_client)
 
-    def _fake_run_inner_cli(*, command: str, cli_args: list[str], instance_type: str | None):
+    def _fake_run_inner_cli(
+        *, command: str, cli_args: list[str], instance_type: str | None
+    ):
         seen["command"] = command
         seen["cli_args"] = cli_args
         seen["instance_type"] = instance_type
@@ -243,7 +245,9 @@ def test_runtime_main_hydrates_s3_inputs_and_writes_runtime_context(
     assert isinstance(cli_args, list)
     assert any(str(arg).endswith("dataset_path.json") for arg in cli_args)
     runtime_context = json.loads(
-        (repo_root / "artifacts" / "training" / "aws_smoke" / "runtime_context.json").read_text()
+        (
+            repo_root / "artifacts" / "training" / "aws_smoke" / "runtime_context.json"
+        ).read_text()
     )
     assert runtime_context["runtime_env"] == "dev"
     assert runtime_context["command"] == "train-hypotheses"

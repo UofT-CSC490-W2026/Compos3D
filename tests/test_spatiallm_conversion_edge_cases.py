@@ -49,7 +49,8 @@ def _candidate(
 
 def _layout_text(*labels: str, include_window: bool = False) -> str:
     lines = [
-        f"bbox_{index}=Bbox({label},1,2,3,0,1,1,1)" for index, label in enumerate(labels)
+        f"bbox_{index}=Bbox({label},1,2,3,0,1,1,1)"
+        for index, label in enumerate(labels)
     ]
     if include_window:
         lines.insert(0, "window_0=Window(wall_1,0.5,1.0,1.0,0.1,1.2)")
@@ -65,9 +66,12 @@ def _repo_temp_dir() -> Path:
 def test_spatiallm_helper_branches_cover_selection_and_phrase_shapes() -> None:
     assert normalize_source_label(" Floor Standing Lamp ") == "floor_standing_lamp"
 
-    assert select_required_assets(
-        "living_room", Counter({"table_top": 1, "lamp": 1, "rug": 1})
-    ) is None
+    assert (
+        select_required_assets(
+            "living_room", Counter({"table_top": 1, "lamp": 1, "rug": 1})
+        )
+        is None
+    )
     assert select_required_assets("bedroom", Counter({"lamp": 1})) is None
 
     assert asset_prompt_noun("dining_room", "dining_table") == "dining table"
@@ -85,7 +89,9 @@ def test_spatiallm_helper_branches_cover_selection_and_phrase_shapes() -> None:
     assert join_phrases(["left", "right"]) == "left and right"
 
 
-def test_spatiallm_metadata_and_row_loader_helpers(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_spatiallm_metadata_and_row_loader_helpers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     temp_dir = _repo_temp_dir()
     try:
         csv_path = temp_dir / "split.csv"
@@ -121,7 +127,10 @@ def test_spatiallm_metadata_and_row_loader_helpers(monkeypatch: pytest.MonkeyPat
         assert rows == [{"row": "one"}, {"row": "two"}]
 
         assert room_base_id("scene_alpha_0") == "scene_alpha"
-        assert extract_sample_id({"point_clouds": ["nested/scene_alpha_0.ply"]}) == "scene_alpha_0"
+        assert (
+            extract_sample_id({"point_clouds": ["nested/scene_alpha_0.ply"]})
+            == "scene_alpha_0"
+        )
         assert extract_sample_id({"point_clouds": []}) is None
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
@@ -294,7 +303,11 @@ def test_collect_spatiallm_candidates_filters_duplicates_and_sorts(
                 "point_clouds": ["/tmp/br_keep_0.ply"],
                 "conversations": [
                     {"value": "u"},
-                    {"value": _layout_text("nightstand", "desk_lamp", include_window=True)},
+                    {
+                        "value": _layout_text(
+                            "nightstand", "desk_lamp", include_window=True
+                        )
+                    },
                 ],
             },
         ],

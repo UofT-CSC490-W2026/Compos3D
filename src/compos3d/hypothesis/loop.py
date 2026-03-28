@@ -117,7 +117,9 @@ class SceneHypothesisLoop:
         self.by_room: dict[str, list[TrainingExample]] = {}
         for example in dataset.examples:
             self.by_room.setdefault(example.room_type, []).append(example)
-        self.example_by_id = {example.example_id: example for example in dataset.examples}
+        self.example_by_id = {
+            example.example_id: example for example in dataset.examples
+        }
 
         self.bank: list[HypothesisRecord] = []
         self.predictions: list[PredictionRecord] = []
@@ -248,9 +250,7 @@ class SceneHypothesisLoop:
                         ),
                     )
                     self.hypothesis_evaluations.append(eval_record)
-                    if (
-                        global_step % self.logging_config.log_every_n_examples == 0
-                    ):
+                    if global_step % self.logging_config.log_every_n_examples == 0:
                         self._logger.log_hypothesis_eval(
                             eval_record,
                             log_media=(
@@ -456,7 +456,9 @@ class SceneHypothesisLoop:
                 "hypothesis_evaluations": [
                     record.model_dump() for record in self.hypothesis_evaluations
                 ],
-                "training_trace": [record.model_dump() for record in self.training_trace],
+                "training_trace": [
+                    record.model_dump() for record in self.training_trace
+                ],
                 "failed_scene_bank": [
                     record.model_dump() for record in self.failed_scene_bank
                 ],
@@ -561,7 +563,8 @@ class SceneHypothesisLoop:
             current_sample = max(len(seed_examples), 2)
             new_records: list[HypothesisRecord] = []
             existing_texts = {
-                self._normalize_text(record.text) for record in self._room_bank(room_type)
+                self._normalize_text(record.text)
+                for record in self._room_bank(room_type)
             }
             seen_new: set[str] = set()
             for hypothesis in generated:

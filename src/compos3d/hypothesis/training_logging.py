@@ -135,7 +135,9 @@ class TrainingLogger:
                 round(score, 4),
                 prompt,
                 hypothesis_text,
-                self._table_image(self._preview_path(_slugify(f"init_{room_type}_{example_id}"))),
+                self._table_image(
+                    self._preview_path(_slugify(f"init_{room_type}_{example_id}"))
+                ),
                 self._table_video(
                     self._media_video_path(
                         slug=_slugify(f"init_{room_type}_{example_id}"),
@@ -206,12 +208,16 @@ class TrainingLogger:
                 bool(record.was_successful),
                 self._table_image(
                     self._preview_path(
-                        _slugify(f"hyp_eval_{record.global_step}_{record.hypothesis_id}")
+                        _slugify(
+                            f"hyp_eval_{record.global_step}_{record.hypothesis_id}"
+                        )
                     )
                 ),
                 self._table_video(
                     self._media_video_path(
-                        slug=_slugify(f"hyp_eval_{record.global_step}_{record.hypothesis_id}"),
+                        slug=_slugify(
+                            f"hyp_eval_{record.global_step}_{record.hypothesis_id}"
+                        ),
                         raw_video_path=record.video_path,
                     )
                 ),
@@ -283,7 +289,10 @@ class TrainingLogger:
                         ]
                     ),
                     "pred/scene_constraints_json": json.dumps(
-                        [constraint.text for constraint in prediction.scene_program.constraints]
+                        [
+                            constraint.text
+                            for constraint in prediction.scene_program.constraints
+                        ]
                     ),
                     "pred/score": prediction.critic_score.overall,
                     "pred/room_type": prediction.room_type,
@@ -332,11 +341,15 @@ class TrainingLogger:
                     prediction.prompt,
                     json.dumps(prediction.selected_hypotheses),
                     self._table_image(
-                        self._preview_path(_slugify(f"pred_{trace.global_step}_{trace.example_id}"))
+                        self._preview_path(
+                            _slugify(f"pred_{trace.global_step}_{trace.example_id}")
+                        )
                     ),
                     self._table_video(
                         self._media_video_path(
-                            slug=_slugify(f"pred_{trace.global_step}_{trace.example_id}"),
+                            slug=_slugify(
+                                f"pred_{trace.global_step}_{trace.example_id}"
+                            ),
                             raw_video_path=prediction.video_path,
                         )
                     ),
@@ -405,7 +418,9 @@ class TrainingLogger:
                 ),
                 self._table_video(
                     self._media_video_path(
-                        slug=_slugify(f"failure_{record.global_step}_{record.example_id}"),
+                        slug=_slugify(
+                            f"failure_{record.global_step}_{record.example_id}"
+                        ),
                         raw_video_path=record.combined_video_path,
                     )
                 ),
@@ -413,7 +428,9 @@ class TrainingLogger:
             ],
         )
 
-    def log_regeneration(self, *, global_step: int, room_type: str, new_records: int) -> None:
+    def log_regeneration(
+        self, *, global_step: int, room_type: str, new_records: int
+    ) -> None:
         self.log_scalars(
             {
                 "regeneration/event": 1.0,
@@ -423,7 +440,9 @@ class TrainingLogger:
             step=global_step,
         )
 
-    def finish(self, *, summary: EvaluationSummary, run_dir: Path, manifest: dict[str, Any]) -> None:
+    def finish(
+        self, *, summary: EvaluationSummary, run_dir: Path, manifest: dict[str, Any]
+    ) -> None:
         self.log_scalars(
             {
                 "final/num_predictions": summary.num_predictions,
@@ -437,7 +456,11 @@ class TrainingLogger:
             step=summary.num_predictions,
         )
 
-        if self._run is not None and self._wandb is not None and self.config.upload_artifact_at_end:
+        if (
+            self._run is not None
+            and self._wandb is not None
+            and self.config.upload_artifact_at_end
+        ):
             artifact = self._wandb.Artifact(
                 name=f"{self.experiment_name}-training",
                 type="training-run",
@@ -459,9 +482,7 @@ class TrainingLogger:
             snapshots_dir = run_dir / "bank_snapshots"
             if snapshots_dir.exists():
                 for path in sorted(snapshots_dir.glob("*.json")):
-                    artifact.add_file(
-                        str(path), name=f"bank_snapshots/{path.name}"
-                    )
+                    artifact.add_file(str(path), name=f"bank_snapshots/{path.name}")
             if self.config.upload_media_artifact_at_end and self._media_dir.exists():
                 for path in sorted(self._media_dir.glob("**/*")):
                     if path.is_file():
@@ -530,7 +551,9 @@ class TrainingLogger:
             ]
         media_video_path = self._media_video_path(
             slug=safe_slug,
-            raw_video_path=str(normalized_video_path) if normalized_video_path else None,
+            raw_video_path=str(normalized_video_path)
+            if normalized_video_path
+            else None,
         )
         if media_video_path is not None:
             payload[f"{prefix}/animation"] = self._wandb.Video(
@@ -709,7 +732,9 @@ class TrainingLogger:
     def _animation_path(self, slug: str) -> Path:
         return self._media_dir / f"{slug}_animation.gif"
 
-    def _media_video_path(self, *, slug: str, raw_video_path: str | None) -> Path | None:
+    def _media_video_path(
+        self, *, slug: str, raw_video_path: str | None
+    ) -> Path | None:
         if raw_video_path and Path(raw_video_path).exists():
             return Path(raw_video_path)
         animation_path = self._animation_path(slug)
@@ -735,7 +760,9 @@ class TrainingLogger:
             preview.paste(resized, (col * width, row * height))
         preview.save(preview_path)
 
-    def _ensure_animation(self, animation_path: Path, image_paths: Sequence[Path]) -> None:
+    def _ensure_animation(
+        self, animation_path: Path, image_paths: Sequence[Path]
+    ) -> None:
         if animation_path.exists() or len(image_paths) < 2:
             return
         frames = self._load_frames(image_paths)
@@ -794,7 +821,9 @@ class TrainingLogger:
             "step": step,
             "prefix": prefix,
             "preview_path": str(preview_path) if preview_path is not None else None,
-            "animation_path": str(animation_path) if animation_path is not None else None,
+            "animation_path": str(animation_path)
+            if animation_path is not None
+            else None,
             "image_paths": [str(path) for path in image_paths],
             "video_path": str(video_path) if video_path is not None else None,
             **metadata,

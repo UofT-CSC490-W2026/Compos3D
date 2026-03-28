@@ -684,7 +684,9 @@ def test_ec2_runner_remaining_branches(monkeypatch) -> None:
         def describe_repositories(self, **_kwargs):
             return {
                 "repositories": [
-                    {"repositoryUri": "123456789012.dkr.ecr.us-east-1.amazonaws.com/compos3d-dev-runtime"}
+                    {
+                        "repositoryUri": "123456789012.dkr.ecr.us-east-1.amazonaws.com/compos3d-dev-runtime"
+                    }
                 ]
             }
 
@@ -1056,7 +1058,9 @@ def test_ec2_runner_resolve_ami_and_wait_paths(monkeypatch) -> None:
         def describe_repositories(self, **_kwargs):
             return {
                 "repositories": [
-                    {"repositoryUri": "123456789012.dkr.ecr.us-east-1.amazonaws.com/compos3d-dev-runtime"}
+                    {
+                        "repositoryUri": "123456789012.dkr.ecr.us-east-1.amazonaws.com/compos3d-dev-runtime"
+                    }
                 ]
             }
 
@@ -1088,7 +1092,10 @@ def test_ec2_runner_resolve_ami_and_wait_paths(monkeypatch) -> None:
         spec=spec,
         image_ref="123456789012.dkr.ecr.us-east-1.amazonaws.com/compos3d-dev-runtime:latest",
     )
-    assert '"$IMAGE_REF" --runtime-env dev --instance-type t3.small train-hypotheses --env dev' in user_data
+    assert (
+        '"$IMAGE_REF" --runtime-env dev --instance-type t3.small train-hypotheses --env dev'
+        in user_data
+    )
     assert '"$IMAGE_REF" python -m compos3d.aws_runtime' not in user_data
 
     instance_id, info = runner.launch(spec)

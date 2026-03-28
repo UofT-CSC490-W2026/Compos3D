@@ -144,7 +144,9 @@ def _repo_root() -> Path:
     return Path(__file__).resolve().parent.parent.parent
 
 
-def _resolve_runtime_paths(command: str, cli_args: list[str], app_cfg: AppConfig) -> RuntimePaths:
+def _resolve_runtime_paths(
+    command: str, cli_args: list[str], app_cfg: AppConfig
+) -> RuntimePaths:
     output_dir_value = _option_value(cli_args, "--output-dir")
     if output_dir_value:
         output_dir = (
@@ -157,7 +159,9 @@ def _resolve_runtime_paths(command: str, cli_args: list[str], app_cfg: AppConfig
     else:
         output_dir = None
     if command != "train-hypotheses":
-        return RuntimePaths(output_dir=output_dir, run_dir=output_dir, checkpoint_uri=None)
+        return RuntimePaths(
+            output_dir=output_dir, run_dir=output_dir, checkpoint_uri=None
+        )
 
     if output_dir is None:
         output_dir = (_repo_root() / "artifacts" / "training").resolve()
@@ -170,7 +174,9 @@ def _resolve_runtime_paths(command: str, cli_args: list[str], app_cfg: AppConfig
     if prefix:
         checkpoint_key = f"{prefix}/{checkpoint_key}"
     checkpoint_uri = _s3_uri(app_cfg.s3_bucket_bronze, checkpoint_key)
-    return RuntimePaths(output_dir=output_dir, run_dir=run_dir, checkpoint_uri=checkpoint_uri)
+    return RuntimePaths(
+        output_dir=output_dir, run_dir=run_dir, checkpoint_uri=checkpoint_uri
+    )
 
 
 def _download_if_s3(uri: str, *, target_dir: Path, s3_client: Any, label: str) -> Path:
@@ -182,7 +188,9 @@ def _download_if_s3(uri: str, *, target_dir: Path, s3_client: Any, label: str) -
     return target_path
 
 
-def _hydrate_remote_inputs(cli_args: list[str], *, target_dir: Path, s3_client: Any) -> tuple[list[str], dict[str, str]]:
+def _hydrate_remote_inputs(
+    cli_args: list[str], *, target_dir: Path, s3_client: Any
+) -> tuple[list[str], dict[str, str]]:
     updated = list(cli_args)
     resolved_paths: dict[str, str] = {}
     for flag in _SUPPORTED_REMOTE_INPUT_FLAGS:
@@ -200,7 +208,9 @@ def _hydrate_remote_inputs(cli_args: list[str], *, target_dir: Path, s3_client: 
     return updated, resolved_paths
 
 
-def _list_s3_objects(s3_client: Any, *, bucket: str, prefix: str) -> list[dict[str, Any]]:
+def _list_s3_objects(
+    s3_client: Any, *, bucket: str, prefix: str
+) -> list[dict[str, Any]]:
     paginator = s3_client.get_paginator("list_objects_v2")
     pages = paginator.paginate(Bucket=bucket, Prefix=prefix)
     out: list[dict[str, Any]] = []
@@ -209,9 +219,13 @@ def _list_s3_objects(s3_client: Any, *, bucket: str, prefix: str) -> list[dict[s
     return out
 
 
-def _download_s3_prefix(s3_client: Any, *, source_uri: str, destination_dir: Path) -> int:
+def _download_s3_prefix(
+    s3_client: Any, *, source_uri: str, destination_dir: Path
+) -> int:
     bucket, prefix = _parse_s3_uri(source_uri)
-    objects = _list_s3_objects(s3_client, bucket=bucket, prefix=prefix.rstrip("/") + "/")
+    objects = _list_s3_objects(
+        s3_client, bucket=bucket, prefix=prefix.rstrip("/") + "/"
+    )
     if not objects:
         return 0
     downloaded = 0
@@ -307,7 +321,9 @@ class CheckpointSyncManager:
     def start(self) -> None:
         if self.local_dir is None or self.remote_uri is None:
             return
-        self._thread = threading.Thread(target=self._run, name="checkpoint-sync", daemon=True)
+        self._thread = threading.Thread(
+            target=self._run, name="checkpoint-sync", daemon=True
+        )
         self._thread.start()
 
     def stop(self) -> None:

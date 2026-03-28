@@ -266,7 +266,9 @@ class EC2JobRunner:
 
     def _build_user_data(self, *, spec: EC2JobSpec, image_ref: str) -> str:
         extra_setup = "\n".join(spec.extra_setup_commands)
-        gpu_flag = "--gpus all" if self._requires_gpu(self.cfg.ec2_instance_type) else ""
+        gpu_flag = (
+            "--gpus all" if self._requires_gpu(self.cfg.ec2_instance_type) else ""
+        )
         cli_tokens = [
             "--runtime-env",
             str(self.cfg.env),

@@ -13,7 +13,10 @@ def test_layout_private_helpers_cover_clone_offset_and_anchor_fallbacks(
     assert cloned == source_pose
     assert cloned is not source_pose
 
-    assert layout_mod._normalize_text("Side_Table", None, " Near Sofa ") == "side table near sofa"  # noqa: SLF001
+    assert (
+        layout_mod._normalize_text("Side_Table", None, " Near Sofa ")
+        == "side table near sofa"
+    )  # noqa: SLF001
     assert layout_mod._contains_any("place near sofa", ("sofa",))  # noqa: SLF001
     assert not layout_mod._contains_any("place near sofa", ("chair",))  # noqa: SLF001
 
@@ -48,7 +51,9 @@ def test_layout_private_helpers_cover_clone_offset_and_anchor_fallbacks(
     )
 
 
-def test_preview_anchor_map_and_resolve_positions_cover_living_room_relationships() -> None:
+def test_preview_anchor_map_and_resolve_positions_cover_living_room_relationships() -> (
+    None
+):
     scene_program = {
         "prompt": "A cozy living room seating area",
         "room_type": "living_room",
@@ -121,7 +126,11 @@ def test_resolve_positions_and_factory_params_cover_remaining_branches() -> None
 
     lamp_near_table = layout_mod.resolve_asset_positions(
         dining_scene,
-        {"asset_type": "lamp", "count": 1, "placement": "above or near the dining table"},
+        {
+            "asset_type": "lamp",
+            "count": 1,
+            "placement": "above or near the dining table",
+        },
         dining_anchors,
     )
     assert lamp_near_table == [{"xy": (1.8, 1.0), "rot_z": 0.0}]
@@ -151,19 +160,31 @@ def test_resolve_positions_and_factory_params_cover_remaining_branches() -> None
     dining_rug = layout_mod.resolve_factory_params(
         "rug",
         dining_scene,
-        {"asset_type": "rug", "placement": "beneath the dining_table", "rationale": "anchor the table"},
+        {
+            "asset_type": "rug",
+            "placement": "beneath the dining_table",
+            "rationale": "anchor the table",
+        },
         rug_opts,
     )
     sofa_rug = layout_mod.resolve_factory_params(
         "rug",
         living_scene,
-        {"asset_type": "rug", "placement": "in front of sofa", "rationale": "anchor the sofa"},
+        {
+            "asset_type": "rug",
+            "placement": "in front of sofa",
+            "rationale": "anchor the sofa",
+        },
         rug_opts,
     )
     dining_chair = layout_mod.resolve_factory_params(
         "chair",
         dining_scene,
-        {"asset_type": "chair", "placement": "around the table", "rationale": "seat guests"},
+        {
+            "asset_type": "chair",
+            "placement": "around the table",
+            "rationale": "seat guests",
+        },
         chair_opts,
     )
     cozy_sofa = layout_mod.resolve_factory_params(
@@ -174,7 +195,12 @@ def test_resolve_positions_and_factory_params_cover_remaining_branches() -> None
     )
     default_lamp = layout_mod.resolve_factory_params(
         "lamp",
-        {"prompt": "A spare room", "room_type": "bedroom", "hypotheses": [], "constraints": []},
+        {
+            "prompt": "A spare room",
+            "room_type": "bedroom",
+            "hypotheses": [],
+            "constraints": [],
+        },
         {"asset_type": "lamp", "placement": "corner", "rationale": "light the room"},
         lamp_opts,
     )

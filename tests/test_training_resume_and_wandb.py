@@ -119,7 +119,9 @@ def test_training_resume_continues_from_saved_state(
 
     assert resumed["num_predictions"] == fresh["num_predictions"]
     assert resumed["metrics"] == fresh["metrics"]
-    resumed_bank = json.loads((interrupted_run_dir / "hypothesis_bank.json").read_text())
+    resumed_bank = json.loads(
+        (interrupted_run_dir / "hypothesis_bank.json").read_text()
+    )
     fresh_bank = json.loads((tmp_path / "fresh" / "hypothesis_bank.json").read_text())
     assert resumed_bank == fresh_bank
 
@@ -236,6 +238,8 @@ def test_training_logs_to_wandb_when_enabled(
     assert any("tables/hypothesis_evals" in payload for payload, _ in logs)
     assert artifacts
     assert any(name == "resume_state.json" for _, name in artifacts[0].files)
-    assert any(name == "wandb_media/media_manifest.jsonl" for _, name in artifacts[0].files)
+    assert any(
+        name == "wandb_media/media_manifest.jsonl" for _, name in artifacts[0].files
+    )
     assert _FakeWandb.last_run is not None and _FakeWandb.last_run.finished
     assert _FakeWandb.last_run.defined_metrics
