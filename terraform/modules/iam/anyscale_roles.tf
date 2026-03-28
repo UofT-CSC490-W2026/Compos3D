@@ -6,7 +6,7 @@
 # ==============================================================================
 resource "aws_iam_role" "anyscale_bronze_pipeline" {
   name = "${var.project_name}-${var.environment}-anyscale-bronze"
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -19,7 +19,7 @@ resource "aws_iam_role" "anyscale_bronze_pipeline" {
       }
     ]
   })
-  
+
   tags = {
     Name        = "${var.project_name}-${var.environment}-anyscale-bronze"
     Environment = var.environment
@@ -30,7 +30,7 @@ resource "aws_iam_role" "anyscale_bronze_pipeline" {
 resource "aws_iam_role_policy" "bronze_pipeline_policy" {
   name = "${var.project_name}-${var.environment}-bronze-policy"
   role = aws_iam_role.anyscale_bronze_pipeline.id
-  
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -94,7 +94,7 @@ resource "aws_iam_instance_profile" "bronze_pipeline" {
 # ==============================================================================
 resource "aws_iam_role" "anyscale_silver_pipeline" {
   name = "${var.project_name}-${var.environment}-anyscale-silver"
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -107,7 +107,7 @@ resource "aws_iam_role" "anyscale_silver_pipeline" {
       }
     ]
   })
-  
+
   tags = {
     Name        = "${var.project_name}-${var.environment}-anyscale-silver"
     Environment = var.environment
@@ -118,7 +118,7 @@ resource "aws_iam_role" "anyscale_silver_pipeline" {
 resource "aws_iam_role_policy" "silver_pipeline_policy" {
   name = "${var.project_name}-${var.environment}-silver-policy"
   role = aws_iam_role.anyscale_silver_pipeline.id
-  
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -193,7 +193,7 @@ resource "aws_iam_instance_profile" "silver_pipeline" {
 # ==============================================================================
 resource "aws_iam_role" "anyscale_gold_pipeline" {
   name = "${var.project_name}-${var.environment}-anyscale-gold"
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -206,7 +206,7 @@ resource "aws_iam_role" "anyscale_gold_pipeline" {
       }
     ]
   })
-  
+
   tags = {
     Name        = "${var.project_name}-${var.environment}-anyscale-gold"
     Environment = var.environment
@@ -217,7 +217,7 @@ resource "aws_iam_role" "anyscale_gold_pipeline" {
 resource "aws_iam_role_policy" "gold_pipeline_policy" {
   name = "${var.project_name}-${var.environment}-gold-policy"
   role = aws_iam_role.anyscale_gold_pipeline.id
-  
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [

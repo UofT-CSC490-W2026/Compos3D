@@ -9,7 +9,7 @@ variable "secrets_policy_arn" { type = string }
 # IAM Role for AWS Batch jobs
 resource "aws_iam_role" "batch_job" {
   name = "${var.project_name}-${var.environment}-batch-job"
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -32,7 +32,7 @@ resource "aws_iam_role_policy_attachment" "batch_secrets" {
 resource "aws_iam_role_policy" "batch_job_policy" {
   name = "${var.project_name}-${var.environment}-batch-policy"
   role = aws_iam_role.batch_job.id
-  
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -85,7 +85,7 @@ resource "aws_iam_role_policy" "batch_job_policy" {
 # IAM Role for AWS Batch service
 resource "aws_iam_role" "batch_service" {
   name = "${var.project_name}-${var.environment}-batch-service"
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -106,7 +106,7 @@ resource "aws_iam_role_policy_attachment" "batch_service" {
 # IAM Role for Athena queries
 resource "aws_iam_role" "athena_user" {
   name = "${var.project_name}-${var.environment}-athena-user"
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -122,7 +122,7 @@ resource "aws_iam_role" "athena_user" {
 resource "aws_iam_role_policy" "athena_user_policy" {
   name = "${var.project_name}-${var.environment}-athena-policy"
   role = aws_iam_role.athena_user.id
-  
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [

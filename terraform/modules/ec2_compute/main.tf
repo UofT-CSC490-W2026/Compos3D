@@ -1,14 +1,82 @@
 variable "project_name" { type = string }
 variable "environment" { type = string }
+variable "aws_region" { type = string }
 variable "bronze_bucket" { type = string }
 variable "silver_bucket" { type = string }
 variable "gold_bucket" { type = string }
+variable "secrets_policy_arn" { type = string }
+variable "ecr_repository_arn" { type = string }
+variable "log_group_name" { type = string }
 
-# ---------------------------------------------------------------------------
-# IAM role that EC2 instances assume to access S3, SSM, and CloudWatch Logs.
-# The instance profile is referenced as ec2_iam_instance_profile in the
-# AppConfig / env YAML files.
-# ---------------------------------------------------------------------------
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+locals {
+  vpc_cidr_by_env = {
+    dev     = "10.40.0.0/16"
+    staging = "10.41.0.0/16"
+    prod    = "10.42.0.0/16"
+  }
+  vpc_cidr = lookup(local.vpc_cidr_by_env, var.environment, "10.49.0.0/16")
+  az_count = min(2, length(data.aws_availability_zones.available.names))
+  az_names = slice(data.aws_availability_zones.available.names, 0, local.az_count)
+}
+
+resource "aws_vpc" "job" {
+  cidr_block           = local.vpc_cidr
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-vpc"
+    Tier = "network"
+  }
+}
+
+resource "aws_internet_gateway" "job" {
+  vpc_id = aws_vpc.job.id
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-igw"
+    Tier = "network"
+  }
+}
+
+resource "aws_subnet" "public" {
+  count = local.az_count
+
+  vpc_id                  = aws_vpc.job.id
+  availability_zone       = local.az_names[count.index]
+  cidr_block              = cidrsubnet(local.vpc_cidr, 8, count.index)
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-public-${substr(local.az_names[count.index], -1, 1)}"
+    Tier = "public"
+  }
+}
+
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.job.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.job.id
+  }
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-public-rt"
+    Tier = "public"
+  }
+}
+
+resource "aws_route_table_association" "public" {
+  count = local.az_count
+
+  subnet_id      = aws_subnet.public[count.index].id
+  route_table_id = aws_route_table.public.id
+}
 
 resource "aws_iam_role" "ec2_job" {
   name = "${var.project_name}-${var.environment}-ec2-job"
@@ -23,15 +91,20 @@ resource "aws_iam_role" "ec2_job" {
   })
 }
 
-# S3 read/write on all three lake buckets
-resource "aws_iam_role_policy" "ec2_s3" {
-  name = "${var.project_name}-${var.environment}-ec2-s3"
+resource "aws_iam_role_policy_attachment" "ec2_secrets" {
+  role       = aws_iam_role.ec2_job.name
+  policy_arn = var.secrets_policy_arn
+}
+
+resource "aws_iam_role_policy" "ec2_runtime" {
+  name = "${var.project_name}-${var.environment}-ec2-runtime"
   role = aws_iam_role.ec2_job.id
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
+        Sid    = "LakeS3Access"
         Effect = "Allow"
         Action = [
           "s3:GetObject",
@@ -47,51 +120,63 @@ resource "aws_iam_role_policy" "ec2_s3" {
           "arn:aws:s3:::${var.gold_bucket}",
           "arn:aws:s3:::${var.gold_bucket}/*"
         ]
+      },
+      {
+        Sid    = "CloudWatchLogs"
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "EcrPull"
+        Effect = "Allow"
+        Action = [
+          "ecr:BatchGetImage",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer"
+        ]
+        Resource = [var.ecr_repository_arn]
+      },
+      {
+        Sid    = "EcrAuth"
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "BedrockInvoke"
+        Effect = "Allow"
+        Action = [
+          "bedrock:InvokeModel",
+          "bedrock:InvokeModelWithResponseStream"
+        ]
+        Resource = "arn:aws:bedrock:${var.aws_region}::foundation-model/*"
       }
     ]
   })
 }
 
-# CloudWatch Logs: write job output
-resource "aws_iam_role_policy" "ec2_logs" {
-  name = "${var.project_name}-${var.environment}-ec2-logs"
-  role = aws_iam_role.ec2_job.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Action = [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents",
-        "logs:DescribeLogStreams"
-      ]
-      Resource = "arn:aws:logs:*:*:*"
-    }]
-  })
-}
-
-# SSM: allow Session Manager and Run Command (no SSH key needed)
 resource "aws_iam_role_policy_attachment" "ec2_ssm" {
   role       = aws_iam_role.ec2_job.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
-# EC2 instance profile (wraps the role for assignment to instances)
 resource "aws_iam_instance_profile" "ec2_job" {
   name = "${var.project_name}-${var.environment}-ec2-job"
   role = aws_iam_role.ec2_job.name
 }
 
-# ---------------------------------------------------------------------------
-# Security group: outbound-only (HTTPS for pip/git, S3, SSM endpoints).
-# No inbound rules — SSH is not needed when using SSM.
-# ---------------------------------------------------------------------------
-
 resource "aws_security_group" "ec2_job" {
   name        = "${var.project_name}-${var.environment}-ec2-job"
-  description = "compos3d EC2 job nodes — egress only"
+  description = "compos3d EC2 job nodes - egress only"
+  vpc_id      = aws_vpc.job.id
 
   egress {
     from_port   = 0
@@ -100,15 +185,36 @@ resource "aws_security_group" "ec2_job" {
     cidr_blocks = ["0.0.0.0/0"]
     description = "Allow all outbound"
   }
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-ec2-job"
+    Tier = "compute"
+  }
 }
 
-# ---------------------------------------------------------------------------
-# Outputs
-# ---------------------------------------------------------------------------
+resource "aws_cloudwatch_log_group" "jobs" {
+  name              = var.log_group_name
+  retention_in_days = 30
+}
 
 output "instance_profile_name" {
   description = "Value for ec2_iam_instance_profile in AppConfig"
   value       = aws_iam_instance_profile.ec2_job.name
+}
+
+output "vpc_id" {
+  description = "VPC id for the Compos3D job network"
+  value       = aws_vpc.job.id
+}
+
+output "primary_subnet_id" {
+  description = "Primary public subnet id for EC2 job runners"
+  value       = aws_subnet.public[0].id
+}
+
+output "public_subnet_ids" {
+  description = "Public subnet ids for EC2 job runners"
+  value       = aws_subnet.public[*].id
 }
 
 output "security_group_id" {
@@ -118,4 +224,8 @@ output "security_group_id" {
 
 output "ec2_job_role_arn" {
   value = aws_iam_role.ec2_job.arn
+}
+
+output "log_group_name" {
+  value = aws_cloudwatch_log_group.jobs.name
 }

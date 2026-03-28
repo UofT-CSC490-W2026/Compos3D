@@ -12,7 +12,7 @@ resource "random_string" "external_id" {
 # ==============================================================================
 resource "aws_iam_role" "anyscale_cross_account" {
   name = "${var.project_name}-${var.environment}-anyscale-access"
-  
+
   # Trust policy - allows Anyscale's AWS identity to assume this role
   # NOTE: Update the Principal after running get_anyscale_identity.py
   assume_role_policy = jsonencode({
@@ -34,7 +34,7 @@ resource "aws_iam_role" "anyscale_cross_account" {
       }
     ]
   })
-  
+
   tags = {
     Name        = "${var.project_name}-${var.environment}-anyscale-access"
     Environment = var.environment
@@ -46,7 +46,7 @@ resource "aws_iam_role" "anyscale_cross_account" {
 resource "aws_iam_role_policy" "anyscale_cross_account_policy" {
   name = "${var.project_name}-${var.environment}-anyscale-policy"
   role = aws_iam_role.anyscale_cross_account.id
-  
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [

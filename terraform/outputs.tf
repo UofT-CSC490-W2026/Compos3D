@@ -34,12 +34,78 @@ output "athena_workgroup" {
   value       = module.glue_catalog.athena_workgroup
 }
 
-# Commented out - ECR and Batch modules not deployed yet
-# output "ecr_repository_url" {
-#   description = "URL of the ECR repository"
-#   value       = module.ecr.repository_url
-# }
-# 
+output "ecr_repository_url" {
+  description = "URL of the Compos3D runtime ECR repository"
+  value       = module.ecr.repository_url
+}
+
+output "ecr_repository_name" {
+  description = "Name of the Compos3D runtime ECR repository"
+  value       = module.ecr.repository_name
+}
+
+output "ec2_instance_profile_name" {
+  description = "EC2 instance profile name for job runners"
+  value       = module.ec2_compute.instance_profile_name
+}
+
+output "ec2_vpc_id" {
+  description = "VPC id for Compos3D EC2 job runners"
+  value       = module.ec2_compute.vpc_id
+}
+
+output "ec2_primary_subnet_id" {
+  description = "Primary subnet id for Compos3D EC2 job runners"
+  value       = module.ec2_compute.primary_subnet_id
+}
+
+output "ec2_public_subnet_ids" {
+  description = "Public subnet ids for Compos3D EC2 job runners"
+  value       = module.ec2_compute.public_subnet_ids
+}
+
+output "ec2_security_group_id" {
+  description = "EC2 security group id for job runners"
+  value       = module.ec2_compute.security_group_id
+}
+
+output "ec2_log_group_name" {
+  description = "CloudWatch log group for EC2 job containers"
+  value       = module.ec2_compute.log_group_name
+}
+
+output "openai_secret_arn" {
+  value = module.secrets.openai_secret_arn
+}
+
+output "anthropic_secret_arn" {
+  value = module.secrets.anthropic_secret_arn
+}
+
+output "anyscale_secret_arn" {
+  value = module.secrets.anyscale_secret_arn
+}
+
+output "wandb_secret_arn" {
+  value = module.secrets.wandb_secret_arn
+}
+
+output "openai_secret_name" {
+  value = module.secrets.openai_secret_name
+}
+
+output "anthropic_secret_name" {
+  value = module.secrets.anthropic_secret_name
+}
+
+output "anyscale_secret_name" {
+  value = module.secrets.anyscale_secret_name
+}
+
+output "wandb_secret_name" {
+  value = module.secrets.wandb_secret_name
+}
+
 # output "batch_compute_environment_arn" {
 #   description = "ARN of the Batch Compute Environment"
 #   value       = module.batch.compute_environment_arn

@@ -9,7 +9,7 @@ variable "environment" {
 }
 
 resource "aws_ecr_repository" "main" {
-  name                 = "${var.project_name}-data-platform"
+  name                 = "${var.project_name}-${var.environment}-runtime"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
@@ -17,7 +17,7 @@ resource "aws_ecr_repository" "main" {
   }
 
   tags = {
-    Name        = "${var.project_name}-data-platform"
+    Name        = "${var.project_name}-${var.environment}-runtime"
     Environment = var.environment
   }
 }
@@ -47,4 +47,8 @@ output "repository_url" {
 
 output "repository_arn" {
   value = aws_ecr_repository.main.arn
+}
+
+output "repository_name" {
+  value = aws_ecr_repository.main.name
 }
