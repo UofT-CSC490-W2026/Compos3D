@@ -691,7 +691,7 @@ class SceneHypothesisLoop:
         render_dir = self.run_dir / "renders" / f"{self._render_counter:04d}_{tag}"
         try:
             paths = self.renderer(scene_program, render_dir)
-            print(f"[loop] Rendered {len(paths)} views → {render_dir.name}")
+            print(f"[loop] Rendered {len(paths)} views -> {render_dir.name}")
             build_manifest_path = render_dir / "build_manifest.json"
             video_path = render_dir / "turntable.mp4"
             return RenderArtifacts(

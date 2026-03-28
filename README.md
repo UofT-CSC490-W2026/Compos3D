@@ -504,7 +504,12 @@ After the smoke run succeeds, the full AWS training command is:
 Run the test suite with:
 
 ```bash
-./.venv/bin/pytest -q --cov=compos3d --cov-report=term-missing --cov-report=xml --basetemp .pytest_tmp_fresh -p no:cacheprovider
+./.venv/bin/pytest -q \
+  --cov=compos3d \
+  --cov-report=term-missing \
+  --cov-report=xml \
+  --basetemp .pytest_tmp_fresh \
+  -p no:cacheprovider
 ```
 
 The automated tests use mocks; they do not require Bedrock credentials.

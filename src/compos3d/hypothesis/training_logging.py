@@ -488,7 +488,7 @@ class TrainingLogger:
                     if path.is_file():
                         artifact.add_file(
                             str(path),
-                            name=str(path.relative_to(self.run_dir)),
+                            name=path.relative_to(self.run_dir).as_posix(),
                         )
             self._run.log_artifact(artifact)
 
