@@ -102,23 +102,31 @@ def test_aws_runtime_cli_parsing_and_path_helpers(tmp_path: Path) -> None:
     train_paths = _resolve_runtime_paths("train-hypotheses", [], cfg)
     assert train_paths.checkpoint_uri is None
 
-    assert _write_runtime_context(
-        target_dir=None,
-        command="x",
-        cli_args=[],
-        resolved_inputs={},
-        bindings=[],
-        checkpoint_uri=None,
-        instance_type=None,
-        runtime_env="dev",
-    ) is None
+    assert (
+        _write_runtime_context(
+            target_dir=None,
+            command="x",
+            cli_args=[],
+            resolved_inputs={},
+            bindings=[],
+            checkpoint_uri=None,
+            instance_type=None,
+            runtime_env="dev",
+        )
+        is None
+    )
 
 
-def test_aws_runtime_s3_sync_edges_and_imds(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_aws_runtime_s3_sync_edges_and_imds(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     s3 = _FakeS3Lite()
-    assert _download_s3_prefix(
-        s3_client=s3, source_uri="s3://bucket/prefix", destination_dir=tmp_path
-    ) == 0
+    assert (
+        _download_s3_prefix(
+            s3_client=s3, source_uri="s3://bucket/prefix", destination_dir=tmp_path
+        )
+        == 0
+    )
 
     s3.files[("bucket", "prefix/")] = b""
     s3.files[("bucket", "prefix/a.json")] = b'{"x":1}'
@@ -128,15 +136,21 @@ def test_aws_runtime_s3_sync_edges_and_imds(monkeypatch: pytest.MonkeyPatch, tmp
     assert downloaded == 1
     assert (tmp_path / "dl" / "a.json").exists()
 
-    assert _upload_directory(
-        s3_client=s3, source_dir=tmp_path / "missing", destination_uri="s3://bucket/u"
-    ) == 0
+    assert (
+        _upload_directory(
+            s3_client=s3,
+            source_dir=tmp_path / "missing",
+            destination_uri="s3://bucket/u",
+        )
+        == 0
+    )
     src = tmp_path / "src"
     (src / "dir").mkdir(parents=True)
     (src / "dir" / "x.txt").write_text("x")
-    assert _upload_directory(
-        s3_client=s3, source_dir=src, destination_uri="s3://bucket/u"
-    ) == 1
+    assert (
+        _upload_directory(s3_client=s3, source_dir=src, destination_uri="s3://bucket/u")
+        == 1
+    )
 
     class _Resp:
         def __init__(self, text: str):
@@ -160,7 +174,11 @@ def test_aws_runtime_s3_sync_edges_and_imds(monkeypatch: pytest.MonkeyPatch, tmp
     imds = _IMDSv2()
     assert imds.get("meta-data/instance-id") == "meta"
 
-    monkeypatch.setattr(_IMDSv2, "_refresh_token", lambda self: (_ for _ in ()).throw(RuntimeError("boom")))
+    monkeypatch.setattr(
+        _IMDSv2,
+        "_refresh_token",
+        lambda self: (_ for _ in ()).throw(RuntimeError("boom")),
+    )
     assert _IMDSv2().get("meta-data/instance-id") is None
 
     class _404:
@@ -268,9 +286,9 @@ def test_checkpoint_manager_handlers_and_main_resume_branch(
     monkeypatch.setattr("compos3d.aws_runtime.load_app_config", lambda _env: fake_cfg)
     monkeypatch.setattr(
         "compos3d.aws_runtime.boto3.client",
-        lambda name, region_name=None: _FakeS3Lite()
-        if name == "s3"
-        else types.SimpleNamespace(),
+        lambda name, region_name=None: (
+            _FakeS3Lite() if name == "s3" else types.SimpleNamespace()
+        ),
     )
     monkeypatch.setattr(
         "compos3d.aws_runtime._resolve_runtime_paths",
@@ -304,7 +322,9 @@ def test_checkpoint_manager_handlers_and_main_resume_branch(
 
     monkeypatch.setattr("compos3d.aws_runtime.CheckpointSyncManager", _Sync)
     monkeypatch.setattr("compos3d.aws_runtime._hydrate_secrets", lambda *_a, **_k: [])
-    monkeypatch.setattr("compos3d.aws_runtime._write_runtime_context", lambda **_k: None)
+    monkeypatch.setattr(
+        "compos3d.aws_runtime._write_runtime_context", lambda **_k: None
+    )
     monkeypatch.setattr(
         "compos3d.aws_runtime._install_shutdown_handlers", lambda _sm: None
     )
@@ -326,7 +346,9 @@ def test_checkpoint_manager_handlers_and_main_resume_branch(
     assert "Restored 3 checkpoint artifacts" in capsys.readouterr().out
 
 
-def test_aws_runtime_secret_hydration_and_inner_cli(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_aws_runtime_secret_hydration_and_inner_cli(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     bad_cfg = AppConfig(
         env="dev",
         storage_backend="s3",
@@ -359,8 +381,9 @@ def test_aws_runtime_secret_hydration_and_inner_cli(monkeypatch: pytest.MonkeyPa
     seen: dict[str, object] = {}
     monkeypatch.setattr(
         "compos3d.aws_runtime.subprocess.run",
-        lambda cmd, cwd, check=False: seen.update(cmd=cmd, cwd=cwd)
-        or types.SimpleNamespace(returncode=7),
+        lambda cmd, cwd, check=False: (
+            seen.update(cmd=cmd, cwd=cwd) or types.SimpleNamespace(returncode=7)
+        ),
     )
     code = _run_inner_cli(command="train-hypotheses", cli_args=[], instance_type="g5")
     assert code == 7
@@ -405,11 +428,9 @@ def test_ec2_runner_remaining_simple_branches(monkeypatch: pytest.MonkeyPatch) -
 
     monkeypatch.setattr(
         "compos3d.compute.ec2_runner.boto3.client",
-        lambda name, region_name=None: _EC2()
-        if name == "ec2"
-        else _SSM()
-        if name == "ssm"
-        else _ECR(),
+        lambda name, region_name=None: (
+            _EC2() if name == "ec2" else _SSM() if name == "ssm" else _ECR()
+        ),
     )
     cfg = AppConfig(
         env="dev",
@@ -470,9 +491,12 @@ def test_engine_and_loop_remaining_branches(tmp_path: Path) -> None:
     )
     assert len([k for k, _ in store.json if k.endswith("/runtime_context.json")]) >= 2
 
-    assert _filter_hypotheses_for_inference(  # noqa: SLF001
-        llm=object(), records=[], prompt="p", room_type="dining_room"
-    ) == []
+    assert (
+        _filter_hypotheses_for_inference(  # noqa: SLF001
+            llm=object(), records=[], prompt="p", room_type="dining_room"
+        )
+        == []
+    )
 
     records = [
         HypothesisRecord(hypothesis_id="h1", text="chair", room_type="dining_room"),
@@ -481,7 +505,9 @@ def test_engine_and_loop_remaining_branches(tmp_path: Path) -> None:
         SceneProgram(
             prompt="p",
             room_type="dining_room",
-            assets=[AssetSpec(asset_type="chair", count=1, placement="p", rationale="r")],
+            assets=[
+                AssetSpec(asset_type="chair", count=1, placement="p", rationale="r")
+            ],
         )
     ]
     program_break = engine._weighted_vote_scene_program(  # noqa: SLF001
