@@ -110,7 +110,12 @@ def test_train_without_env_keeps_store_none(monkeypatch) -> None:
 
 def test_launch_aws_wait_invokes_runner_launch_and_wait(monkeypatch) -> None:
     runner = CliRunner()
-    fake_cfg = app_config_module.AppConfig(env="dev", storage_backend="local")
+    fake_cfg = app_config_module.AppConfig(
+        env="dev",
+        storage_backend="local",
+        container_image_tag="stable",
+        ec2_log_group="/compos3d/dev/jobs",
+    )
     seen = {}
 
     class _FakeRunner:
@@ -152,4 +157,6 @@ def test_launch_aws_wait_invokes_runner_launch_and_wait(monkeypatch) -> None:
         "--env",
         "dev",
     ]
+    assert seen["spec"].image_tag == "stable"
+    assert seen["spec"].log_group == "/compos3d/dev/jobs"
     assert seen["waited_for"] == "i-123"

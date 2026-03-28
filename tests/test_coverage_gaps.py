@@ -490,7 +490,8 @@ def test_hypothesis_loop_render_success_and_only_best_hypothesis(
     )
 
     # cover _render success print lines 328-329
-    assert loop._render(SceneProgram(prompt="p", room_type="dining_room"), "t") == [img]  # noqa: SLF001
+    render = loop._render(SceneProgram(prompt="p", room_type="dining_room"), "t")  # noqa: SLF001
+    assert render.image_paths == [img]
 
     # cover only_best_hypothesis branch line 492 by monkeypatching _make_records
     monkey_records = [
@@ -654,7 +655,11 @@ def test_scene_llm_bedrock_paths_and_build_scene_llm_branches(monkeypatch) -> No
 def test_ec2_runner_remaining_branches(monkeypatch) -> None:
     # cover subnet/security group/key, spot options, ec2_ami_id fast path, and wait timeout
     class _EC2:
+        def __init__(self):
+            self.launch_kwargs = None
+
         def run_instances(self, **_kwargs):
+            self.launch_kwargs = _kwargs
             return {"Instances": [{"InstanceId": "i-x"}]}
 
         def describe_instances(self, **_kwargs):
@@ -666,13 +671,31 @@ def test_ec2_runner_remaining_branches(monkeypatch) -> None:
         def describe_images(self, **_kwargs):
             return {"Images": []}
 
+        def describe_subnets(self, **_kwargs):
+            return {"Subnets": []}
+
+        def describe_security_groups(self, **_kwargs):
+            return {"SecurityGroups": []}
+
     class _SSM:
         pass
+
+    class _ECR:
+        def describe_repositories(self, **_kwargs):
+            return {
+                "repositories": [
+                    {"repositoryUri": "123456789012.dkr.ecr.us-east-1.amazonaws.com/compos3d-dev-runtime"}
+                ]
+            }
 
     ec2 = _EC2()
 
     def _fake_client(name, region_name=None):  # noqa: ARG001
-        return ec2 if name == "ec2" else _SSM()
+        if name == "ec2":
+            return ec2
+        if name == "ecr":
+            return _ECR()
+        return _SSM()
 
     monkeypatch.setattr(__import__("boto3"), "client", _fake_client)
 
@@ -694,6 +717,8 @@ def test_ec2_runner_remaining_branches(monkeypatch) -> None:
     spec = EC2JobSpec(command="run-inference", cli_args=["--env", "dev"])
     iid, _info = runner.launch(spec)
     assert iid == "i-x"
+    assert ec2.launch_kwargs["SubnetId"] == "subnet-1"
+    assert ec2.launch_kwargs["SecurityGroupIds"] == ["sg-1"]
 
     with pytest.raises(TimeoutError):
         runner.wait("i-x", poll_interval_seconds=0, timeout_minutes=0)
@@ -972,6 +997,7 @@ def test_ec2_runner_resolve_ami_and_wait_paths(monkeypatch) -> None:
     class _FakeEC2:
         def __init__(self):
             self.calls = 0
+            self.launch_kwargs = None
 
         def describe_images(self, **_kwargs):
             return {
@@ -990,6 +1016,7 @@ def test_ec2_runner_resolve_ami_and_wait_paths(monkeypatch) -> None:
             }
 
         def run_instances(self, **_kwargs):
+            self.launch_kwargs = _kwargs
             return {"Instances": [{"InstanceId": "i-123"}]}
 
         def describe_instances(self, **_kwargs):
@@ -1000,11 +1027,45 @@ def test_ec2_runner_resolve_ami_and_wait_paths(monkeypatch) -> None:
         def terminate_instances(self, **_kwargs):
             return {}
 
+        def describe_subnets(self, **_kwargs):
+            return {
+                "Subnets": [
+                    {
+                        "SubnetId": "subnet-auto-a",
+                        "AvailabilityZone": "us-east-1a",
+                    },
+                    {
+                        "SubnetId": "subnet-auto-b",
+                        "AvailabilityZone": "us-east-1b",
+                    },
+                ]
+            }
+
+        def describe_security_groups(self, **_kwargs):
+            return {
+                "SecurityGroups": [
+                    {"GroupId": "sg-auto"},
+                ]
+            }
+
     class _FakeSSM:
-        pass
+        def get_parameter(self, **_kwargs):
+            return {"Parameter": {"Value": "ami-ssm"}}
+
+    class _FakeECR:
+        def describe_repositories(self, **_kwargs):
+            return {
+                "repositories": [
+                    {"repositoryUri": "123456789012.dkr.ecr.us-east-1.amazonaws.com/compos3d-dev-runtime"}
+                ]
+            }
 
     def _fake_client(name, region_name=None):  # noqa: ARG001
-        return _FakeEC2() if name == "ec2" else _FakeSSM()
+        if name == "ec2":
+            return _FakeEC2()
+        if name == "ecr":
+            return _FakeECR()
+        return _FakeSSM()
 
     monkeypatch.setattr(
         __import__("boto3"),
@@ -1023,9 +1084,18 @@ def test_ec2_runner_resolve_ami_and_wait_paths(monkeypatch) -> None:
     )
     runner = EC2JobRunner(app_config=cfg)
     spec = EC2JobSpec(command="train-hypotheses", cli_args=["--env", "dev"])
+    user_data = runner._build_user_data(  # noqa: SLF001
+        spec=spec,
+        image_ref="123456789012.dkr.ecr.us-east-1.amazonaws.com/compos3d-dev-runtime:latest",
+    )
+    assert '"$IMAGE_REF" --runtime-env dev --instance-type t3.small train-hypotheses --env dev' in user_data
+    assert '"$IMAGE_REF" python -m compos3d.aws_runtime' not in user_data
+
     instance_id, info = runner.launch(spec)
     assert instance_id == "i-123"
-    assert info["ami_id"] == "ami_new"
+    assert info["ami_id"] == "ami-ssm"
+    assert info["subnet_id"] == "subnet-auto-a"
+    assert info["security_group_id"] == "sg-auto"
 
     state = runner.wait(instance_id, poll_interval_seconds=0, timeout_minutes=1)
     assert state == "terminated"

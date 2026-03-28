@@ -22,6 +22,7 @@ from compos3d.storage.paths import (
     inference_bronze_prefix,
     inference_gold_prefix,
     inference_silver_prefix,
+    training_checkpoint_prefix,
     training_bronze_prefix,
     training_gold_prefix,
     training_silver_prefix,
@@ -30,7 +31,8 @@ from compos3d.storage.paths import (
 
 
 class TestAppConfig:
-    def test_default_is_local(self) -> None:
+    def test_default_is_local(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("COMPOS3D_ENV", raising=False)
         cfg = AppConfig()
         assert cfg.env == "local"
         assert cfg.storage_backend == "local"
@@ -119,6 +121,10 @@ class TestLakePaths:
         assert (
             training_gold_prefix("my_experiment")
             == "gold/hypothesis_banks/my_experiment"
+        )
+        assert (
+            training_checkpoint_prefix("my_experiment")
+            == "bronze/checkpoints/training/my_experiment/latest"
         )
 
     def test_inference_paths(self) -> None:
