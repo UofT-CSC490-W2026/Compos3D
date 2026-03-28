@@ -224,12 +224,16 @@ The current full config uses:
 
 - Generator: `us.anthropic.claude-sonnet-4-5-20250929-v1:0`
 - Critic: `qwen.qwen3-vl-235b-a22b`
-- Room types: `dining_room`, `living_room`, `bedroom`
+- Room types: `dining_room`
 - Training renders: `256x256`
-- Training samples: `16`
+- Training samples: `100`
 - `num_epochs=3`
 - `selection_strategy="ucb"`
 - `use_repair=true`
+
+That section reflects the config currently checked into
+`train_configs/compos3d.json`. If you want to train across all three room
+types, update `room_types` in that file before launching the run.
 
 Training artifacts go under:
 
@@ -267,8 +271,8 @@ Run frozen inference from a trained bank:
 source api_key
 ./.venv/bin/compos3d run-inference \
   --bank-path artifacts/training/claude_qwen/hypothesis_bank.json \
-  --prompt "a bright living room with a sofa, rug, lamp, and coffee table" \
-  --output-dir artifacts/inference/living_room \
+  --prompt "a cozy dining room with a round table, four chairs, a rug, and a lamp" \
+  --output-dir artifacts/inference/dining_room \
   --config-path train_configs/compos3d.json \
   --inference-strategy filter_and_weight \
   --render-scene
@@ -298,8 +302,8 @@ If you already have a `SceneProgram`, render it directly:
 
 ```bash
 ./.venv/bin/compos3d build-scene \
-  --scene-program artifacts/inference/living_room/scene_program.json \
-  --output-dir artifacts/scenes/living_room \
+  --scene-program artifacts/inference/dining_room/scene_program.json \
+  --output-dir artifacts/scenes/dining_room \
   --resolution 512x512 \
   --view-samples 48 \
   --video-frames 90
@@ -309,8 +313,8 @@ To skip the video:
 
 ```bash
 ./.venv/bin/compos3d build-scene \
-  --scene-program artifacts/inference/living_room/scene_program.json \
-  --output-dir artifacts/scenes/living_room_fast \
+  --scene-program artifacts/inference/dining_room/scene_program.json \
+  --output-dir artifacts/scenes/dining_room_fast \
   --resolution 256x256 \
   --view-samples 16 \
   --no-video
@@ -365,6 +369,15 @@ Compos3D now supports an AWS-native execution path that keeps local workflows un
 - training checkpoints sync to a mutable Bronze checkpoint prefix for resume
 - final artifacts still mirror into Bronze, Silver, and Gold through the existing Python engine
 
+If you use AWS SSO or a named profile, set it once before running the AWS
+commands below:
+
+```bash
+aws sso login --profile <your-profile>
+export AWS_PROFILE=<your-profile>
+export AWS_REGION=us-east-1
+```
+
 ### 1. Bootstrap Terraform remote state
 
 Run this once:
@@ -377,16 +390,26 @@ terraform -chdir=terraform/bootstrap apply
 Then initialize the main stack for `dev`:
 
 ```bash
-terraform -chdir=terraform init -backend-config=backends/dev.hcl
+terraform -chdir=terraform init -reconfigure -backend-config=backends/dev.hcl
 ```
 
 For `staging` and `prod`, swap in `backends/staging.hcl` or `backends/prod.hcl`.
+
+Keep Terraform in the `default` workspace. In this repo, environment isolation
+comes from `terraform/backends/*.hcl` and `terraform/environments/*.tfvars`,
+not from Terraform workspaces.
 
 ### 2. Apply the dev infrastructure
 
 ```bash
 terraform -chdir=terraform plan -var-file=environments/dev.tfvars
 terraform -chdir=terraform apply -var-file=environments/dev.tfvars
+```
+
+You can inspect the live output names with:
+
+```bash
+terraform -chdir=terraform output
 ```
 
 Important outputs:
@@ -396,14 +419,18 @@ Important outputs:
 - `ec2_instance_profile_name`
 - `ec2_security_group_id`
 - `ec2_log_group_name`
+- `openai_secret_name`
+- `anthropic_secret_name`
+- `anyscale_secret_name`
 - `wandb_secret_name`
 
 ### 3. Populate secret values outside Terraform state
 
-Example:
+Example for W&B:
 
 ```bash
-./scripts/put_secret_value.sh compos3d-dev-wandb-key "$WANDB_API_KEY"
+WANDB_SECRET_NAME=$(terraform -chdir=terraform output -raw wandb_secret_name)
+./scripts/put_secret_value.sh "$WANDB_SECRET_NAME" "$WANDB_API_KEY" us-east-1
 ```
 
 Repeat for any other secret names you need, such as:
@@ -412,11 +439,18 @@ Repeat for any other secret names you need, such as:
 - `compos3d-dev-anthropic-key`
 - `compos3d-dev-anyscale-key`
 
+For the checked-in Bedrock configs in `train_configs/`, only `WANDB_API_KEY`
+is required. The OpenAI, Anthropic, and Anyscale secrets are optional and are
+skipped automatically if they do not have a current value.
+
 ### 4. Build and push the runtime image
 
 ```bash
-./scripts/build_and_push_runtime_image.sh <ecr_repository_url> latest us-east-1
+ECR_REPOSITORY_URL=$(terraform -chdir=terraform output -raw ecr_repository_url)
+./scripts/build_and_push_runtime_image.sh "$ECR_REPOSITORY_URL" latest us-east-1
 ```
+
+This script requires local Docker daemon access.
 
 ### 5. Launch a dev smoke run
 
@@ -429,6 +463,9 @@ This uses the same CLI command shape as local training, but wraps it in the AWS 
   --image-tag latest \
   --wait
 ```
+
+Do not include `--env` inside `--cli-args`; `launch-aws` injects the outer
+environment automatically.
 
 ### 6. Resume an interrupted training run
 
@@ -446,6 +483,16 @@ Resume with the same command plus `--resume` inside `--cli-args`:
   --wait
 ```
 
+After the smoke run succeeds, the full AWS training command is:
+
+```bash
+./.venv/bin/compos3d launch-aws train-hypotheses \
+  --cli-args '--dataset-path examples/vertical_slice_dataset.json --output-dir artifacts/training --experiment-name claude_qwen --config-path train_configs/compos3d.json' \
+  --env dev \
+  --image-tag latest \
+  --wait
+```
+
 ### Environment Policy
 
 - `dev`: apply and smoke-test here first
@@ -457,7 +504,7 @@ Resume with the same command plus `--resume` inside `--cli-args`:
 Run the test suite with:
 
 ```bash
-pytest -q --cov=compos3d --cov-report=term-missing --cov-report=xml --basetemp .pytest_tmp_fresh -p no:cacheprovider
+./.venv/bin/pytest -q --cov=compos3d --cov-report=term-missing --cov-report=xml --basetemp .pytest_tmp_fresh -p no:cacheprovider
 ```
 
 The automated tests use mocks; they do not require Bedrock credentials.
