@@ -436,9 +436,6 @@ def _weighted_vote_scene_program(
         if asset_type not in selected_asset_types:
             selected_asset_types.append(asset_type)
 
-    if not selected_asset_types and ranked_assets:
-        selected_asset_types.append(ranked_assets[0])
-
     assets: list[AssetSpec] = []
     for asset_type in selected_asset_types[:6]:
         if asset_type in best_asset_spec:
