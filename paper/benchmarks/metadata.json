@@ -1,0 +1,31 @@
+{
+  "paper_scope": "dining_room",
+  "canonical_training_dataset_path": "examples/vertical_slice_dataset.json",
+  "raw_dir": "data/external/spatiallm",
+  "allowed_split": "train",
+  "seed": 42,
+  "rare_asset_tuple_threshold": 3,
+  "hf_cache_dir": "/tmp/compos3d_hf_datasets_cache",
+  "canonical_training_dining_examples": 60,
+  "all_convertible_dining_examples": 208,
+  "heldout_dining_examples": 148,
+  "split_sizes": {
+    "val": 24,
+    "test": 100,
+    "showcase": 24
+  },
+  "asset_tuple_counts": {
+    "[\"dining_table\", \"chair\", \"lamp\", \"window\"]": 35,
+    "[\"dining_table\", \"chair\", \"lamp\", \"rug\"]": 23,
+    "[\"dining_table\", \"chair\", \"rug\", \"window\"]": 1,
+    "[\"dining_table\", \"chair\", \"lamp\"]": 69,
+    "[\"dining_table\", \"chair\", \"window\"]": 17,
+    "[\"dining_table\", \"chair\", \"rug\"]": 3
+  },
+  "edit_pair_counts": {
+    "count_change": 25,
+    "add_asset": 25,
+    "remove_asset": 25,
+    "swap_asset": 25
+  }
+}

@@ -1,0 +1,2452 @@
+{
+  "dataset_id": "dining_room_paper_test",
+  "metadata": {
+    "paper_scope": "dining_room",
+    "canonical_training_dataset_path": "examples/vertical_slice_dataset.json",
+    "raw_dir": "data/external/spatiallm",
+    "allowed_split": "train",
+    "seed": 42,
+    "rare_asset_tuple_threshold": 3,
+    "hf_cache_dir": "/tmp/compos3d_hf_datasets_cache",
+    "canonical_training_dining_examples": 60,
+    "all_convertible_dining_examples": 208,
+    "heldout_dining_examples": 148,
+    "split_sizes": {
+      "val": 24,
+      "test": 100,
+      "showcase": 24
+    },
+    "split_name": "test",
+    "num_examples": 100,
+    "asset_tuple_counts": {
+      "[\"dining_table\", \"chair\", \"lamp\"]": 47,
+      "[\"dining_table\", \"chair\", \"lamp\", \"rug\"]": 15,
+      "[\"dining_table\", \"chair\", \"lamp\", \"window\"]": 24,
+      "[\"dining_table\", \"chair\", \"rug\"]": 2,
+      "[\"dining_table\", \"chair\", \"rug\", \"window\"]": 1,
+      "[\"dining_table\", \"chair\", \"window\"]": 11
+    }
+  },
+  "examples": [
+    {
+      "example_id": "dr_scene_000220_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, two chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_000220_02",
+      "source_sample_id": "scene_000220_02_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 2,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_000297_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with two dining tables, several chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_000297_00",
+      "source_sample_id": "scene_000297_00_0",
+      "expected_asset_counts": {
+        "dining_table": 2,
+        "chair": 6,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_000514_01",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, two chairs, and several lamps",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_000514_01",
+      "source_sample_id": "scene_000514_01_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 2,
+        "lamp": 13
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_000714_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, three chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_000714_02",
+      "source_sample_id": "scene_000714_02_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 3,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_001072_03",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, two chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_001072_03",
+      "source_sample_id": "scene_001072_03_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 2,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_001279_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, and several lamps",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_001279_00",
+      "source_sample_id": "scene_001279_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 8,
+        "lamp": 6
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_001380_03",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, two chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_001380_03",
+      "source_sample_id": "scene_001380_03_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 2,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_001466_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_001466_00",
+      "source_sample_id": "scene_001466_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_002358_06",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, a chair, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_002358_06",
+      "source_sample_id": "scene_002358_06_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 1,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_002830_01",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_002830_01",
+      "source_sample_id": "scene_002830_01_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_002862_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_002862_02",
+      "source_sample_id": "scene_002862_02_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 6,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_003286_03",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_003286_03",
+      "source_sample_id": "scene_003286_03_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_003319_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_003319_00",
+      "source_sample_id": "scene_003319_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_003550_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_003550_00",
+      "source_sample_id": "scene_003550_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_004032_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, and two lamps",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_004032_00",
+      "source_sample_id": "scene_004032_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 5,
+        "lamp": 2
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_004280_03",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, three chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_004280_03",
+      "source_sample_id": "scene_004280_03_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 3,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_004526_03",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, and two lamps",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_004526_03",
+      "source_sample_id": "scene_004526_03_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 2
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_004544_01",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_004544_01",
+      "source_sample_id": "scene_004544_01_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_004813_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_004813_02",
+      "source_sample_id": "scene_004813_02_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_005113_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with two dining tables, four chairs, and two lamps",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_005113_02",
+      "source_sample_id": "scene_005113_02_0",
+      "expected_asset_counts": {
+        "dining_table": 2,
+        "chair": 4,
+        "lamp": 2
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_005292_01",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_005292_01",
+      "source_sample_id": "scene_005292_01_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 8,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_005387_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_005387_00",
+      "source_sample_id": "scene_005387_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 6,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_005596_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_005596_00",
+      "source_sample_id": "scene_005596_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 6,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_005782_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, and two lamps",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_005782_00",
+      "source_sample_id": "scene_005782_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 2
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_005794_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, three chairs, and three lamps",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_005794_02",
+      "source_sample_id": "scene_005794_02_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 3,
+        "lamp": 3
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_005800_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_005800_00",
+      "source_sample_id": "scene_005800_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_006174_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, and three lamps",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_006174_00",
+      "source_sample_id": "scene_006174_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 6,
+        "lamp": 3
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_006515_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, and three lamps",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_006515_00",
+      "source_sample_id": "scene_006515_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 3
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_006580_05",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_006580_05",
+      "source_sample_id": "scene_006580_05_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 6,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_006894_05",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_006894_05",
+      "source_sample_id": "scene_006894_05_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_006950_06",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_006950_06",
+      "source_sample_id": "scene_006950_06_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_007013_04",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_007013_04",
+      "source_sample_id": "scene_007013_04_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 7,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_007855_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_007855_00",
+      "source_sample_id": "scene_007855_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 6,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_007911_04",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, two chairs, and two lamps",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_007911_04",
+      "source_sample_id": "scene_007911_04_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 2,
+        "lamp": 2
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_008228_01",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_008228_01",
+      "source_sample_id": "scene_008228_01_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_008237_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, and four lamps",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_008237_02",
+      "source_sample_id": "scene_008237_02_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 4
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_009021_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_009021_02",
+      "source_sample_id": "scene_009021_02_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_009061_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_009061_02",
+      "source_sample_id": "scene_009061_02_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_009568_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, and three lamps",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_009568_02",
+      "source_sample_id": "scene_009568_02_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 6,
+        "lamp": 3
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_009573_05",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_009573_05",
+      "source_sample_id": "scene_009573_05_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_009659_05",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_009659_05",
+      "source_sample_id": "scene_009659_05_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_009838_04",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_009838_04",
+      "source_sample_id": "scene_009838_04_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 5,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_010210_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_010210_02",
+      "source_sample_id": "scene_010210_02_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 6,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_010265_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_010265_00",
+      "source_sample_id": "scene_010265_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 8,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_010396_04",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, a chair, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_010396_04",
+      "source_sample_id": "scene_010396_04_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 1,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_010623_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with two dining tables, several chairs, and three lamps",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_010623_02",
+      "source_sample_id": "scene_010623_02_0",
+      "expected_asset_counts": {
+        "dining_table": 2,
+        "chair": 5,
+        "lamp": 3
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_011069_03",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, and a lamp",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_011069_03",
+      "source_sample_id": "scene_011069_03_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 6,
+        "lamp": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ]
+    },
+    {
+      "example_id": "dr_scene_000406_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_000406_00",
+      "source_sample_id": "scene_000406_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 6,
+        "lamp": 1,
+        "rug": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ]
+    },
+    {
+      "example_id": "dr_scene_000922_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with two dining tables, a chair, three lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_000922_02",
+      "source_sample_id": "scene_000922_02_0",
+      "expected_asset_counts": {
+        "dining_table": 2,
+        "chair": 1,
+        "lamp": 3,
+        "rug": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ]
+    },
+    {
+      "example_id": "dr_scene_001252_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, three lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_001252_00",
+      "source_sample_id": "scene_001252_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 3,
+        "rug": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ]
+    },
+    {
+      "example_id": "dr_scene_001676_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, two lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_001676_00",
+      "source_sample_id": "scene_001676_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 2,
+        "rug": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ]
+    },
+    {
+      "example_id": "dr_scene_003292_06",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_003292_06",
+      "source_sample_id": "scene_003292_06_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 6,
+        "lamp": 1,
+        "rug": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ]
+    },
+    {
+      "example_id": "dr_scene_004392_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, two lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_004392_00",
+      "source_sample_id": "scene_004392_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 5,
+        "lamp": 2,
+        "rug": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ]
+    },
+    {
+      "example_id": "dr_scene_004424_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_004424_02",
+      "source_sample_id": "scene_004424_02_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 6,
+        "lamp": 1,
+        "rug": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ]
+    },
+    {
+      "example_id": "dr_scene_004576_04",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, a lamp, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_004576_04",
+      "source_sample_id": "scene_004576_04_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1,
+        "rug": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ]
+    },
+    {
+      "example_id": "dr_scene_004595_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, three lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_004595_00",
+      "source_sample_id": "scene_004595_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 3,
+        "rug": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ]
+    },
+    {
+      "example_id": "dr_scene_005657_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, a chair, several lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_005657_00",
+      "source_sample_id": "scene_005657_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 1,
+        "lamp": 6,
+        "rug": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ]
+    },
+    {
+      "example_id": "dr_scene_005729_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with two dining tables, two chairs, four lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_005729_00",
+      "source_sample_id": "scene_005729_00_0",
+      "expected_asset_counts": {
+        "dining_table": 2,
+        "chair": 2,
+        "lamp": 4,
+        "rug": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ]
+    },
+    {
+      "example_id": "dr_scene_006543_01",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, two lamps, and two rugs",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_006543_01",
+      "source_sample_id": "scene_006543_01_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 2,
+        "rug": 2
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ]
+    },
+    {
+      "example_id": "dr_scene_008415_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_008415_00",
+      "source_sample_id": "scene_008415_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 5,
+        "lamp": 1,
+        "rug": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ]
+    },
+    {
+      "example_id": "dr_scene_009220_04",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, three lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_009220_04",
+      "source_sample_id": "scene_009220_04_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 3,
+        "rug": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ]
+    },
+    {
+      "example_id": "dr_scene_011117_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, two chairs, four lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_011117_00",
+      "source_sample_id": "scene_011117_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 2,
+        "lamp": 4,
+        "rug": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ]
+    },
+    {
+      "example_id": "dr_scene_000039_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_000039_02",
+      "source_sample_id": "scene_000039_02_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_000865_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, three chairs, two lamps, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_000865_00",
+      "source_sample_id": "scene_000865_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 3,
+        "lamp": 2,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_000931_01",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, a chair, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_000931_01",
+      "source_sample_id": "scene_000931_01_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 1,
+        "lamp": 1,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_002249_01",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_002249_01",
+      "source_sample_id": "scene_002249_01_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_004019_03",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_004019_03",
+      "source_sample_id": "scene_004019_03_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_004240_03",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, a chair, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_004240_03",
+      "source_sample_id": "scene_004240_03_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 1,
+        "lamp": 1,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_005248_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, two chairs, three lamps, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_005248_00",
+      "source_sample_id": "scene_005248_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 2,
+        "lamp": 3,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_005708_03",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_005708_03",
+      "source_sample_id": "scene_005708_03_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_005940_03",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_005940_03",
+      "source_sample_id": "scene_005940_03_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_006671_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, two chairs, two lamps, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_006671_00",
+      "source_sample_id": "scene_006671_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 2,
+        "lamp": 2,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_007283_03",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_007283_03",
+      "source_sample_id": "scene_007283_03_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_007291_03",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_007291_03",
+      "source_sample_id": "scene_007291_03_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_007630_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, two lamps, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_007630_02",
+      "source_sample_id": "scene_007630_02_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 2,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_007917_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, three chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_007917_00",
+      "source_sample_id": "scene_007917_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 3,
+        "lamp": 1,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_007947_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, two lamps, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_007947_00",
+      "source_sample_id": "scene_007947_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 2,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_007953_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_007953_02",
+      "source_sample_id": "scene_007953_02_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_008561_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_008561_02",
+      "source_sample_id": "scene_008561_02_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_008744_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, two lamps, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_008744_02",
+      "source_sample_id": "scene_008744_02_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 2,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_008901_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, two chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_008901_02",
+      "source_sample_id": "scene_008901_02_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 2,
+        "lamp": 1,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_009512_01",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_009512_01",
+      "source_sample_id": "scene_009512_01_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_009834_01",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, two chairs, three lamps, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_009834_01",
+      "source_sample_id": "scene_009834_01_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 2,
+        "lamp": 3,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_010352_01",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_010352_01",
+      "source_sample_id": "scene_010352_01_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_010753_05",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_010753_05",
+      "source_sample_id": "scene_010753_05_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 1,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_010920_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, three chairs, two lamps, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_010920_02",
+      "source_sample_id": "scene_010920_02_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 3,
+        "lamp": 2,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_000615_03",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "rug"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_000615_03",
+      "source_sample_id": "scene_000615_03_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "rug": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "rug"
+      ]
+    },
+    {
+      "example_id": "dr_scene_008318_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, and two rugs",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "rug"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_008318_00",
+      "source_sample_id": "scene_008318_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 7,
+        "rug": 2
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "rug"
+      ]
+    },
+    {
+      "example_id": "dr_scene_004801_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, a rug, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "rug",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_004801_00",
+      "source_sample_id": "scene_004801_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "rug": 1,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "rug",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_002603_01",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, a chair, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_002603_01",
+      "source_sample_id": "scene_002603_01_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 1,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_002915_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_002915_02",
+      "source_sample_id": "scene_002915_02_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 8,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_006457_01",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_006457_01",
+      "source_sample_id": "scene_006457_01_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 8,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_007325_04",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, two chairs, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_007325_04",
+      "source_sample_id": "scene_007325_04_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 2,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_007713_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_007713_02",
+      "source_sample_id": "scene_007713_02_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_008533_02",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_008533_02",
+      "source_sample_id": "scene_008533_02_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_009168_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, a chair, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_009168_00",
+      "source_sample_id": "scene_009168_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 1,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_009536_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_009536_00",
+      "source_sample_id": "scene_009536_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_010550_00",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, four chairs, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_010550_00",
+      "source_sample_id": "scene_010550_00_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_010694_01",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_010694_01",
+      "source_sample_id": "scene_010694_01_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 7,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "window"
+      ]
+    },
+    {
+      "example_id": "dr_scene_011267_03",
+      "room_type": "dining_room",
+      "prompt": "A dining room with a dining table, several chairs, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "window"
+      ],
+      "style": "spatiallm",
+      "source_room_id": "scene_011267_03",
+      "source_sample_id": "scene_011267_03_0",
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 6,
+        "window": 1
+      },
+      "asset_tuple": [
+        "dining_table",
+        "chair",
+        "window"
+      ]
+    }
+  ]
+}
