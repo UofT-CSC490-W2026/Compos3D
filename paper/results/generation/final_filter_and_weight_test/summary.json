@@ -1,0 +1,219 @@
+{
+  "method_name": "final_filter_and_weight",
+  "benchmark_path": "paper/benchmarks/dining_test.json",
+  "bank_path": "artifacts/training/claude_qwen/hypothesis_bank.json",
+  "results_path": "paper/results/generation/final_filter_and_weight_test/generation_results.jsonl",
+  "summary": {
+    "num_examples": 100,
+    "metrics": {
+      "exact_room_type_accuracy": 1.0,
+      "requested_asset_precision": 0.9075,
+      "requested_asset_recall": 1.0,
+      "requested_asset_f1": 0.9441,
+      "requested_count_error_total": 0.64,
+      "requested_count_error_mean": 0.2058,
+      "exact_asset_set_match": 0.71,
+      "hallucinated_asset_rate": 0.0925,
+      "validity": 0.6375,
+      "prompt_adherence": 0.6773,
+      "asset_precision": 0.7672,
+      "asset_recall": 0.6888,
+      "room_match": 0.73,
+      "overall": 0.6905
+    },
+    "subgroups": {
+      "has_window": {
+        "num_examples": 36,
+        "metrics": {
+          "exact_room_type_accuracy": 1.0,
+          "requested_asset_precision": 0.9014,
+          "requested_asset_recall": 1.0,
+          "requested_asset_f1": 0.9413,
+          "requested_count_error_total": 0.1389,
+          "requested_count_error_mean": 0.0463,
+          "exact_asset_set_match": 0.6667,
+          "hallucinated_asset_rate": 0.0986,
+          "validity": 0.3111,
+          "prompt_adherence": 0.4111,
+          "asset_precision": 0.6139,
+          "asset_recall": 0.4814,
+          "room_match": 0.4403,
+          "overall": 0.44
+        }
+      },
+      "has_rug": {
+        "num_examples": 18,
+        "metrics": {
+          "exact_room_type_accuracy": 1.0,
+          "requested_asset_precision": 0.9528,
+          "requested_asset_recall": 1.0,
+          "requested_asset_f1": 0.972,
+          "requested_count_error_total": 0.5556,
+          "requested_count_error_mean": 0.1435,
+          "exact_asset_set_match": 0.8333,
+          "hallucinated_asset_rate": 0.0472,
+          "validity": 0.7889,
+          "prompt_adherence": 0.775,
+          "asset_precision": 0.8139,
+          "asset_recall": 0.7389,
+          "room_match": 0.8778,
+          "overall": 0.7833
+        }
+      },
+      "count_heavy": {
+        "num_examples": 94,
+        "metrics": {
+          "exact_room_type_accuracy": 1.0,
+          "requested_asset_precision": 0.9069,
+          "requested_asset_recall": 1.0,
+          "requested_asset_f1": 0.9436,
+          "requested_count_error_total": 0.6809,
+          "requested_count_error_mean": 0.219,
+          "exact_asset_set_match": 0.7128,
+          "hallucinated_asset_rate": 0.0931,
+          "validity": 0.6569,
+          "prompt_adherence": 0.6939,
+          "asset_precision": 0.7789,
+          "asset_recall": 0.7009,
+          "room_match": 0.7553,
+          "overall": 0.7069
+        }
+      },
+      "multi_table": {
+        "num_examples": 5,
+        "metrics": {
+          "exact_room_type_accuracy": 1.0,
+          "requested_asset_precision": 0.74,
+          "requested_asset_recall": 1.0,
+          "requested_asset_f1": 0.8333,
+          "requested_count_error_total": 1.0,
+          "requested_count_error_mean": 0.3333,
+          "exact_asset_set_match": 0.4,
+          "hallucinated_asset_rate": 0.26,
+          "validity": 0.12,
+          "prompt_adherence": 0.326,
+          "asset_precision": 0.39,
+          "asset_recall": 0.254,
+          "room_match": 0.52,
+          "overall": 0.31
+        }
+      },
+      "asset_tuple": {
+        "[\"dining_table\", \"chair\", \"lamp\", \"rug\"]": {
+          "num_examples": 15,
+          "metrics": {
+            "exact_room_type_accuracy": 1.0,
+            "requested_asset_precision": 1.0,
+            "requested_asset_recall": 1.0,
+            "requested_asset_f1": 1.0,
+            "requested_count_error_total": 0.6,
+            "requested_count_error_mean": 0.15,
+            "exact_asset_set_match": 1.0,
+            "hallucinated_asset_rate": 0.0,
+            "validity": 0.7733,
+            "prompt_adherence": 0.7667,
+            "asset_precision": 0.81,
+            "asset_recall": 0.7367,
+            "room_match": 0.8833,
+            "overall": 0.778
+          }
+        },
+        "[\"dining_table\", \"chair\", \"lamp\", \"window\"]": {
+          "num_examples": 24,
+          "metrics": {
+            "exact_room_type_accuracy": 1.0,
+            "requested_asset_precision": 1.0,
+            "requested_asset_recall": 1.0,
+            "requested_asset_f1": 1.0,
+            "requested_count_error_total": 0.0,
+            "requested_count_error_mean": 0.0,
+            "exact_asset_set_match": 1.0,
+            "hallucinated_asset_rate": 0.0,
+            "validity": 0.3875,
+            "prompt_adherence": 0.4875,
+            "asset_precision": 0.7333,
+            "asset_recall": 0.5646,
+            "room_match": 0.55,
+            "overall": 0.5296
+          }
+        },
+        "[\"dining_table\", \"chair\", \"lamp\"]": {
+          "num_examples": 47,
+          "metrics": {
+            "exact_room_type_accuracy": 1.0,
+            "requested_asset_precision": 0.8926,
+            "requested_asset_recall": 1.0,
+            "requested_asset_f1": 0.9344,
+            "requested_count_error_total": 1.0426,
+            "requested_count_error_mean": 0.3475,
+            "exact_asset_set_match": 0.6809,
+            "hallucinated_asset_rate": 0.1074,
+            "validity": 0.833,
+            "prompt_adherence": 0.8453,
+            "asset_precision": 0.8696,
+            "asset_recall": 0.8298,
+            "room_match": 0.8979,
+            "overall": 0.8487
+          }
+        },
+        "[\"dining_table\", \"chair\", \"rug\", \"window\"]": {
+          "num_examples": 1,
+          "metrics": {
+            "exact_room_type_accuracy": 1.0,
+            "requested_asset_precision": 0.8,
+            "requested_asset_recall": 1.0,
+            "requested_asset_f1": 0.8889,
+            "requested_count_error_total": 0.0,
+            "requested_count_error_mean": 0.0,
+            "exact_asset_set_match": 0.0,
+            "hallucinated_asset_rate": 0.2,
+            "validity": 0.8,
+            "prompt_adherence": 0.75,
+            "asset_precision": 0.9,
+            "asset_recall": 0.75,
+            "room_match": 0.85,
+            "overall": 0.78
+          }
+        },
+        "[\"dining_table\", \"chair\", \"rug\"]": {
+          "num_examples": 2,
+          "metrics": {
+            "exact_room_type_accuracy": 1.0,
+            "requested_asset_precision": 0.675,
+            "requested_asset_recall": 1.0,
+            "requested_asset_f1": 0.8035,
+            "requested_count_error_total": 0.5,
+            "requested_count_error_mean": 0.1666,
+            "exact_asset_set_match": 0.0,
+            "hallucinated_asset_rate": 0.325,
+            "validity": 0.9,
+            "prompt_adherence": 0.85,
+            "asset_precision": 0.8,
+            "asset_recall": 0.75,
+            "room_match": 0.85,
+            "overall": 0.825
+          }
+        },
+        "[\"dining_table\", \"chair\", \"window\"]": {
+          "num_examples": 11,
+          "metrics": {
+            "exact_room_type_accuracy": 1.0,
+            "requested_asset_precision": 0.6955,
+            "requested_asset_recall": 1.0,
+            "requested_asset_f1": 0.8182,
+            "requested_count_error_total": 0.4545,
+            "requested_count_error_mean": 0.1515,
+            "exact_asset_set_match": 0.0,
+            "hallucinated_asset_rate": 0.3045,
+            "validity": 0.1,
+            "prompt_adherence": 0.2136,
+            "asset_precision": 0.3273,
+            "asset_recall": 0.2755,
+            "room_match": 0.1636,
+            "overall": 0.2136
+          }
+        }
+      }
+    }
+  }
+}

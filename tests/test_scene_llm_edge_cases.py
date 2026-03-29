@@ -91,6 +91,39 @@ def test_generate_scene_program_normalization_failure_raises() -> None:
         )
 
 
+def test_generate_scene_program_allows_empty_hypotheses_for_baseline() -> None:
+    llm = BedrockSceneLLM(GeneratorConfig(provider="bedrock"))
+    llm._run_json_prompt = lambda _p: {  # noqa: SLF001
+        "prompt": "a dining room with a dining table and chairs",
+        "room_type": "dining_room",
+        "style": "warm",
+        "hypotheses": [],
+        "assets": [
+            {
+                "asset_type": "dining_table",
+                "count": 1,
+                "placement": "center of room",
+                "rationale": "Anchor the dining room layout.",
+            },
+            {
+                "asset_type": "chair",
+                "count": 4,
+                "placement": "around the table",
+                "rationale": "Support dining use.",
+            },
+        ],
+        "constraints": [],
+        "render_spec": {"mode": "program_only"},
+    }
+    program = llm.generate_scene_program(
+        prompt="a dining room with a dining table and chairs",
+        room_type="dining_room",
+        selected_hypotheses=[],
+    )
+    assert program.hypotheses == []
+    assert program.room_type == "dining_room"
+
+
 def test_determinism_controls_forwarded_inference_config() -> None:
     captured = {}
     llm = BedrockSceneLLM(

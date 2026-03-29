@@ -59,7 +59,9 @@ def _extract_requested_count(prompt: str, asset_type: str) -> int:
     return 1
 
 
-def _normalize_hypotheses(raw_hypotheses: object) -> list[str]:
+def _normalize_hypotheses(
+    raw_hypotheses: object, *, allow_empty: bool = False
+) -> list[str]:
     if not isinstance(raw_hypotheses, list):
         raise StructuredOutputError(
             "SceneProgram response must include a hypotheses list."
@@ -67,7 +69,7 @@ def _normalize_hypotheses(raw_hypotheses: object) -> list[str]:
 
     normalized = [str(item).strip() for item in raw_hypotheses if str(item).strip()]
     normalized = _dedupe_keep_order(normalized)
-    if not normalized:
+    if not normalized and not allow_empty:
         raise StructuredOutputError(
             "SceneProgram response must include at least one non-empty hypothesis."
         )
@@ -178,7 +180,11 @@ def _normalize_assets(raw_assets: object, room_type: str) -> list[dict[str, obje
 
 
 def _normalize_scene_program_payload(
-    payload: dict, *, prompt: str, room_type: str
+    payload: dict,
+    *,
+    prompt: str,
+    room_type: str,
+    allow_empty_hypotheses: bool = False,
 ) -> dict:
     if not isinstance(payload, dict):
         raise StructuredOutputError("SceneProgram response must be a JSON object.")
@@ -200,7 +206,10 @@ def _normalize_scene_program_payload(
         "prompt": prompt,
         "room_type": room_type,
         "style": str(normalized_payload.get("style", "")).strip() or None,
-        "hypotheses": _normalize_hypotheses(normalized_payload.get("hypotheses")),
+        "hypotheses": _normalize_hypotheses(
+            normalized_payload.get("hypotheses"),
+            allow_empty=allow_empty_hypotheses,
+        ),
         "assets": _normalize_assets(normalized_payload.get("assets"), room_type),
         "constraints": _normalize_constraints(normalized_payload.get("constraints")),
         "render_spec": render_spec or {"mode": "program_only"},
@@ -424,13 +433,22 @@ class BedrockSceneLLM:
         self, *, prompt: str, room_type: str | None, selected_hypotheses: list[str]
     ) -> SceneProgram:
         resolved_room_type = room_type or infer_room_type(prompt)
+        if selected_hypotheses:
+            hypothesis_instruction = (
+                "Preserve the selected hypotheses exactly in the hypotheses field."
+            )
+        else:
+            hypothesis_instruction = (
+                "No hypothesis guidance is provided for this request. "
+                "Set hypotheses to [] and do not invent abstract hypotheses."
+            )
         request = (
             "You are generating a structured SceneProgram for a controllable procedural indoor scene. "
             "Return strictly valid JSON with fields prompt, room_type, style, hypotheses, assets, constraints, and render_spec. "
             f"room_type must be one of {list(DEFAULT_ASSETS_BY_ROOM.keys())}. "
             f"Supported assets for {resolved_room_type}: {list(supported_assets_for_room(resolved_room_type))}. "
             "Each asset item must have asset_type, count, placement, and rationale. "
-            "Use only supported assets, keep the program minimal, and preserve the selected hypotheses. "
+            f"Use only supported assets, keep the program minimal. {hypothesis_instruction} "
             f"Prompt: {prompt}\n"
             f"Selected hypotheses: {selected_hypotheses}"
         )
@@ -439,6 +457,7 @@ class BedrockSceneLLM:
             raw_payload,
             prompt=prompt,
             room_type=resolved_room_type,
+            allow_empty_hypotheses=not selected_hypotheses,
         )
         return SceneProgram.model_validate(normalized_payload)
 

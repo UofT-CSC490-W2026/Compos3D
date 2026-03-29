@@ -1,0 +1,46 @@
+{
+  "num_examples": 50,
+  "method_a": "final_filter_and_weight",
+  "method_b": "no_hypotheses",
+  "headline_metrics": {
+    "generation_quality_score": 0.64,
+    "generation_quality_win_rate": 0.64,
+    "generation_quality_non_tie_win_rate": 0.64,
+    "asset_selection_score": 0.6,
+    "layout_coherence_score": 0.64
+  },
+  "asset_selection": {
+    "counts": {
+      "A": 26,
+      "tie": 8,
+      "B": 16
+    },
+    "preferred_win_rate": 0.52,
+    "other_win_rate": 0.32,
+    "tie_rate": 0.16,
+    "preferred_score": 0.6,
+    "preferred_non_tie_win_rate": 0.619
+  },
+  "layout_coherence": {
+    "counts": {
+      "A": 32,
+      "B": 18
+    },
+    "preferred_win_rate": 0.64,
+    "other_win_rate": 0.36,
+    "tie_rate": 0.0,
+    "preferred_score": 0.64,
+    "preferred_non_tie_win_rate": 0.64
+  },
+  "overall_preference": {
+    "counts": {
+      "A": 32,
+      "B": 18
+    },
+    "preferred_win_rate": 0.64,
+    "other_win_rate": 0.36,
+    "tie_rate": 0.0,
+    "preferred_score": 0.64,
+    "preferred_non_tie_win_rate": 0.64
+  }
+}
