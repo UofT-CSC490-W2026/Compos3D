@@ -1,0 +1,164 @@
+{
+  "dataset_path": "examples/vertical_slice_dataset.json",
+  "benchmark_val_path": "paper/benchmarks/dining_val.json",
+  "benchmark_test_path": "paper/benchmarks/dining_test.json",
+  "training_output_dir": "artifacts/training",
+  "train_runs": [
+    {
+      "name": "full_system",
+      "experiment_name": "paper_dining_full_system",
+      "config_path": "paper/results/training_matrix/configs/full_system.json",
+      "train_command": "./.venv/bin/compos3d train-hypotheses --dataset-path examples/vertical_slice_dataset.json --output-dir artifacts/training --experiment-name paper_dining_full_system --config-path paper/results/training_matrix/configs/full_system.json",
+      "val_eval_command": "./.venv/bin/python scripts/run_paper_generation_eval.py --benchmark-path paper/benchmarks/dining_val.json --output-dir paper/results/generation/paper_dining_full_system_val --method-name full_system --config-path paper/results/training_matrix/configs/full_system.json --inference-strategy filter_and_weight --render-scene --bank-path artifacts/training/paper_dining_full_system/hypothesis_bank.json"
+    },
+    {
+      "name": "no_hypotheses",
+      "experiment_name": "paper_dining_no_hypotheses",
+      "config_path": "paper/results/training_matrix/configs/no_hypotheses.json",
+      "train_command": "./.venv/bin/compos3d train-hypotheses --dataset-path examples/vertical_slice_dataset.json --output-dir artifacts/training --experiment-name paper_dining_no_hypotheses --config-path paper/results/training_matrix/configs/no_hypotheses.json",
+      "val_eval_command": "./.venv/bin/python scripts/run_paper_generation_eval.py --benchmark-path paper/benchmarks/dining_val.json --output-dir paper/results/generation/paper_dining_no_hypotheses_val --method-name no_hypotheses --config-path paper/results/training_matrix/configs/no_hypotheses.json --inference-strategy filter_and_weight --render-scene --use-empty-bank"
+    },
+    {
+      "name": "fixed_hypotheses",
+      "experiment_name": "paper_dining_fixed_hypotheses",
+      "config_path": "paper/results/training_matrix/configs/fixed_hypotheses.json",
+      "train_command": "./.venv/bin/compos3d train-hypotheses --dataset-path examples/vertical_slice_dataset.json --output-dir artifacts/training --experiment-name paper_dining_fixed_hypotheses --config-path paper/results/training_matrix/configs/fixed_hypotheses.json",
+      "val_eval_command": "./.venv/bin/python scripts/run_paper_generation_eval.py --benchmark-path paper/benchmarks/dining_val.json --output-dir paper/results/generation/paper_dining_fixed_hypotheses_val --method-name fixed_hypotheses --config-path paper/results/training_matrix/configs/fixed_hypotheses.json --inference-strategy filter_and_weight --render-scene --bank-path artifacts/training/paper_dining_fixed_hypotheses/hypothesis_bank.json"
+    },
+    {
+      "name": "no_repair",
+      "experiment_name": "paper_dining_no_repair",
+      "config_path": "paper/results/training_matrix/configs/no_repair.json",
+      "train_command": "./.venv/bin/compos3d train-hypotheses --dataset-path examples/vertical_slice_dataset.json --output-dir artifacts/training --experiment-name paper_dining_no_repair --config-path paper/results/training_matrix/configs/no_repair.json",
+      "val_eval_command": "./.venv/bin/python scripts/run_paper_generation_eval.py --benchmark-path paper/benchmarks/dining_val.json --output-dir paper/results/generation/paper_dining_no_repair_val --method-name no_repair --config-path paper/results/training_matrix/configs/no_repair.json --inference-strategy filter_and_weight --render-scene --bank-path artifacts/training/paper_dining_no_repair/hypothesis_bank.json"
+    },
+    {
+      "name": "greedy",
+      "experiment_name": "paper_dining_greedy",
+      "config_path": "paper/results/training_matrix/configs/greedy.json",
+      "train_command": "./.venv/bin/compos3d train-hypotheses --dataset-path examples/vertical_slice_dataset.json --output-dir artifacts/training --experiment-name paper_dining_greedy --config-path paper/results/training_matrix/configs/greedy.json",
+      "val_eval_command": "./.venv/bin/python scripts/run_paper_generation_eval.py --benchmark-path paper/benchmarks/dining_val.json --output-dir paper/results/generation/paper_dining_greedy_val --method-name greedy --config-path paper/results/training_matrix/configs/greedy.json --inference-strategy filter_and_weight --render-scene --bank-path artifacts/training/paper_dining_greedy/hypothesis_bank.json"
+    },
+    {
+      "name": "random",
+      "experiment_name": "paper_dining_random",
+      "config_path": "paper/results/training_matrix/configs/random.json",
+      "train_command": "./.venv/bin/compos3d train-hypotheses --dataset-path examples/vertical_slice_dataset.json --output-dir artifacts/training --experiment-name paper_dining_random --config-path paper/results/training_matrix/configs/random.json",
+      "val_eval_command": "./.venv/bin/python scripts/run_paper_generation_eval.py --benchmark-path paper/benchmarks/dining_val.json --output-dir paper/results/generation/paper_dining_random_val --method-name random --config-path paper/results/training_matrix/configs/random.json --inference-strategy filter_and_weight --render-scene --bank-path artifacts/training/paper_dining_random/hypothesis_bank.json"
+    }
+  ],
+  "sweeps": [
+    {
+      "name": "alpha_0_0",
+      "experiment_name": "paper_dining_alpha_0_0",
+      "config_path": "paper/results/training_matrix/configs/alpha_0_0.json",
+      "train_command": "./.venv/bin/compos3d train-hypotheses --dataset-path examples/vertical_slice_dataset.json --output-dir artifacts/training --experiment-name paper_dining_alpha_0_0 --config-path paper/results/training_matrix/configs/alpha_0_0.json",
+      "val_eval_command": "./.venv/bin/python scripts/run_paper_generation_eval.py --benchmark-path paper/benchmarks/dining_val.json --output-dir paper/results/generation/paper_dining_alpha_0_0_val --method-name alpha_0_0 --config-path paper/results/training_matrix/configs/alpha_0_0.json --inference-strategy filter_and_weight --render-scene --bank-path artifacts/training/paper_dining_alpha_0_0/hypothesis_bank.json"
+    },
+    {
+      "name": "alpha_0_25",
+      "experiment_name": "paper_dining_alpha_0_25",
+      "config_path": "paper/results/training_matrix/configs/alpha_0_25.json",
+      "train_command": "./.venv/bin/compos3d train-hypotheses --dataset-path examples/vertical_slice_dataset.json --output-dir artifacts/training --experiment-name paper_dining_alpha_0_25 --config-path paper/results/training_matrix/configs/alpha_0_25.json",
+      "val_eval_command": "./.venv/bin/python scripts/run_paper_generation_eval.py --benchmark-path paper/benchmarks/dining_val.json --output-dir paper/results/generation/paper_dining_alpha_0_25_val --method-name alpha_0_25 --config-path paper/results/training_matrix/configs/alpha_0_25.json --inference-strategy filter_and_weight --render-scene --bank-path artifacts/training/paper_dining_alpha_0_25/hypothesis_bank.json"
+    },
+    {
+      "name": "alpha_0_5",
+      "experiment_name": "paper_dining_alpha_0_5",
+      "config_path": "paper/results/training_matrix/configs/alpha_0_5.json",
+      "train_command": "./.venv/bin/compos3d train-hypotheses --dataset-path examples/vertical_slice_dataset.json --output-dir artifacts/training --experiment-name paper_dining_alpha_0_5 --config-path paper/results/training_matrix/configs/alpha_0_5.json",
+      "val_eval_command": "./.venv/bin/python scripts/run_paper_generation_eval.py --benchmark-path paper/benchmarks/dining_val.json --output-dir paper/results/generation/paper_dining_alpha_0_5_val --method-name alpha_0_5 --config-path paper/results/training_matrix/configs/alpha_0_5.json --inference-strategy filter_and_weight --render-scene --bank-path artifacts/training/paper_dining_alpha_0_5/hypothesis_bank.json"
+    },
+    {
+      "name": "alpha_1_0",
+      "experiment_name": "paper_dining_alpha_1_0",
+      "config_path": "paper/results/training_matrix/configs/alpha_1_0.json",
+      "train_command": "./.venv/bin/compos3d train-hypotheses --dataset-path examples/vertical_slice_dataset.json --output-dir artifacts/training --experiment-name paper_dining_alpha_1_0 --config-path paper/results/training_matrix/configs/alpha_1_0.json",
+      "val_eval_command": "./.venv/bin/python scripts/run_paper_generation_eval.py --benchmark-path paper/benchmarks/dining_val.json --output-dir paper/results/generation/paper_dining_alpha_1_0_val --method-name alpha_1_0 --config-path paper/results/training_matrix/configs/alpha_1_0.json --inference-strategy filter_and_weight --render-scene --bank-path artifacts/training/paper_dining_alpha_1_0/hypothesis_bank.json"
+    },
+    {
+      "name": "num_wrong_scale_0_4",
+      "experiment_name": "paper_dining_num_wrong_scale_0_4",
+      "config_path": "paper/results/training_matrix/configs/num_wrong_scale_0_4.json",
+      "train_command": "./.venv/bin/compos3d train-hypotheses --dataset-path examples/vertical_slice_dataset.json --output-dir artifacts/training --experiment-name paper_dining_num_wrong_scale_0_4 --config-path paper/results/training_matrix/configs/num_wrong_scale_0_4.json",
+      "val_eval_command": "./.venv/bin/python scripts/run_paper_generation_eval.py --benchmark-path paper/benchmarks/dining_val.json --output-dir paper/results/generation/paper_dining_num_wrong_scale_0_4_val --method-name num_wrong_scale_0_4 --config-path paper/results/training_matrix/configs/num_wrong_scale_0_4.json --inference-strategy filter_and_weight --render-scene --bank-path artifacts/training/paper_dining_num_wrong_scale_0_4/hypothesis_bank.json"
+    },
+    {
+      "name": "num_wrong_scale_0_8",
+      "experiment_name": "paper_dining_num_wrong_scale_0_8",
+      "config_path": "paper/results/training_matrix/configs/num_wrong_scale_0_8.json",
+      "train_command": "./.venv/bin/compos3d train-hypotheses --dataset-path examples/vertical_slice_dataset.json --output-dir artifacts/training --experiment-name paper_dining_num_wrong_scale_0_8 --config-path paper/results/training_matrix/configs/num_wrong_scale_0_8.json",
+      "val_eval_command": "./.venv/bin/python scripts/run_paper_generation_eval.py --benchmark-path paper/benchmarks/dining_val.json --output-dir paper/results/generation/paper_dining_num_wrong_scale_0_8_val --method-name num_wrong_scale_0_8 --config-path paper/results/training_matrix/configs/num_wrong_scale_0_8.json --inference-strategy filter_and_weight --render-scene --bank-path artifacts/training/paper_dining_num_wrong_scale_0_8/hypothesis_bank.json"
+    },
+    {
+      "name": "num_wrong_scale_1_2",
+      "experiment_name": "paper_dining_num_wrong_scale_1_2",
+      "config_path": "paper/results/training_matrix/configs/num_wrong_scale_1_2.json",
+      "train_command": "./.venv/bin/compos3d train-hypotheses --dataset-path examples/vertical_slice_dataset.json --output-dir artifacts/training --experiment-name paper_dining_num_wrong_scale_1_2 --config-path paper/results/training_matrix/configs/num_wrong_scale_1_2.json",
+      "val_eval_command": "./.venv/bin/python scripts/run_paper_generation_eval.py --benchmark-path paper/benchmarks/dining_val.json --output-dir paper/results/generation/paper_dining_num_wrong_scale_1_2_val --method-name num_wrong_scale_1_2 --config-path paper/results/training_matrix/configs/num_wrong_scale_1_2.json --inference-strategy filter_and_weight --render-scene --bank-path artifacts/training/paper_dining_num_wrong_scale_1_2/hypothesis_bank.json"
+    },
+    {
+      "name": "success_threshold_0_65",
+      "experiment_name": "paper_dining_success_threshold_0_65",
+      "config_path": "paper/results/training_matrix/configs/success_threshold_0_65.json",
+      "train_command": "./.venv/bin/compos3d train-hypotheses --dataset-path examples/vertical_slice_dataset.json --output-dir artifacts/training --experiment-name paper_dining_success_threshold_0_65 --config-path paper/results/training_matrix/configs/success_threshold_0_65.json",
+      "val_eval_command": "./.venv/bin/python scripts/run_paper_generation_eval.py --benchmark-path paper/benchmarks/dining_val.json --output-dir paper/results/generation/paper_dining_success_threshold_0_65_val --method-name success_threshold_0_65 --config-path paper/results/training_matrix/configs/success_threshold_0_65.json --inference-strategy filter_and_weight --render-scene --bank-path artifacts/training/paper_dining_success_threshold_0_65/hypothesis_bank.json"
+    },
+    {
+      "name": "success_threshold_0_70",
+      "experiment_name": "paper_dining_success_threshold_0_70",
+      "config_path": "paper/results/training_matrix/configs/success_threshold_0_70.json",
+      "train_command": "./.venv/bin/compos3d train-hypotheses --dataset-path examples/vertical_slice_dataset.json --output-dir artifacts/training --experiment-name paper_dining_success_threshold_0_70 --config-path paper/results/training_matrix/configs/success_threshold_0_70.json",
+      "val_eval_command": "./.venv/bin/python scripts/run_paper_generation_eval.py --benchmark-path paper/benchmarks/dining_val.json --output-dir paper/results/generation/paper_dining_success_threshold_0_70_val --method-name success_threshold_0_70 --config-path paper/results/training_matrix/configs/success_threshold_0_70.json --inference-strategy filter_and_weight --render-scene --bank-path artifacts/training/paper_dining_success_threshold_0_70/hypothesis_bank.json"
+    },
+    {
+      "name": "success_threshold_0_75",
+      "experiment_name": "paper_dining_success_threshold_0_75",
+      "config_path": "paper/results/training_matrix/configs/success_threshold_0_75.json",
+      "train_command": "./.venv/bin/compos3d train-hypotheses --dataset-path examples/vertical_slice_dataset.json --output-dir artifacts/training --experiment-name paper_dining_success_threshold_0_75 --config-path paper/results/training_matrix/configs/success_threshold_0_75.json",
+      "val_eval_command": "./.venv/bin/python scripts/run_paper_generation_eval.py --benchmark-path paper/benchmarks/dining_val.json --output-dir paper/results/generation/paper_dining_success_threshold_0_75_val --method-name success_threshold_0_75 --config-path paper/results/training_matrix/configs/success_threshold_0_75.json --inference-strategy filter_and_weight --render-scene --bank-path artifacts/training/paper_dining_success_threshold_0_75/hypothesis_bank.json"
+    }
+  ],
+  "inference_ablations": [
+    {
+      "name": "filter_and_weight_topk_1",
+      "config_path": "paper/results/training_matrix/configs/filter_and_weight_topk_1.json",
+      "test_eval_command": "./.venv/bin/python scripts/run_paper_generation_eval.py --benchmark-path paper/benchmarks/dining_test.json --output-dir paper/results/generation/filter_and_weight_topk_1 --method-name filter_and_weight_topk_1 --config-path paper/results/training_matrix/configs/filter_and_weight_topk_1.json --inference-strategy filter_and_weight --render-scene --bank-path artifacts/training/claude_qwen/hypothesis_bank.json"
+    },
+    {
+      "name": "filter_and_weight_topk_2",
+      "config_path": "paper/results/training_matrix/configs/filter_and_weight_topk_2.json",
+      "test_eval_command": "./.venv/bin/python scripts/run_paper_generation_eval.py --benchmark-path paper/benchmarks/dining_test.json --output-dir paper/results/generation/filter_and_weight_topk_2 --method-name filter_and_weight_topk_2 --config-path paper/results/training_matrix/configs/filter_and_weight_topk_2.json --inference-strategy filter_and_weight --render-scene --bank-path artifacts/training/claude_qwen/hypothesis_bank.json"
+    },
+    {
+      "name": "filter_and_weight_topk_3",
+      "config_path": "paper/results/training_matrix/configs/filter_and_weight_topk_3.json",
+      "test_eval_command": "./.venv/bin/python scripts/run_paper_generation_eval.py --benchmark-path paper/benchmarks/dining_test.json --output-dir paper/results/generation/filter_and_weight_topk_3 --method-name filter_and_weight_topk_3 --config-path paper/results/training_matrix/configs/filter_and_weight_topk_3.json --inference-strategy filter_and_weight --render-scene --bank-path artifacts/training/claude_qwen/hypothesis_bank.json"
+    },
+    {
+      "name": "filter_and_weight_topk_4",
+      "config_path": "paper/results/training_matrix/configs/filter_and_weight_topk_4.json",
+      "test_eval_command": "./.venv/bin/python scripts/run_paper_generation_eval.py --benchmark-path paper/benchmarks/dining_test.json --output-dir paper/results/generation/filter_and_weight_topk_4 --method-name filter_and_weight_topk_4 --config-path paper/results/training_matrix/configs/filter_and_weight_topk_4.json --inference-strategy filter_and_weight --render-scene --bank-path artifacts/training/claude_qwen/hypothesis_bank.json"
+    },
+    {
+      "name": "joint_top_k_topk_1",
+      "config_path": "paper/results/training_matrix/configs/joint_top_k_topk_1.json",
+      "test_eval_command": "./.venv/bin/python scripts/run_paper_generation_eval.py --benchmark-path paper/benchmarks/dining_test.json --output-dir paper/results/generation/joint_top_k_topk_1 --method-name joint_top_k_topk_1 --config-path paper/results/training_matrix/configs/joint_top_k_topk_1.json --inference-strategy joint_top_k --render-scene --bank-path artifacts/training/claude_qwen/hypothesis_bank.json"
+    },
+    {
+      "name": "joint_top_k_topk_2",
+      "config_path": "paper/results/training_matrix/configs/joint_top_k_topk_2.json",
+      "test_eval_command": "./.venv/bin/python scripts/run_paper_generation_eval.py --benchmark-path paper/benchmarks/dining_test.json --output-dir paper/results/generation/joint_top_k_topk_2 --method-name joint_top_k_topk_2 --config-path paper/results/training_matrix/configs/joint_top_k_topk_2.json --inference-strategy joint_top_k --render-scene --bank-path artifacts/training/claude_qwen/hypothesis_bank.json"
+    },
+    {
+      "name": "joint_top_k_topk_3",
+      "config_path": "paper/results/training_matrix/configs/joint_top_k_topk_3.json",
+      "test_eval_command": "./.venv/bin/python scripts/run_paper_generation_eval.py --benchmark-path paper/benchmarks/dining_test.json --output-dir paper/results/generation/joint_top_k_topk_3 --method-name joint_top_k_topk_3 --config-path paper/results/training_matrix/configs/joint_top_k_topk_3.json --inference-strategy joint_top_k --render-scene --bank-path artifacts/training/claude_qwen/hypothesis_bank.json"
+    },
+    {
+      "name": "joint_top_k_topk_4",
+      "config_path": "paper/results/training_matrix/configs/joint_top_k_topk_4.json",
+      "test_eval_command": "./.venv/bin/python scripts/run_paper_generation_eval.py --benchmark-path paper/benchmarks/dining_test.json --output-dir paper/results/generation/joint_top_k_topk_4 --method-name joint_top_k_topk_4 --config-path paper/results/training_matrix/configs/joint_top_k_topk_4.json --inference-strategy joint_top_k --render-scene --bank-path artifacts/training/claude_qwen/hypothesis_bank.json"
+    }
+  ]
+}

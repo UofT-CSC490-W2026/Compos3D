@@ -1,0 +1,64 @@
+{
+  "room_types": [
+    "dining_room"
+  ],
+  "generator": {
+    "provider": "bedrock",
+    "model_id": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+    "region_name": "us-east-1",
+    "max_tokens": 1400,
+    "temperature": 0.0
+  },
+  "critic": {
+    "mode": "vlm",
+    "provider": "bedrock",
+    "model_id": "qwen.qwen3-vl-235b-a22b",
+    "region_name": "us-east-1",
+    "max_tokens": 800,
+    "temperature": 0.0
+  },
+  "render": {
+    "enabled": true,
+    "resolution": "256x256",
+    "view_samples": 100,
+    "no_video": true,
+    "save_blend": false
+  },
+  "logging": {
+    "enable_wandb": true,
+    "wandb_project": "compos3d",
+    "wandb_mode": "online",
+    "wandb_tags": [
+      "final-training"
+    ],
+    "log_every_n_examples": 1,
+    "log_bank_table_every_n_examples": 10,
+    "log_prediction_media_every_n_examples": 1,
+    "log_hypothesis_eval_media_every_n_examples": 2,
+    "log_initial_media": true,
+    "log_failure_media": true,
+    "create_animation_gif": true,
+    "max_media_images": 4,
+    "upload_artifact_at_end": true,
+    "upload_media_artifact_at_end": true
+  },
+  "training": {
+    "num_init_examples_per_room": 3,
+    "init_hypotheses_per_room": 4,
+    "top_k": 4,
+    "alpha": 0.5,
+    "max_num_hypotheses_per_room": 10,
+    "num_wrong_scale": 0.8,
+    "update_batch_size": 2,
+    "num_hypotheses_to_update": 2,
+    "update_hypotheses_per_batch": 2,
+    "only_best_hypothesis": false,
+    "num_epochs": 3,
+    "success_threshold": 0.7,
+    "save_every_n_examples": 10,
+    "selection_strategy": "ucb",
+    "use_repair": true,
+    "baseline_mode": null,
+    "seed": 42
+  }
+}
