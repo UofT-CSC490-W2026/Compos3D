@@ -1,0 +1,16 @@
+{
+  "run_dir": "artifacts/training/claude_qwen",
+  "room_type": "dining_room",
+  "num_predictions": 57,
+  "num_training_trace_rows": 57,
+  "num_failures": 10,
+  "num_media_rows": 134,
+  "runtime_seconds": 4024.711692947,
+  "runtime_minutes": 67.08,
+  "figure_paths": {
+    "bank_evolution": "paper/figures/bank_evolution.png",
+    "bank_metrics_timeline": "paper/figures/bank_metrics_timeline.png",
+    "failure_taxonomy": "paper/figures/failure_taxonomy.png",
+    "best_worst_cases": "paper/figures/best_worst_cases.png"
+  }
+}
