@@ -362,8 +362,6 @@ def judge_generation_pairwise(
                 if attempt == max_attempts - 1:
                     raise
                 time.sleep(min(8, 2**attempt))
-        if last_error is not None and example_id not in rows_by_id:
-            raise last_error
 
     rows = [rows_by_id[example_id] for example_id in chosen_ids]
     write_jsonl(results_path, rows)

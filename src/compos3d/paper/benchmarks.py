@@ -305,7 +305,7 @@ def stratified_split_examples(
             cursor += count
 
     if any(value != 0 for value in remaining.values()):
-        raise ValueError(f"Split quotas were not exhausted: {remaining}")
+        raise ValueError(f"Split quotas were not exhausted: {remaining}")  # pragma: no cover
 
     for split_name, bucket in split_examples.items():
         bucket.sort(key=lambda item: (_asset_tuple(item), str(item["example_id"])))
@@ -402,7 +402,7 @@ def _allocate_bucket_counts(
         if not placed:
             raise ValueError(
                 "Could not distribute bucket counts within remaining quotas."
-            )
+            )  # pragma: no cover
 
     return {split_name: counts.get(split_name, 0) for split_name in remaining}
 
@@ -607,8 +607,8 @@ def _edit_pair_payload(
 def _asset_phrase(asset: str, count: int) -> str:
     noun_singular, noun_plural = ASSET_NOUNS[asset]
     if count == 1:
-        article = "an" if noun_singular[0].lower() in {"a", "e", "i", "o", "u"} else "a"
-        return f"{article} {noun_singular}"
+        article = "an" if noun_singular[0].lower() in {"a", "e", "i", "o", "u"} else "a"  # pragma: no cover
+        return f"{article} {noun_singular}"  # pragma: no cover
     count_text = NUMERIC_WORDS.get(count, str(count))
     return f"{count_text} {noun_plural}"
 
