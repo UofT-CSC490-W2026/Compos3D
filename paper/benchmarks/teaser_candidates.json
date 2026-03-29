@@ -1,0 +1,148 @@
+{
+  "showcase_path": "paper/benchmarks/dining_showcase.json",
+  "top_n": 8,
+  "candidates": [
+    {
+      "rank": 1,
+      "example_id": "dr_scene_004571_01",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 6,
+        "lamp": 1,
+        "rug": 1
+      },
+      "complexity_score": 22
+    },
+    {
+      "rank": 2,
+      "example_id": "dr_scene_000868_00",
+      "prompt": "A dining room with a dining table, several chairs, and several lamps",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp"
+      ],
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 6,
+        "lamp": 6
+      },
+      "complexity_score": 22
+    },
+    {
+      "rank": 3,
+      "example_id": "dr_scene_006272_02",
+      "prompt": "A dining room with a dining table, four chairs, two lamps, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 2,
+        "window": 1
+      },
+      "complexity_score": 21
+    },
+    {
+      "rank": 4,
+      "example_id": "dr_scene_003682_02",
+      "prompt": "A dining room with a dining table, several chairs, a lamp, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 5,
+        "lamp": 1,
+        "window": 1
+      },
+      "complexity_score": 21
+    },
+    {
+      "rank": 5,
+      "example_id": "dr_scene_002672_00",
+      "prompt": "A dining room with a dining table, four chairs, two lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 4,
+        "lamp": 2,
+        "rug": 1
+      },
+      "complexity_score": 21
+    },
+    {
+      "rank": 6,
+      "example_id": "dr_scene_007226_03",
+      "prompt": "A dining room with a dining table, three chairs, two lamps, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 3,
+        "lamp": 2,
+        "window": 1
+      },
+      "complexity_score": 20
+    },
+    {
+      "rank": 7,
+      "example_id": "dr_scene_003516_00",
+      "prompt": "A dining room with a dining table, two chairs, three lamps, and a rug",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "rug"
+      ],
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 2,
+        "lamp": 3,
+        "rug": 1
+      },
+      "complexity_score": 20
+    },
+    {
+      "rank": 8,
+      "example_id": "dr_scene_001301_02",
+      "prompt": "A dining room with a dining table, three chairs, two lamps, and a window",
+      "required_assets": [
+        "dining_table",
+        "chair",
+        "lamp",
+        "window"
+      ],
+      "expected_asset_counts": {
+        "dining_table": 1,
+        "chair": 3,
+        "lamp": 2,
+        "window": 1
+      },
+      "complexity_score": 20
+    }
+  ]
+}
