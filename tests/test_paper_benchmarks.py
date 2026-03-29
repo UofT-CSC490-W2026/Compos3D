@@ -59,12 +59,24 @@ def test_build_edit_pairs_from_splits_covers_all_edit_types(
 ) -> None:
     monkeypatch.setattr(random.Random, "shuffle", lambda self, seq: None)
     val_examples = [
-        _example("a_add", ["dining_table", "chair"], counts={"dining_table": 1, "chair": 2}),
-        _example("b_remove", ["dining_table", "chair", "rug"], counts={"dining_table": 1, "chair": 4, "rug": 1}),
+        _example(
+            "a_add", ["dining_table", "chair"], counts={"dining_table": 1, "chair": 2}
+        ),
+        _example(
+            "b_remove",
+            ["dining_table", "chair", "rug"],
+            counts={"dining_table": 1, "chair": 4, "rug": 1},
+        ),
     ]
     test_examples = [
-        _example("c_count", ["dining_table", "chair"], counts={"dining_table": 1, "chair": 1}),
-        _example("d_swap", ["dining_table", "chair", "window"], counts={"dining_table": 1, "chair": 4, "window": 1}),
+        _example(
+            "c_count", ["dining_table", "chair"], counts={"dining_table": 1, "chair": 1}
+        ),
+        _example(
+            "d_swap",
+            ["dining_table", "chair", "window"],
+            counts={"dining_table": 1, "chair": 4, "window": 1},
+        ),
     ]
 
     pairs = build_edit_pairs_from_splits(

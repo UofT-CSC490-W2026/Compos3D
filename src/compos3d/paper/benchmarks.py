@@ -95,7 +95,8 @@ def _load_dataset_payload(path: Path) -> dict[str, Any]:
 def _candidate_to_example(candidate) -> dict[str, Any]:
     required_assets = [str(asset) for asset in candidate.required_assets]
     filtered_counts = {
-        str(asset): int(candidate.asset_counts.get(asset, 1)) for asset in required_assets
+        str(asset): int(candidate.asset_counts.get(asset, 1))
+        for asset in required_assets
     }
     return {
         "example_id": f"dr_{candidate.room_id}",
@@ -286,7 +287,9 @@ def stratified_split_examples(
                 for split_name in remaining
             }
             if sum(counts.values()) != len(bucket):
-                raise ValueError("Final bucket could not satisfy remaining split quotas.")
+                raise ValueError(
+                    "Final bucket could not satisfy remaining split quotas."
+                )
         else:
             counts = _allocate_bucket_counts(
                 bucket_size=len(bucket),
@@ -339,7 +342,8 @@ def build_edit_pairs_from_splits(
                 [
                     example
                     for example in source_pool
-                    if example["example_id"] not in used_example_ids and item[1](example)
+                    if example["example_id"] not in used_example_ids
+                    and item[1](example)
                 ]
             ),
         )
@@ -396,7 +400,9 @@ def _allocate_bucket_counts(
                 placed = True
                 break
         if not placed:
-            raise ValueError("Could not distribute bucket counts within remaining quotas.")
+            raise ValueError(
+                "Could not distribute bucket counts within remaining quotas."
+            )
 
     return {split_name: counts.get(split_name, 0) for split_name in remaining}
 
@@ -458,7 +464,9 @@ def _build_add_asset_edit(example: dict[str, Any]) -> dict[str, Any]:
     ]
     target_asset = missing[0]
     base_counts[target_asset] = 1
-    edited_assets = _sorted_required_assets(list(example["required_assets"]) + [target_asset])
+    edited_assets = _sorted_required_assets(
+        list(example["required_assets"]) + [target_asset]
+    )
     return _edit_pair_payload(
         example=example,
         edit_type="add_asset",
@@ -474,7 +482,9 @@ def _build_remove_asset_edit(example: dict[str, Any]) -> dict[str, Any]:
     removable = _optional_assets(example)
     target_asset = sorted(removable, key=DINING_ROOM_ASSET_ORDER.index)[0]
     base_counts.pop(target_asset, None)
-    edited_assets = [asset for asset in example["required_assets"] if asset != target_asset]
+    edited_assets = [
+        asset for asset in example["required_assets"] if asset != target_asset
+    ]
     return _edit_pair_payload(
         example=example,
         edit_type="remove_asset",
@@ -562,13 +572,16 @@ def _edit_pair_payload(
 ) -> dict[str, Any]:
     base_counts = dict(expected_asset_counts(example))
     edited_counts = {
-        asset: int(edited_asset_counts.get(asset, 1)) for asset in edited_required_assets
+        asset: int(edited_asset_counts.get(asset, 1))
+        for asset in edited_required_assets
     }
     edited_prompt = build_prompt(
         DINING_ROOM, edited_required_assets, Counter(edited_counts)
     )
     unchanged_assets = [
-        asset for asset in example["required_assets"] if asset not in set(changed_assets)
+        asset
+        for asset in example["required_assets"]
+        if asset not in set(changed_assets)
     ]
     changed_suffix = "_".join(changed_assets)
     return {
@@ -617,7 +630,9 @@ def parse_prompt_asset_counts(
     prompt_lower = prompt.lower()
     counts: dict[str, int] = {}
     for asset in required_assets:
-        singular, plural = ASSET_NOUNS.get(asset, (asset.replace("_", " "), f"{asset}s"))
+        singular, plural = ASSET_NOUNS.get(
+            asset, (asset.replace("_", " "), f"{asset}s")
+        )
         phrases = [singular, plural]
         matched_value: int | None = None
         for phrase in phrases:
@@ -634,7 +649,9 @@ def parse_prompt_asset_counts(
     return counts
 
 
-def scene_program_asset_counts(scene_program: SceneProgram | dict[str, Any]) -> dict[str, int]:
+def scene_program_asset_counts(
+    scene_program: SceneProgram | dict[str, Any],
+) -> dict[str, int]:
     if isinstance(scene_program, SceneProgram):
         assets = scene_program.assets
     else:
@@ -767,10 +784,12 @@ def compute_edit_program_metrics(
     base_counts = scene_program_asset_counts(base_scene_program)
     edited_counts = scene_program_asset_counts(edited_scene_program)
     expected_base = {
-        str(key): int(value) for key, value in pair["base_expected_asset_counts"].items()
+        str(key): int(value)
+        for key, value in pair["base_expected_asset_counts"].items()
     }
     expected_edited = {
-        str(key): int(value) for key, value in pair["edited_expected_asset_counts"].items()
+        str(key): int(value)
+        for key, value in pair["edited_expected_asset_counts"].items()
     }
     changed_assets = set(str(asset) for asset in pair.get("changed_assets", []))
     unchanged_assets = set(str(asset) for asset in pair.get("unchanged_assets", []))
@@ -795,14 +814,11 @@ def compute_edit_program_metrics(
         if (precision + recall) == 0
         else 2 * precision * recall / (precision + recall)
     )
-    unchanged_retention = (
-        sum(
-            1
-            for asset in unchanged_assets
-            if edited_counts.get(asset, 0) == base_counts.get(asset, 0)
-        )
-        / max(len(unchanged_assets), 1)
-    )
+    unchanged_retention = sum(
+        1
+        for asset in unchanged_assets
+        if edited_counts.get(asset, 0) == base_counts.get(asset, 0)
+    ) / max(len(unchanged_assets), 1)
     delta_count_l1 = sum(
         abs(predicted_delta.get(asset, 0) - expected_delta.get(asset, 0))
         for asset in expected_changed

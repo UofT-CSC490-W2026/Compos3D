@@ -21,7 +21,9 @@ def _extract_json_payload(text: str) -> dict[str, Any]:
     start = cleaned.find("{")
     end = cleaned.rfind("}")
     if start < 0 or end < 0 or end <= start:
-        raise ValueError(f"Could not locate JSON object in judge response: {cleaned[:200]}")
+        raise ValueError(
+            f"Could not locate JSON object in judge response: {cleaned[:200]}"
+        )
     return json.loads(cleaned[start : end + 1])
 
 
@@ -44,7 +46,9 @@ class BedrockPairwiseJudge:
             return suffix
         return "png"
 
-    def _run_json_prompt(self, *, prompt_text: str, image_paths: list[Path]) -> dict[str, Any]:
+    def _run_json_prompt(
+        self, *, prompt_text: str, image_paths: list[Path]
+    ) -> dict[str, Any]:
         content: list[dict[str, Any]] = []
         for path in image_paths:
             content.append(
@@ -74,7 +78,9 @@ class BedrockPairwiseJudge:
                 raise CriticUnavailableError(
                     "Bedrock judge credentials are unavailable or expired. Reauthenticate with aws login."
                 ) from exc
-            raise CriticUnavailableError(f"Bedrock judge request failed: {exc}") from exc
+            raise CriticUnavailableError(
+                f"Bedrock judge request failed: {exc}"
+            ) from exc
 
         text_blocks = [
             item.get("text", "")
@@ -193,7 +199,10 @@ def clip_directional_similarity(
 
     image_direction = after_image - before_image
     text_direction = text_features[1] - text_features[0]
-    if float(image_direction.norm().item()) == 0.0 or float(text_direction.norm().item()) == 0.0:
+    if (
+        float(image_direction.norm().item()) == 0.0
+        or float(text_direction.norm().item()) == 0.0
+    ):
         return None
     image_direction = image_direction / image_direction.norm()
     text_direction = text_direction / text_direction.norm()

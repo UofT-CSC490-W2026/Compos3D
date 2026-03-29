@@ -30,8 +30,12 @@ def render_training_paper_figures(
     trace_rows = _load_rows(run_dir / "training_trace.jsonl", room_type=room_type)
     failed_rows = _load_rows(run_dir / "failed_scene_bank.jsonl", room_type=room_type)
     final_bank = _load_json(run_dir / "hypothesis_bank.json")
-    initial_bank = _load_json(run_dir / "bank_snapshots" / "hypothesis_bank_initial.json")
-    media_rows = _load_rows(run_dir / "wandb_media" / "media_manifest.jsonl", room_type=room_type)
+    initial_bank = _load_json(
+        run_dir / "bank_snapshots" / "hypothesis_bank_initial.json"
+    )
+    media_rows = _load_rows(
+        run_dir / "wandb_media" / "media_manifest.jsonl", room_type=room_type
+    )
     wandb_summary_path = next(
         (
             path
@@ -110,11 +114,17 @@ def _load_jsonl_rows(path: Path) -> list[dict[str, Any]]:
 
 def _snapshot_stats(run_dir: Path) -> list[dict[str, Any]]:
     stats: list[dict[str, Any]] = []
-    for path in sorted((run_dir / "bank_snapshots").glob("*.json"), key=_snapshot_sort_key):
+    for path in sorted(
+        (run_dir / "bank_snapshots").glob("*.json"), key=_snapshot_sort_key
+    ):
         records = _load_json(path)
         rewards = [float(record["reward"]) for record in records] if records else [0.0]
-        accuracies = [float(record["accuracy"]) for record in records] if records else [0.0]
-        scores = [float(record["mean_score"]) for record in records] if records else [0.0]
+        accuracies = (
+            [float(record["accuracy"]) for record in records] if records else [0.0]
+        )
+        scores = (
+            [float(record["mean_score"]) for record in records] if records else [0.0]
+        )
         stats.append(
             {
                 "label": path.stem,
@@ -155,7 +165,9 @@ def _plot_bank_evolution(
     fig, axes = plt.subplots(1, 4, figsize=(19, 4.8))
     steps = [item["step"] for item in snapshots]
 
-    axes[0].plot(steps, [item["bank_size"] for item in snapshots], color="#0f766e", linewidth=2.4)
+    axes[0].plot(
+        steps, [item["bank_size"] for item in snapshots], color="#0f766e", linewidth=2.4
+    )
     axes[0].set_title("Hypothesis Count")
     axes[0].set_xlabel("Training Step")
     axes[0].set_ylabel("Hypotheses in Bank")
@@ -285,7 +297,9 @@ def _plot_failure_taxonomy(
     fig, ax = plt.subplots(figsize=(9, 5))
     labels = list(counts)
     values = [counts[label] for label in labels]
-    ax.bar(labels, values, color=["#b91c1c", "#1d4ed8", "#0f766e", "#a16207", "#7c3aed"])
+    ax.bar(
+        labels, values, color=["#b91c1c", "#1d4ed8", "#0f766e", "#a16207", "#7c3aed"]
+    )
     ax.set_ylabel("Count")
     ax.tick_params(axis="x", rotation=20)
     fig.tight_layout()
@@ -332,7 +346,9 @@ def _build_best_worst_cases(
             rows=rendered_rows,
             output_path=output_path,
             title="Best and worst dining-room predictions",
-            caption_fn=lambda row: f"{row['example_id']} | overall {float(row['overall']):.2f}",
+            caption_fn=lambda row: (
+                f"{row['example_id']} | overall {float(row['overall']):.2f}"
+            ),
             columns=4,
         )
 
@@ -355,7 +371,9 @@ def _image_grid(
         "RGB",
         (
             padding + columns * (cell_width + padding),
-            title_height + padding + grid_rows * (cell_height + caption_height + padding),
+            title_height
+            + padding
+            + grid_rows * (cell_height + caption_height + padding),
         ),
         color=(247, 248, 250),
     )

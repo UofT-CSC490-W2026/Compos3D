@@ -89,9 +89,7 @@ def main() -> None:
         limit=args.limit,
         force=args.force,
     )
-    print(
-        f"Wrote {len(result['rows'])} generation rows to {result['results_path']}"
-    )
+    print(f"Wrote {len(result['rows'])} generation rows to {result['results_path']}")
     print(result["summary"])
 
     if args.pairwise_baseline_results is not None:

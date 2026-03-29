@@ -173,7 +173,9 @@ def run_generation_benchmark(
                 "prompt": str(example["prompt"]),
                 "room_type": str(example["room_type"]),
                 "required_assets": list(example.get("required_assets", [])),
-                "asset_tuple": list(example.get("asset_tuple", example.get("required_assets", []))),
+                "asset_tuple": list(
+                    example.get("asset_tuple", example.get("required_assets", []))
+                ),
                 "output_dir": str(run_dir),
                 "scene_program_path": str(run_dir / "scene_program.json"),
                 "critic_score_path": str(run_dir / "critic_score.json"),
@@ -201,7 +203,9 @@ def run_generation_benchmark(
                 "overall": float(critic_score["overall"]),
                 "critic_notes": list(critic_score.get("notes", [])),
             }
-            row.update(build_program_metric_row(example=example, scene_program=scene_program))
+            row.update(
+                build_program_metric_row(example=example, scene_program=scene_program)
+            )
             rows.append(row)
     finally:
         if temp_bank is not None:
@@ -252,9 +256,7 @@ def _pairwise_metric_summary(
         "preferred_win_rate": _rate(preferred_wins),
         "other_win_rate": _rate(other_wins),
         "tie_rate": _rate(tie_count),
-        "preferred_score": round(
-            (preferred_wins + (0.5 * tie_count)) / total, 4
-        )
+        "preferred_score": round((preferred_wins + (0.5 * tie_count)) / total, 4)
         if total
         else 0.0,
         "preferred_non_tie_win_rate": round(preferred_wins / non_tie_total, 4)
@@ -284,10 +286,13 @@ def judge_generation_pairwise(
     shared_ids = sorted(
         example_id
         for example_id in set(by_id_a) & set(by_id_b)
-        if by_id_a[example_id].get("image_paths") and by_id_b[example_id].get("image_paths")
+        if by_id_a[example_id].get("image_paths")
+        and by_id_b[example_id].get("image_paths")
     )
     if not shared_ids:
-        raise ValueError("No shared generation examples with rendered images were found.")
+        raise ValueError(
+            "No shared generation examples with rendered images were found."
+        )
 
     rng = random.Random(seed)
     chosen_ids = sorted(rng.sample(shared_ids, min(sample_size, len(shared_ids))))
@@ -318,8 +323,12 @@ def judge_generation_pairwise(
             continue
         row_a = by_id_a[example_id]
         row_b = by_id_b[example_id]
-        candidate_a_paths = [Path(path) for path in row_a["image_paths"][:views_per_candidate]]
-        candidate_b_paths = [Path(path) for path in row_b["image_paths"][:views_per_candidate]]
+        candidate_a_paths = [
+            Path(path) for path in row_a["image_paths"][:views_per_candidate]
+        ]
+        candidate_b_paths = [
+            Path(path) for path in row_b["image_paths"][:views_per_candidate]
+        ]
         last_error: Exception | None = None
         for attempt in range(max_attempts):
             try:
@@ -341,7 +350,11 @@ def judge_generation_pairwise(
                 }
                 write_jsonl(
                     results_path,
-                    [rows_by_id[item_id] for item_id in chosen_ids if item_id in rows_by_id],
+                    [
+                        rows_by_id[item_id]
+                        for item_id in chosen_ids
+                        if item_id in rows_by_id
+                    ],
                 )
                 break
             except CriticUnavailableError as exc:
@@ -510,9 +523,7 @@ def run_edit_benchmark(
                 },
                 scene_program=edited_program,
             )
-            row.update(
-                {f"base_{key}": value for key, value in base_metric_row.items()}
-            )
+            row.update({f"base_{key}": value for key, value in base_metric_row.items()})
             row.update(
                 {f"edited_{key}": value for key, value in edited_metric_row.items()}
             )
@@ -630,7 +641,8 @@ def export_generation_human_study_sheet(
     shared_ids = sorted(
         example_id
         for example_id in set(by_id_a) & set(by_id_b)
-        if by_id_a[example_id].get("image_paths") and by_id_b[example_id].get("image_paths")
+        if by_id_a[example_id].get("image_paths")
+        and by_id_b[example_id].get("image_paths")
     )
     rng = random.Random(seed)
     chosen_ids = sorted(rng.sample(shared_ids, min(sample_size, len(shared_ids))))
@@ -684,7 +696,9 @@ def export_edit_human_study_sheet(
     sample_size: int = 30,
     seed: int = 42,
 ) -> Path:
-    rows = load_jsonl_rows(_resolve_results_file(editing_results_path, "editing_results.jsonl"))
+    rows = load_jsonl_rows(
+        _resolve_results_file(editing_results_path, "editing_results.jsonl")
+    )
     eligible = [
         row
         for row in rows
@@ -812,9 +826,12 @@ def build_paper_training_matrix(
                 ),
                 "val_eval_command": _generation_eval_command(
                     benchmark_path=benchmark_val_path,
-                    output_dir=Path("paper/results/generation") / f"{experiment_name}_val",
+                    output_dir=Path("paper/results/generation")
+                    / f"{experiment_name}_val",
                     method_name=name,
-                    bank_path=training_output_dir / experiment_name / "hypothesis_bank.json",
+                    bank_path=training_output_dir
+                    / experiment_name
+                    / "hypothesis_bank.json",
                     config_path=config_path,
                     inference_strategy="filter_and_weight",
                     use_empty_bank=name == "no_hypotheses",
@@ -843,9 +860,12 @@ def build_paper_training_matrix(
                 ),
                 "val_eval_command": _generation_eval_command(
                     benchmark_path=benchmark_val_path,
-                    output_dir=Path("paper/results/generation") / f"{experiment_name}_val",
+                    output_dir=Path("paper/results/generation")
+                    / f"{experiment_name}_val",
                     method_name=name,
-                    bank_path=training_output_dir / experiment_name / "hypothesis_bank.json",
+                    bank_path=training_output_dir
+                    / experiment_name
+                    / "hypothesis_bank.json",
                     config_path=config_path,
                     inference_strategy="filter_and_weight",
                 ),
@@ -876,7 +896,12 @@ def build_paper_training_matrix(
 
     write_json(output_dir / "experiment_matrix.json", matrix)
     run_script = output_dir / "run_commands.sh"
-    commands: list[str] = ["#!/usr/bin/env bash", "set -euo pipefail", "", "source api_key"]
+    commands: list[str] = [
+        "#!/usr/bin/env bash",
+        "set -euo pipefail",
+        "",
+        "source api_key",
+    ]
     for section in ("train_runs", "sweeps", "inference_ablations"):
         for item in matrix[section]:
             if "train_command" in item:

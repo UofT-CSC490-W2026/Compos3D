@@ -114,9 +114,12 @@ def build_paper_training_matrix(
                 ),
                 "val_eval_command": _generation_eval_command(
                     benchmark_path=benchmark_val_path,
-                    output_dir=Path("paper/results/generation") / f"{experiment_name}_val",
+                    output_dir=Path("paper/results/generation")
+                    / f"{experiment_name}_val",
                     method_name=name,
-                    bank_path=training_output_dir / experiment_name / "hypothesis_bank.json",
+                    bank_path=training_output_dir
+                    / experiment_name
+                    / "hypothesis_bank.json",
                     config_path=config_path,
                     inference_strategy="filter_and_weight",
                     use_empty_bank=name == "no_hypotheses",
@@ -145,9 +148,12 @@ def build_paper_training_matrix(
                 ),
                 "val_eval_command": _generation_eval_command(
                     benchmark_path=benchmark_val_path,
-                    output_dir=Path("paper/results/generation") / f"{experiment_name}_val",
+                    output_dir=Path("paper/results/generation")
+                    / f"{experiment_name}_val",
                     method_name=name,
-                    bank_path=training_output_dir / experiment_name / "hypothesis_bank.json",
+                    bank_path=training_output_dir
+                    / experiment_name
+                    / "hypothesis_bank.json",
                     config_path=config_path,
                     inference_strategy="filter_and_weight",
                 ),
@@ -178,7 +184,12 @@ def build_paper_training_matrix(
 
     write_json(output_dir / "experiment_matrix.json", matrix)
     run_script = output_dir / "run_commands.sh"
-    commands: list[str] = ["#!/usr/bin/env bash", "set -euo pipefail", "", "source api_key"]
+    commands: list[str] = [
+        "#!/usr/bin/env bash",
+        "set -euo pipefail",
+        "",
+        "source api_key",
+    ]
     for section in ("train_runs", "sweeps", "inference_ablations"):
         for item in matrix[section]:
             if "train_command" in item:

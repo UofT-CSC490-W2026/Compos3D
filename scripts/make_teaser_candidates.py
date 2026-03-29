@@ -47,8 +47,14 @@ def build_parser() -> argparse.ArgumentParser:
         default="",
         help="Comma-separated example IDs to render. Defaults to the top-ranked prompts.",
     )
-    parser.add_argument("--bank-path", type=Path, default=Path("artifacts/training/claude_qwen/hypothesis_bank.json"))
-    parser.add_argument("--config-path", type=Path, default=Path("train_configs/compos3d.json"))
+    parser.add_argument(
+        "--bank-path",
+        type=Path,
+        default=Path("artifacts/training/claude_qwen/hypothesis_bank.json"),
+    )
+    parser.add_argument(
+        "--config-path", type=Path, default=Path("train_configs/compos3d.json")
+    )
     parser.add_argument(
         "--render-output-dir",
         type=Path,
@@ -127,7 +133,9 @@ def _render_teaser_examples(
         inference_dir.mkdir(parents=True, exist_ok=True)
         scene_program_path = inference_dir / "scene_program.json"
         _write_json(scene_program_path, scene_program.model_dump())
-        _write_json(inference_dir / "experiment_config.json", experiment_config.model_dump())
+        _write_json(
+            inference_dir / "experiment_config.json", experiment_config.model_dump()
+        )
         inference_manifest = {
             "bank_path": str(bank_path),
             "config_path": str(config_path) if config_path is not None else None,
@@ -136,7 +144,9 @@ def _render_teaser_examples(
             "inference_strategy": "filter_and_weight",
             "candidate_hypothesis_ids": [record.hypothesis_id for record in candidates],
             "candidate_hypotheses": [record.text for record in candidates],
-            "selected_hypothesis_ids": [record.hypothesis_id for record in selected_records],
+            "selected_hypothesis_ids": [
+                record.hypothesis_id for record in selected_records
+            ],
             "selected_hypotheses": [record.text for record in selected_records],
             "scene_program_path": str(scene_program_path),
         }
@@ -172,7 +182,9 @@ def _render_teaser_examples(
                 "inference_dir": str(inference_dir),
                 "scene_dir": str(scene_dir),
                 "scene_program_path": str(scene_program_path),
-                "selected_hypotheses": inference_manifest.get("selected_hypotheses", []),
+                "selected_hypotheses": inference_manifest.get(
+                    "selected_hypotheses", []
+                ),
                 "render_manifest": render_manifest,
             }
         )
