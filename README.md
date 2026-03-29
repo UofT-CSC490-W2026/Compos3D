@@ -14,6 +14,7 @@ This repository provides the implementation of Compos3D, a system that uses LLMs
 - [🎬 Inference](#-inference)
 - [🖼️ Rendering](#-rendering)
 - [⚙️ Configuration](#-configuration)
+- [📄 Paper Experiments](#-paper-experiments)
 - [☁️ AWS](#-aws)
 - [🧪 Testing](#-testing)
 - [🤝 Credits](#-credits)
@@ -74,6 +75,15 @@ procedural/
 
 scripts/
   build_spatiallm_dataset.py Download and convert SpatialLM into training data
+  build_dining_paper_benchmarks.py
+                            Build the held-out dining-room paper benchmark
+  run_paper_generation_eval.py
+                            Run frozen-bank generation evaluation on a benchmark
+  run_paper_edit_eval.py    Run prompt-edit evaluation on the edit-pair benchmark
+  build_paper_training_matrix.py
+                            Materialize ablation + sweep configs and commands
+  make_paper_figures.py     Generate paper plots from a completed local run
+  make_teaser_candidates.py Rank showcase prompts and optionally render them
   build_and_push_runtime_image.sh
                             Build and push the AWS runtime image to ECR
   put_secret_value.sh       Populate Secrets Manager values outside Terraform state
@@ -91,6 +101,11 @@ examples/
 data/external/spatiallm/
   split.csv
   spatiallm_train.json
+
+paper/
+  benchmarks/               Held-out dining-room val/test/showcase manifests
+  results/                  Generation/editing/human-study outputs
+  figures/                  Paper plots derived from the finalized run
 
 infinigen/
   Princeton Infinigen submodule
@@ -358,9 +373,136 @@ If you change the config, keep these constraints in mind:
 - `256x256` and `8-16` samples are a good training-time speed/quality tradeoff
 - `512x512` and `48+` samples are better for polished renders than for training
 
+## 📄 Paper Experiments
+
+We perform the following steps:
+
+1. Build the held-out benchmark.
+2. Run the final model on the `100`-prompt test split.
+3. Run the no-hypotheses baseline on the same split.
+4. Run the pairwise VLM quality judge against that baseline.
+
+### 1. Build the held-out dining-room benchmark
+
+This reads the raw SpatialLM files already in `data/external/spatiallm/`,
+excludes the `60` dining-room examples used by
+`examples/vertical_slice_dataset.json`, and writes the deterministic
+`24/100/24` val/test/showcase split plus `100` prompt-edit pairs.
+
+```bash
+./.venv/bin/python scripts/build_dining_paper_benchmarks.py \
+  --raw-dir data/external/spatiallm \
+  --canonical-training-dataset-path examples/vertical_slice_dataset.json \
+  --output-dir paper/benchmarks
+```
+
+This writes:
+
+- `paper/benchmarks/dining_val.json`
+- `paper/benchmarks/dining_test.json`
+- `paper/benchmarks/dining_showcase.json`
+- `paper/benchmarks/edit_pairs.jsonl`
+
+### 2. Run the primary generation comparison
+
+Final model on the held-out `100`-prompt test set:
+
+```bash
+source api_key
+./.venv/bin/python scripts/run_paper_generation_eval.py \
+  --benchmark-path paper/benchmarks/dining_test.json \
+  --output-dir paper/results/generation/final_filter_and_weight_test \
+  --method-name final_filter_and_weight \
+  --bank-path artifacts/training/claude_qwen/hypothesis_bank.json \
+  --config-path train_configs/compos3d.json \
+  --inference-strategy filter_and_weight \
+  --render-scene
+```
+
+No-hypotheses baseline on the same split:
+
+```bash
+source api_key
+./.venv/bin/python scripts/run_paper_generation_eval.py \
+  --benchmark-path paper/benchmarks/dining_test.json \
+  --output-dir paper/results/generation/no_hypotheses_test \
+  --method-name no_hypotheses \
+  --use-empty-bank \
+  --config-path train_configs/compos3d.json \
+  --inference-strategy joint_top_k \
+  --render-scene
+```
+
+Important outputs:
+
+- `paper/results/generation/final_filter_and_weight_test/generation_results.jsonl`
+- `paper/results/generation/final_filter_and_weight_test/summary.json`
+- `paper/results/generation/no_hypotheses_test/generation_results.jsonl`
+- `paper/results/generation/no_hypotheses_test/summary.json`
+
+### 3. Run the main generation-quality judge
+
+This adds the pairwise VLM image-comparison score for the final model against
+the no-hypotheses baseline.
+
+```bash
+source api_key
+./.venv/bin/python scripts/run_paper_generation_eval.py \
+  --benchmark-path paper/benchmarks/dining_test.json \
+  --output-dir paper/results/generation/final_filter_and_weight_test \
+  --method-name final_filter_and_weight \
+  --bank-path artifacts/training/claude_qwen/hypothesis_bank.json \
+  --config-path train_configs/compos3d.json \
+  --pairwise-baseline-results paper/results/generation/no_hypotheses_test
+```
+
+Important outputs:
+
+- `paper/results/generation/final_filter_and_weight_test/pairwise/pairwise_generation.jsonl`
+- `paper/results/generation/final_filter_and_weight_test/pairwise/pairwise_generation_summary.json`
+- `paper/results/generation/quantitative_tables.md`
+
+### 4. Generate the ablation and sweep matrix
+
+This makes the training configs and command sheet.
+
+```bash
+./.venv/bin/python scripts/build_paper_training_matrix.py \
+  --base-config-path train_configs/compos3d.json \
+  --dataset-path examples/vertical_slice_dataset.json \
+  --benchmark-val-path paper/benchmarks/dining_val.json \
+  --benchmark-test-path paper/benchmarks/dining_test.json \
+  --output-dir paper/results/training_matrix
+```
+
+Important outputs:
+
+- `paper/results/training_matrix/experiment_matrix.json`
+- `paper/results/training_matrix/run_commands.sh`
+- `paper/results/training_matrix/configs/*.json`
+
+### 5. Run prompt-edit evaluation
+
+```bash
+source api_key
+./.venv/bin/python scripts/run_paper_edit_eval.py \
+  --edit-pairs-path paper/benchmarks/edit_pairs.jsonl \
+  --output-dir paper/results/editing/final_filter_and_weight \
+  --method-name final_filter_and_weight \
+  --bank-path artifacts/training/claude_qwen/hypothesis_bank.json \
+  --config-path train_configs/compos3d.json \
+  --inference-strategy filter_and_weight \
+  --render-scene \
+  --judge-edits
+```
+
+The main result file is:
+
+- `paper/results/editing/<method>/editing_results.jsonl`
+
 ## ☁️ AWS
 
-Compos3D now supports an AWS-native execution path that keeps local workflows unchanged:
+Compos3D runs on AWS:
 
 - local commands still run directly from your checkout
 - `launch-aws` runs the same inner `compos3d` command inside an ECR-backed container on an ephemeral EC2 instance
