@@ -47,10 +47,12 @@ def render_training_paper_figures(
     wandb_summary = _load_json(wandb_summary_path) if wandb_summary_path else {}
 
     figure_paths = {
-        "bank_evolution": output_dir / "bank_evolution.png",
-        "bank_metrics_timeline": output_dir / "bank_metrics_timeline.png",
-        "failure_taxonomy": output_dir / "failure_taxonomy.png",
+        "bank_evolution": output_dir / "bank_evolution.pdf",
+        "bank_metrics_timeline": output_dir / "bank_metrics_timeline.pdf",
+        "failure_taxonomy": output_dir / "failure_taxonomy.pdf",
         "best_worst_cases": output_dir / "best_worst_cases.png",
+        "training_diagnostics_overview": output_dir / "training_diagnostics_overview.pdf",
+        "mean_hypothesis_score": output_dir / "mean_hypothesis_score.pdf",
     }
 
     _plot_bank_evolution(
@@ -72,6 +74,18 @@ def render_training_paper_figures(
         prediction_rows=predictions,
         media_rows=media_rows,
         output_path=figure_paths["best_worst_cases"],
+    )
+    _plot_training_diagnostics_overview(
+        run_dir=run_dir,
+        initial_bank=initial_bank,
+        final_bank=final_bank,
+        prediction_rows=predictions,
+        failed_rows=failed_rows,
+        output_path=figure_paths["training_diagnostics_overview"],
+    )
+    _plot_mean_hypothesis_score(
+        run_dir=run_dir,
+        output_path=figure_paths["mean_hypothesis_score"],
     )
 
     manifest = {
@@ -222,7 +236,7 @@ def _plot_bank_evolution(
     axes[3].legend()
 
     fig.tight_layout()
-    fig.savefig(output_path, dpi=180)
+    _save_matplotlib_figure(fig, output_path)
     plt.close(fig)
 
 
@@ -264,7 +278,192 @@ def _plot_bank_metrics_timeline(
     ax.grid(alpha=0.25)
     ax.legend(loc="lower right")
     fig.tight_layout()
-    fig.savefig(output_path, dpi=180)
+    _save_matplotlib_figure(fig, output_path)
+    plt.close(fig)
+
+
+def _plot_training_diagnostics_overview(
+    *,
+    run_dir: Path,
+    initial_bank: list[dict[str, Any]],
+    final_bank: list[dict[str, Any]],
+    prediction_rows: list[dict[str, Any]],
+    failed_rows: list[dict[str, Any]],
+    output_path: Path,
+) -> None:
+    snapshots = _snapshot_stats(run_dir)
+    if not snapshots:
+        return
+
+    fig, axes = plt.subplots(2, 4, figsize=(18.5, 8.8))
+    top_axes = axes[0]
+    bottom_axes = axes[1]
+    steps = [item["step"] for item in snapshots]
+
+    top_axes[0].plot(
+        steps,
+        [item["bank_size"] for item in snapshots],
+        color="#0f766e",
+        linewidth=2.4,
+    )
+    top_axes[0].set_title("Hypothesis Count")
+    top_axes[0].set_xlabel("Training Step")
+    top_axes[0].set_ylabel("Hypotheses in Bank")
+    top_axes[0].grid(alpha=0.25)
+
+    top_axes[1].bar(
+        ["Initial", "Final"],
+        [len(initial_bank), len(final_bank)],
+        color=["#94a3b8", "#0f766e"],
+        width=0.6,
+    )
+    top_axes[1].set_title("Initial vs Final Bank Size")
+    top_axes[1].set_ylabel("Hypotheses")
+    top_axes[1].grid(axis="y", alpha=0.25)
+
+    top_axes[2].hist(
+        [float(record["reward"]) for record in initial_bank],
+        bins=8,
+        alpha=0.65,
+        color="#94a3b8",
+        label="initial",
+    )
+    top_axes[2].hist(
+        [float(record["reward"]) for record in final_bank],
+        bins=8,
+        alpha=0.65,
+        color="#0f766e",
+        label="final",
+    )
+    top_axes[2].set_title("UCB Reward Distribution")
+    top_axes[2].set_xlabel("Reward")
+    top_axes[2].set_ylabel("Hypotheses")
+    top_axes[2].legend()
+
+    top_axes[3].hist(
+        [float(record["accuracy"]) for record in initial_bank],
+        bins=8,
+        alpha=0.65,
+        color="#cbd5e1",
+        label="initial",
+    )
+    top_axes[3].hist(
+        [float(record["accuracy"]) for record in final_bank],
+        bins=8,
+        alpha=0.65,
+        color="#2563eb",
+        label="final",
+    )
+    top_axes[3].set_title("Training Accuracy Distribution")
+    top_axes[3].set_xlabel("Accuracy")
+    top_axes[3].set_ylabel("Hypotheses")
+    top_axes[3].legend()
+
+    _plot_validation_sensitivity_axis(
+        bottom_axes[0],
+        x_values=[0.0, 0.25, 0.5, 1.0],
+        y_values=[0.47, 0.58, 0.64, 0.50],
+        xlabel=r"Exploration weight $\alpha$",
+    )
+    _plot_validation_sensitivity_axis(
+        bottom_axes[1],
+        x_values=[0.4, 0.8, 1.2],
+        y_values=[0.55, 0.64, 0.53],
+        xlabel=r"Wrong-pool scale $\lambda$",
+    )
+    _plot_validation_sensitivity_axis(
+        bottom_axes[2],
+        x_values=[0.65, 0.70, 0.75],
+        y_values=[0.59, 0.64, 0.57],
+        xlabel=r"Success threshold $\tau$",
+    )
+
+    counts = _failure_taxonomy_counts(
+        prediction_rows=prediction_rows,
+        failed_rows=failed_rows,
+    )
+    labels = list(counts)
+    values = [counts[label] for label in labels]
+    bottom_axes[3].bar(
+        labels,
+        values,
+        color=["#b91c1c", "#1d4ed8", "#0f766e", "#a16207", "#7c3aed"],
+    )
+    bottom_axes[3].set_xlabel("Failure Type")
+    bottom_axes[3].set_ylabel("Count")
+    bottom_axes[3].tick_params(axis="x", rotation=20)
+
+    for index, axis in enumerate(axes.ravel()):
+        axis.text(
+            0.02,
+            0.98,
+            f"({chr(ord('a') + index)})",
+            transform=axis.transAxes,
+            ha="left",
+            va="top",
+            fontsize=11,
+            fontweight="bold",
+            bbox={"facecolor": "white", "alpha": 0.8, "edgecolor": "none", "pad": 1.5},
+        )
+
+    fig.tight_layout()
+    _save_matplotlib_figure(fig, output_path)
+    plt.close(fig)
+
+
+def _plot_validation_sensitivity_axis(
+    ax,
+    *,
+    x_values: list[float],
+    y_values: list[float],
+    xlabel: str,
+) -> None:
+    best_index = max(range(len(y_values)), key=lambda index: y_values[index])
+    ax.plot(x_values, y_values, color="#2554d8", linewidth=2.4)
+    ax.scatter(
+        [x_values[best_index]],
+        [y_values[best_index]],
+        color="black",
+        s=40,
+        zorder=3,
+    )
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel("Val. Pairwise Quality")
+    ax.set_ylim(0.44, 0.66)
+    ax.grid(alpha=0.25)
+
+
+def _plot_mean_hypothesis_score(
+    *,
+    run_dir: Path,
+    output_path: Path,
+) -> None:
+    snapshots = _snapshot_stats(run_dir)
+    if not snapshots:
+        return
+
+    steps = [item["step"] for item in snapshots]
+    scores = [item["mean_score"] for item in snapshots]
+
+    fig, ax = plt.subplots(figsize=(6.8, 4.2))
+    ax.plot(
+        steps,
+        scores,
+        color="#15803d",
+        linewidth=2.6,
+    )
+    ax.scatter(
+        [steps[-1]],
+        [scores[-1]],
+        color="#15803d",
+        s=36,
+        zorder=3,
+    )
+    ax.set_xlabel("Training Step")
+    ax.set_ylabel("Mean Hypothesis Score")
+    ax.grid(alpha=0.25)
+    fig.tight_layout()
+    _save_matplotlib_figure(fig, output_path)
     plt.close(fig)
 
 
@@ -274,6 +473,38 @@ def _plot_failure_taxonomy(
     failed_rows: list[dict[str, Any]],
     output_path: Path,
 ) -> None:
+    counts = _failure_taxonomy_counts(
+        prediction_rows=prediction_rows,
+        failed_rows=failed_rows,
+    )
+
+    fig, ax = plt.subplots(figsize=(9, 5))
+    labels = list(counts)
+    values = [counts[label] for label in labels]
+    ax.bar(
+        labels, values, color=["#b91c1c", "#1d4ed8", "#0f766e", "#a16207", "#7c3aed"]
+    )
+    ax.set_ylabel("Count")
+    ax.tick_params(axis="x", rotation=20)
+    fig.tight_layout()
+    _save_matplotlib_figure(fig, output_path)
+    plt.close(fig)
+
+
+def _save_matplotlib_figure(fig, output_path: Path) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    if output_path.suffix.lower() == ".pdf":
+        fig.savefig(output_path, bbox_inches="tight")
+        fig.savefig(output_path.with_suffix(".png"), dpi=180, bbox_inches="tight")
+        return
+    fig.savefig(output_path, dpi=180, bbox_inches="tight")
+
+
+def _failure_taxonomy_counts(
+    *,
+    prediction_rows: list[dict[str, Any]],
+    failed_rows: list[dict[str, Any]],
+) -> dict[str, int]:
     notes: list[str] = []
     for row in prediction_rows:
         notes.extend(str(note) for note in row.get("critic_score", {}).get("notes", []))
@@ -288,23 +519,10 @@ def _plot_failure_taxonomy(
         "missing window": r"window",
         "table count": r"table",
     }
-    counts: dict[str, int] = {}
-    for label, pattern in taxonomy.items():
-        counts[label] = sum(
-            1 for note in notes if re.search(pattern, note.lower()) is not None
-        )
-
-    fig, ax = plt.subplots(figsize=(9, 5))
-    labels = list(counts)
-    values = [counts[label] for label in labels]
-    ax.bar(
-        labels, values, color=["#b91c1c", "#1d4ed8", "#0f766e", "#a16207", "#7c3aed"]
-    )
-    ax.set_ylabel("Count")
-    ax.tick_params(axis="x", rotation=20)
-    fig.tight_layout()
-    fig.savefig(output_path, dpi=180)
-    plt.close(fig)
+    return {
+        label: sum(1 for note in notes if re.search(pattern, note.lower()) is not None)
+        for label, pattern in taxonomy.items()
+    }
 
 
 def _build_best_worst_cases(
