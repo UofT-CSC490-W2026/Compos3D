@@ -27,6 +27,7 @@ def _resolve_bank_path() -> str:
     if not s3_uri.startswith("s3://"):
         return DEFAULT_BANK
     import boto3
+
     remainder = s3_uri[5:]
     bucket, _, key = remainder.partition("/")
     local_path = PROJECT_ROOT / "artifacts" / "demo_bank" / "hypothesis_bank.json"
@@ -132,12 +133,16 @@ def respond(message, history, bank_path, config_path, strategy, render):
 
 with gr.Blocks(title="Compos3D") as demo:
     gr.Markdown("# Compos3D — 3D Scene Generation")
-    gr.Markdown("Describe a room to generate a 3D scene. Send follow-up messages to edit or refine.")
+    gr.Markdown(
+        "Describe a room to generate a 3D scene. Send follow-up messages to edit or refine."
+    )
 
     with gr.Accordion("Settings", open=False):
         bank_path = gr.Textbox(label="Hypothesis bank", value=RESOLVED_BANK)
         config_path = gr.Textbox(label="Config path", value=DEFAULT_CONFIG)
-        strategy = gr.Dropdown(choices=STRATEGIES, value="filter_and_weight", label="Inference strategy")
+        strategy = gr.Dropdown(
+            choices=STRATEGIES, value="filter_and_weight", label="Inference strategy"
+        )
         render = gr.Checkbox(label="Render scene with Blender", value=True)
 
     chatbot = gr.Chatbot(
@@ -176,4 +181,7 @@ with gr.Blocks(title="Compos3D") as demo:
 
 if __name__ == "__main__":
     import os
-    demo.launch(server_name="0.0.0.0", server_port=int(os.environ.get("DEMO_PORT", 7860)))
+
+    demo.launch(
+        server_name="0.0.0.0", server_port=int(os.environ.get("DEMO_PORT", 7860))
+    )
