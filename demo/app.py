@@ -183,5 +183,5 @@ if __name__ == "__main__":
     import os
 
     demo.launch(
-        server_name="0.0.0.0", server_port=int(os.environ.get("DEMO_PORT", 7860))
+        server_name="0.0.0.0", server_port=int(os.environ.get("DEMO_PORT", 7860)), share=True
     )
