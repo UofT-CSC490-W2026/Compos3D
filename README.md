@@ -17,6 +17,7 @@ This repository provides the implementation of Compos3D, a system that uses LLMs
 - [📄 Paper Experiments](#-paper-experiments)
 - [☁️ AWS](#-aws)
 - [🧪 Testing](#-testing)
+- [🖥️ Demo](#-demo)
 - [🤝 Credits](#-credits)
 
 ## ✨ What the Project Does
@@ -41,6 +42,8 @@ The main CLI commands are:
 - `backend-smoke`
 - `reference-generate`
 - `launch-aws`
+
+Trained models are availaible at this [URL](https://github.com/UofT-CSC490-W2026/Compos3D/releases/download/v0.1.0/model.zip).
 
 ## 🗂️ Repository Layout
 
@@ -655,6 +658,62 @@ Run the test suite with:
 ```
 
 The automated tests use mocks; they do not require Bedrock credentials.
+
+## 🖥️ Demo
+
+The Gradio demo lives in `demo/`. It provides a chat-based UI for generation and editing: type a room description, see the raw LLM prompts and responses, and view the rendered images and orbital video. Trained models are availaible at this [URL](https://github.com/UofT-CSC490-W2026/Compos3D/releases/download/v0.1.0/model.zip), if you riun things locally download and unzip it first.
+
+### Run locally
+
+```bash
+source api_key
+.venv/bin/python demo/app.py
+```
+
+Open `http://127.0.0.1:7860` in your browser.
+
+The demo requires AWS credentials for Bedrock (same as the CLI). Rendering with Blender is on by default; uncheck it in Settings to get JSON-only output instantly.
+
+### Host on AWS
+
+The demo reuses the existing ECR repository, IAM instance profile, VPC, and S3 gold bucket that are already provisioned by Terraform. The trained hypothesis bank is read directly from the gold layer (`s3://<gold-bucket>/compos3d/gold/hypothesis_banks/<experiment-name>/hypothesis_bank.json`) — the same path that `train-hypotheses` writes to after a successful run.
+
+Prerequisites: Terraform outputs must be available (`terraform -chdir=terraform output`) and a completed training run must have pushed its bank to the gold bucket.
+
+**1. Build and push the demo image**
+
+```bash
+ECR_REPOSITORY_URL=$(terraform -chdir=terraform output -raw ecr_repository_url)
+./scripts/build_and_push_demo_image.sh "$ECR_REPOSITORY_URL" latest us-east-1
+```
+
+This tags the image as `demo-latest` inside your existing ECR repository.
+
+**2. Launch the demo instance**
+
+```bash
+./scripts/launch_demo_ec2.sh dev claude_qwen latest g5.xlarge us-east-1
+```
+
+The script:
+
+- Reads the gold bucket name, VPC, subnet, instance profile, and Anthropic secret name from `terraform output`.
+- Constructs the S3 URI for the trained bank (`gold/hypothesis_banks/<experiment-name>/`).
+- Creates a minimal security group opening ports `7860` and `22`.
+- Launches a `g5.xlarge` on-demand instance (GPU required for Blender rendering).
+- In the user-data script: pulls the demo image from ECR, fetches `ANTHROPIC_API_KEY` from Secrets Manager, and runs the container with `COMPOS3D_BANK_S3_URI` set so the app downloads the bank from S3 at startup.
+- Prints the public URL once the instance has an IP.
+
+The demo is reachable at `http://<public-ip>:7860` about two minutes after the instance starts.
+
+**3. Tear down**
+
+```bash
+aws ec2 terminate-instances --instance-ids <instance-id> --region us-east-1
+aws ec2 delete-security-group --group-id <demo-sg-id> --region us-east-1
+```
+
+Both IDs are printed by `launch_demo_ec2.sh`.
 
 ## 🤝 Credits
 

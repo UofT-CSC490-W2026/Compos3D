@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 import tempfile
 import time
@@ -8,7 +9,7 @@ from pathlib import Path
 
 import gradio as gr
 
-PROJECT_ROOT = Path(__file__).resolve().parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from compos3d.config import load_experiment_config
@@ -18,6 +19,25 @@ from compos3d.llm.bedrock import BedrockChatClient
 DEFAULT_BANK = str(PROJECT_ROOT / "artifacts/training/claude_qwen/hypothesis_bank.json")
 DEFAULT_CONFIG = str(PROJECT_ROOT / "train_configs/compos3d.json")
 DEMO_OUT = PROJECT_ROOT / "artifacts" / "demo"
+
+
+def _resolve_bank_path() -> str:
+    """Download the hypothesis bank from S3 if COMPOS3D_BANK_S3_URI is set."""
+    s3_uri = os.environ.get("COMPOS3D_BANK_S3_URI", "")
+    if not s3_uri.startswith("s3://"):
+        return DEFAULT_BANK
+    import boto3
+    remainder = s3_uri[5:]
+    bucket, _, key = remainder.partition("/")
+    local_path = PROJECT_ROOT / "artifacts" / "demo_bank" / "hypothesis_bank.json"
+    local_path.parent.mkdir(parents=True, exist_ok=True)
+    print(f"[demo] Downloading bank from {s3_uri}")
+    boto3.client("s3").download_file(bucket, key, str(local_path))
+    print(f"[demo] Bank ready at {local_path}")
+    return str(local_path)
+
+
+RESOLVED_BANK = _resolve_bank_path()
 STRATEGIES = ["filter_and_weight", "joint_top_k"]
 
 EXAMPLES = [
@@ -112,16 +132,12 @@ def respond(message, history, bank_path, config_path, strategy, render):
 
 with gr.Blocks(title="Compos3D") as demo:
     gr.Markdown("# Compos3D — 3D Scene Generation")
-    gr.Markdown(
-        "Describe a room to generate a 3D scene. Send follow-up messages to edit or refine."
-    )
+    gr.Markdown("Describe a room to generate a 3D scene. Send follow-up messages to edit or refine.")
 
     with gr.Accordion("Settings", open=False):
-        bank_path = gr.Textbox(label="Hypothesis bank", value=DEFAULT_BANK)
+        bank_path = gr.Textbox(label="Hypothesis bank", value=RESOLVED_BANK)
         config_path = gr.Textbox(label="Config path", value=DEFAULT_CONFIG)
-        strategy = gr.Dropdown(
-            choices=STRATEGIES, value="filter_and_weight", label="Inference strategy"
-        )
+        strategy = gr.Dropdown(choices=STRATEGIES, value="filter_and_weight", label="Inference strategy")
         render = gr.Checkbox(label="Render scene with Blender", value=True)
 
     chatbot = gr.Chatbot(
@@ -159,4 +175,5 @@ with gr.Blocks(title="Compos3D") as demo:
 
 
 if __name__ == "__main__":
-    demo.launch()
+    import os
+    demo.launch(server_name="0.0.0.0", server_port=int(os.environ.get("DEMO_PORT", 7860)))
