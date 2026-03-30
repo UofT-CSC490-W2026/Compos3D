@@ -40,11 +40,38 @@ def run_dir(tmp_path: Path) -> Path:
     write_jsonl(
         "predictions.jsonl",
         [
-            {"room_type": "dining_room", "example_id": "1", "overall": 0.9, "prompt": "a", "critic_score": {"notes": ["lamp placement issue"]}},
-            {"room_type": "dining_room", "example_id": "2", "overall": 0.2, "prompt": "b"},
-            {"room_type": "dining_room", "example_id": "3", "critic_score": {"overall": 0.5}, "prompt": "c", "critic_notes": ["rug missing"]},
-            {"room_type": "dining_room", "example_id": "4", "overall": 0.8, "prompt": "d"},
-            {"room_type": "dining_room", "example_id": "5", "overall": 0.1, "prompt": "e"},
+            {
+                "room_type": "dining_room",
+                "example_id": "1",
+                "overall": 0.9,
+                "prompt": "a",
+                "critic_score": {"notes": ["lamp placement issue"]},
+            },
+            {
+                "room_type": "dining_room",
+                "example_id": "2",
+                "overall": 0.2,
+                "prompt": "b",
+            },
+            {
+                "room_type": "dining_room",
+                "example_id": "3",
+                "critic_score": {"overall": 0.5},
+                "prompt": "c",
+                "critic_notes": ["rug missing"],
+            },
+            {
+                "room_type": "dining_room",
+                "example_id": "4",
+                "overall": 0.8,
+                "prompt": "d",
+            },
+            {
+                "room_type": "dining_room",
+                "example_id": "5",
+                "overall": 0.1,
+                "prompt": "e",
+            },
             {"room_type": "living_room", "example_id": "6"},
         ],
     )
@@ -59,13 +86,20 @@ def run_dir(tmp_path: Path) -> Path:
     write_jsonl(
         "wandb_media/media_manifest.jsonl",
         [
-            {"room_type": "dining_room", "example_id": str(i), "phase": "prediction", "preview_path": str(base / f"img{i}.png")}
+            {
+                "room_type": "dining_room",
+                "example_id": str(i),
+                "phase": "prediction",
+                "preview_path": str(base / f"img{i}.png"),
+            }
             for i in range(1, 6)
         ],
     )
 
     # json files
-    (base / "hypothesis_bank.json").write_text(json.dumps([{"reward": 1.0, "accuracy": 1.0, "mean_score": 1.0}]))
+    (base / "hypothesis_bank.json").write_text(
+        json.dumps([{"reward": 1.0, "accuracy": 1.0, "mean_score": 1.0}])
+    )
     (base / "bank_snapshots/hypothesis_bank_initial.json").write_text(
         json.dumps([{"reward": 0.5, "accuracy": 0.5, "mean_score": 0.5}])
     )
@@ -92,7 +126,7 @@ def test_load_utils(tmp_path):
     jl = tmp_path / "test.jsonl"
     jl.write_text('{"a": 1}\n\n{"a": 2}')
     assert _load_jsonl_rows(jl) == [{"a": 1}, {"a": 2}]
-    
+
     jl2 = tmp_path / "test2.jsonl"
     jl2.write_text('{"room_type": "a"}\n{"room_type": "b"}')
     assert _load_rows(jl2, room_type="a") == [{"room_type": "a"}]
@@ -103,9 +137,12 @@ def test_snapshot_utils(tmp_path):
     assert _snapshot_step(Path("hypothesis_bank_initial.json")) == 0
     assert _snapshot_step(Path("hypothesis_bank_sample_42.json")) == 42
     assert _snapshot_step(Path("other.json")) == 0
-    
-    assert _snapshot_sort_key(Path("hypothesis_bank_sample_42.json")) == (42, "hypothesis_bank_sample_42.json")
-    
+
+    assert _snapshot_sort_key(Path("hypothesis_bank_sample_42.json")) == (
+        42,
+        "hypothesis_bank_sample_42.json",
+    )
+
     (tmp_path / "bank_snapshots").mkdir()
     (tmp_path / "bank_snapshots" / "hypothesis_bank_sample_1.json").write_text("[]")
     stats = _snapshot_stats(tmp_path)
@@ -130,17 +167,18 @@ def test_render_training_paper_figures(run_dir, tmp_path):
 @pytest.mark.unit
 def test_render_training_paper_figures_empty(tmp_path, monkeypatch):
     import compos3d.paper.figures as mod
+
     monkeypatch.setattr(mod, "_snapshot_stats", lambda r: [])
-    
+
     run_dir = tmp_path / "empty_run"
     run_dir.mkdir()
     (run_dir / "wandb_media").mkdir()
     (run_dir / "bank_snapshots").mkdir()
     (run_dir / "wandb").mkdir()
-    
+
     (run_dir / "hypothesis_bank.json").write_text("[]")
     (run_dir / "bank_snapshots/hypothesis_bank_initial.json").write_text("[]")
-    
+
     out_dir = tmp_path / "empty_out"
     # This will trigger `if not snapshots: return` in all plot functions during render_training_paper_figures
     manifest = render_training_paper_figures(run_dir=run_dir, output_dir=out_dir)
@@ -150,15 +188,16 @@ def test_render_training_paper_figures_empty(tmp_path, monkeypatch):
 @pytest.mark.unit
 def test_save_matplotlib_figure(tmp_path):
     import matplotlib.pyplot as plt
+
     fig, ax = plt.subplots()
     ax.plot([1, 2], [1, 2])
-    
+
     # Test pdf
     pdf_path = tmp_path / "plot.pdf"
     _save_matplotlib_figure(fig, pdf_path)
     assert pdf_path.exists()
     assert pdf_path.with_suffix(".png").exists()
-    
+
     # Test png
     png_path = tmp_path / "plot_only.png"
     _save_matplotlib_figure(fig, png_path)
@@ -170,7 +209,7 @@ def test_save_matplotlib_figure(tmp_path):
 def test_failure_taxonomy_counts():
     counts = _failure_taxonomy_counts(
         prediction_rows=[{"critic_score": {"notes": ["lamp placement is bad"]}}],
-        failed_rows=[{"critic_notes": ["rug is missing", "table"]}]
+        failed_rows=[{"critic_notes": ["rug is missing", "table"]}],
     )
     assert counts["lamp placement"] == 1
     assert counts["rug issues"] == 1
@@ -182,7 +221,7 @@ def test_failure_taxonomy_counts():
 def test_build_best_worst_cases(tmp_path):
     img = tmp_path / "img.png"
     Image.new("RGB", (10, 10)).save(img)
-    
+
     preds = [
         {"example_id": "1", "overall": 0.9, "prompt": "p1"},
         {"example_id": "2", "critic_score": {"overall": 0.8}, "prompt": "p2"},
@@ -191,18 +230,25 @@ def test_build_best_worst_cases(tmp_path):
     ]
     media = [
         {"example_id": "1", "phase": "prediction", "preview_path": str(img)},
-        {"example_id": "2", "phase": "prediction", "preview_path": "relative.png"}, # missing file but will test relative path logic later
+        {
+            "example_id": "2",
+            "phase": "prediction",
+            "preview_path": "relative.png",
+        },  # missing file but will test relative path logic later
     ]
-    
+
     # Just running to verify it doesn't crash, missing image might crash so let's make it exist
     (tmp_path / "relative.png").write_bytes(img.read_bytes())
-    
+
     # To test the cwd fallback
     import os
+
     orig_cwd = os.getcwd()
     os.chdir(tmp_path)
     try:
-        _build_best_worst_cases(prediction_rows=preds, media_rows=media, output_path=tmp_path / "out.png")
+        _build_best_worst_cases(
+            prediction_rows=preds, media_rows=media, output_path=tmp_path / "out.png"
+        )
     finally:
         os.chdir(orig_cwd)
 
@@ -211,13 +257,12 @@ def test_build_best_worst_cases(tmp_path):
 def test_image_grid(tmp_path):
     img1 = tmp_path / "1.png"
     Image.new("RGB", (200, 200)).save(img1)
-    
+
     _image_grid(
         rows=[{"preview_path": str(img1), "id": 1}],
         output_path=tmp_path / "grid.png",
         title="Test Grid",
         caption_fn=lambda r: f"id {r['id']}",
-        columns=2
+        columns=2,
     )
     assert (tmp_path / "grid.png").exists()
-

@@ -51,7 +51,8 @@ def render_training_paper_figures(
         "bank_metrics_timeline": output_dir / "bank_metrics_timeline.pdf",
         "failure_taxonomy": output_dir / "failure_taxonomy.pdf",
         "best_worst_cases": output_dir / "best_worst_cases.png",
-        "training_diagnostics_overview": output_dir / "training_diagnostics_overview.pdf",
+        "training_diagnostics_overview": output_dir
+        / "training_diagnostics_overview.pdf",
         "mean_hypothesis_score": output_dir / "mean_hypothesis_score.pdf",
     }
 
