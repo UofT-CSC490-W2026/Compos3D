@@ -132,7 +132,7 @@ def respond(message, history, bank_path, config_path, strategy, render):
 
 
 with gr.Blocks(title="Compos3D") as demo:
-    gr.Markdown("# Compos3D — 3D Scene Generation")
+    gr.Markdown("# Compos3D: Your Reasoning LLM is Secretly a 3D Scene generator")
     gr.Markdown(
         "Describe a room to generate a 3D scene. Send follow-up messages to edit or refine."
     )
