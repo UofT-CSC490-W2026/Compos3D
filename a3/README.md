@@ -30,7 +30,7 @@ modal secret create nanochat-secrets \
 
 ## Part 2 — Ablations on picochat (d16)
 
-Four d16 models: Baseline, MTP-2, MTP-4, MTP-2+YaRN. All commands from `a3/`.
+Five d16 models: Baseline, MTP-2, MTP-4, Yarn, MTP-2+YaRN. Run all commands from `a3/`.
 
 ### Hyperparameter sweep
 4 configs × 9 runs (3 LR × 3 batch size) = 36 runs, 300 steps each on H100:2.
@@ -50,6 +50,13 @@ modal run part2_mtp/nanochat_modal.py::quick_test_d12 2>&1 | tee /tmp/a2mtp_quic
 ```
 
 ### Main d16 training
+
+Training and evaluation for YaRN only model can be run separately with: 
+```
+modal run part2/nanochat_modal_yarn.py 2>&1 | tee /tmp/yarn_log
+```
+For all other models:
+
 ```sh
 modal run part2_mtp/nanochat_modal.py::stage_train_baseline  2>&1 | tee /tmp/a2mtp_baseline.log &
 modal run part2_mtp/nanochat_modal.py::stage_train_mtp2      2>&1 | tee /tmp/a2mtp_mtp2.log &
@@ -78,7 +85,7 @@ uv run python3 a3/make_p2_figures.py
 ## Part 3 — Context-length curriculum (d16)
 
 Three d16 models: Phase 1 (ctx=512), Phase 2 (ctx=2048 warm-start), Baseline (ctx=2048 from scratch).
-All commands from `a3/`.
+Run all commands from `a3/`.
 
 > [!NOTE]
 > The d20 runs (tags `part3/d20_ctx512`, `part3/d20_ctx2048`, `part3/d20_baseline`) are also
